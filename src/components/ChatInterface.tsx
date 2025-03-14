@@ -1,6 +1,6 @@
 
 import { useRef, useEffect, useState } from "react";
-import { ArrowUp, CornerDownLeft, Loader2 } from "lucide-react";
+import { ArrowUp, CornerDownLeft, Loader2, Video } from "lucide-react";
 import { mockConversations } from "@/data/mockData";
 import { Message } from "@/types";
 
@@ -9,12 +9,20 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
 }
 
+// New interface to represent a demonstration record
+interface DemonstrationRecord {
+  id: string;
+  duration: string; // e.g., "54 seconds"
+  timestamp: string;
+}
+
 export const ChatInterface = ({
   conversationId,
   onSendMessage
 }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [demoRecords, setDemoRecords] = useState<Record<string, DemonstrationRecord>>({});
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -23,8 +31,34 @@ export const ChatInterface = ({
     const conversation = mockConversations.find(conv => conv.id === conversationId);
     if (conversation) {
       setMessages(conversation.messages);
+      
+      // For demo purposes, add demonstration records at specific points in the conversation
+      // In a real app, this would come from the API
+      const records: Record<string, DemonstrationRecord> = {};
+      
+      // Find the message pairs where demonstrations happened
+      for (let i = 0; i < conversation.messages.length - 1; i++) {
+        const current = conversation.messages[i];
+        const next = conversation.messages[i + 1];
+        
+        // After assistant asks "can you show me" and before user responds
+        if (
+          current.role === "assistant" && 
+          next.role === "user" && 
+          (current.content.includes("show me") || current.content.includes("please show me"))
+        ) {
+          records[`${current.id}-${next.id}`] = {
+            id: `demo-${i}`,
+            duration: "54 seconds",
+            timestamp: new Date().toISOString()
+          };
+        }
+      }
+      
+      setDemoRecords(records);
     } else {
       setMessages([]);
+      setDemoRecords({});
     }
   }, [conversationId]);
 
@@ -78,6 +112,11 @@ export const ChatInterface = ({
     autoResizeTextarea();
   };
 
+  // Function to check if there's a demonstration record between messages
+  const hasDemoRecord = (currentMsg: Message, nextMsg: Message) => {
+    return demoRecords[`${currentMsg.id}-${nextMsg.id}`];
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -89,16 +128,28 @@ export const ChatInterface = ({
             </div>
           </div>
         ) : (
-          messages.map((message, index) => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div className={message.role === "user" ? "chat-bubble-user" : "chat-bubble-assistant"}>
-                {message.content}
+          <>
+            {messages.map((message, index) => (
+              <div key={message.id}>
+                <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={message.role === "user" ? "chat-bubble-user" : "chat-bubble-assistant"}>
+                    {message.content}
+                  </div>
+                </div>
+                
+                {/* Demonstration record indicator */}
+                {index < messages.length - 1 && 
+                 hasDemoRecord(message, messages[index + 1]) && (
+                  <div className="flex justify-center my-4">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm">
+                      <Video className="w-4 h-4" />
+                      <span>Demonstration record, {demoRecords[`${message.id}-${messages[index + 1].id}`].duration}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            ))}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
