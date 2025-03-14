@@ -125,15 +125,14 @@ const Index = () => {
           <div className="flex-1 flex items-stretch p-4 gap-4 overflow-hidden">
             <ResizablePanelGroup 
               direction="horizontal"
-              className="w-full h-full gap-4"
+              className="w-full rounded-lg"
             >
               {/* Chat Interface */}
               <ResizablePanel 
                 defaultSize={50} 
                 minSize={30}
-                className="min-w-[300px]"
               >
-                <div className="h-full glass-panel animate-fade-in">
+                <div className="h-full glass-panel">
                   <ChatInterface
                     conversationId={selectedConversationId}
                     onSendMessage={handleSendMessage}
@@ -141,15 +140,15 @@ const Index = () => {
                 </div>
               </ResizablePanel>
               
-              <ResizableHandle withHandle />
+              <ResizableHandle className="w-2 bg-transparent" withHandle />
               
               {/* Workflow Panel */}
               <ResizablePanel 
                 defaultSize={50} 
-                minSize={25} 
-                className="hidden md:block min-w-[300px]"
+                minSize={25}
+                className="hidden md:block"
               >
-                <div className="h-full glass-panel animate-fade-in">
+                <div className="h-full glass-panel">
                   <WorkflowPanel onRunWorkflow={handleRunWorkflow} />
                 </div>
               </ResizablePanel>
