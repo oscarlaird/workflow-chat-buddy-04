@@ -1,15 +1,16 @@
 
 import { useRef, useEffect, useState } from "react";
-import { ArrowUp, CornerDownLeft, Loader2, Video } from "lucide-react";
+import { CornerDownLeft, Loader2, Video } from "lucide-react";
 import { mockConversations } from "@/data/mockData";
 import { Message } from "@/types";
+import { toast } from "@/components/ui/use-toast";
 
 interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage: (message: string) => void;
 }
 
-// New interface to represent a demonstration record
+// Interface to represent a demonstration record
 interface DemonstrationRecord {
   id: string;
   duration: string; // e.g., "54 seconds"
@@ -33,20 +34,21 @@ export const ChatInterface = ({
       setMessages(conversation.messages);
       
       // For demo purposes, add demonstration records at specific points in the conversation
-      // In a real app, this would come from the API
       const records: Record<string, DemonstrationRecord> = {};
       
-      // Find the message pairs where demonstrations happened
+      // Find the message pairs where demonstrations should happen
       for (let i = 0; i < conversation.messages.length - 1; i++) {
         const current = conversation.messages[i];
         const next = conversation.messages[i + 1];
         
-        // After assistant asks "can you show me" and before user responds
+        // After assistant asks "can you show me" or "please show me" and before user responds
         if (
           current.role === "assistant" && 
           next.role === "user" && 
-          (current.content.includes("show me") || current.content.includes("please show me"))
+          (current.content.toLowerCase().includes("show me") || 
+           current.content.toLowerCase().includes("please show me"))
         ) {
+          console.log(`Found demo record between messages: ${current.id} and ${next.id}`);
           records[`${current.id}-${next.id}`] = {
             id: `demo-${i}`,
             duration: "54 seconds",
@@ -55,7 +57,16 @@ export const ChatInterface = ({
         }
       }
       
+      console.log("Demo records:", records);
       setDemoRecords(records);
+      
+      // Show toast when demo records are found
+      if (Object.keys(records).length > 0) {
+        toast({
+          title: "Demonstration records loaded",
+          description: `Found ${Object.keys(records).length} demonstration records in this conversation.`
+        });
+      }
     } else {
       setMessages([]);
       setDemoRecords({});
@@ -114,7 +125,12 @@ export const ChatInterface = ({
 
   // Function to check if there's a demonstration record between messages
   const hasDemoRecord = (currentMsg: Message, nextMsg: Message) => {
-    return demoRecords[`${currentMsg.id}-${nextMsg.id}`];
+    const key = `${currentMsg.id}-${nextMsg.id}`;
+    const hasDemoRec = !!demoRecords[key];
+    if (hasDemoRec) {
+      console.log(`Found demo record for key: ${key}`);
+    }
+    return hasDemoRec;
   };
 
   return (
@@ -128,19 +144,22 @@ export const ChatInterface = ({
             </div>
           </div>
         ) : (
-          <>
+          <div className="space-y-6">
             {messages.map((message, index) => (
-              <div key={message.id}>
+              <div key={message.id} className="space-y-4">
                 <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={message.role === "user" ? "chat-bubble-user" : "chat-bubble-assistant"}>
+                  <div className={`max-w-[80%] px-4 py-3 rounded-lg ${
+                    message.role === "user" 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted"
+                  }`}>
                     {message.content}
                   </div>
                 </div>
                 
                 {/* Demonstration record indicator */}
-                {index < messages.length - 1 && 
-                 hasDemoRecord(message, messages[index + 1]) && (
-                  <div className="flex justify-center my-4">
+                {index < messages.length - 1 && hasDemoRecord(message, messages[index + 1]) && (
+                  <div className="flex justify-center my-2">
                     <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm">
                       <Video className="w-4 h-4" />
                       <span>Demonstration record, {demoRecords[`${message.id}-${messages[index + 1].id}`].duration}</span>
@@ -149,7 +168,7 @@ export const ChatInterface = ({
                 )}
               </div>
             ))}
-          </>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
