@@ -97,18 +97,27 @@ export const ChatInterface = ({
     setIsLoading(true);
     
     // Add user message immediately
-    const newMessage: Message = {
+    const newUserMessage: Message = {
       id: `temp-${Date.now()}`,
       role: "user",
       content: inputValue
     };
     
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, newUserMessage]);
     setInputValue("");
     
     // Simulate sending message to API
     setTimeout(() => {
       onSendMessage(inputValue);
+      
+      // Add the automated "Okay" response from the assistant
+      const botResponse: Message = {
+        id: `resp-${Date.now()}`,
+        role: "assistant",
+        content: "Okay"
+      };
+      
+      setMessages(prev => [...prev, botResponse]);
       setIsLoading(false);
     }, 800);
   };
