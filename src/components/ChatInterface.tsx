@@ -33,31 +33,60 @@ export const ChatInterface = ({
     if (conversation) {
       setMessages(conversation.messages);
       
-      // For demo purposes, create demonstration records
+      // Instead of hard-coding message IDs, we'll identify demonstration points
+      // by checking the message content and patterns
       const records: Record<string, DemonstrationRecord> = {};
       
-      // Explicitly create demo records for specific message IDs from our mock data
-      // These are hard-coded based on the mockConversations data structure
-      records["msg-9-msg-10"] = {
-        id: "demo-1",
-        duration: "54 seconds",
-        timestamp: new Date().toISOString()
-      };
-      
-      records["msg-14-msg-15"] = {
-        id: "demo-2",
-        duration: "54 seconds",
-        timestamp: new Date().toISOString()
-      };
+      // Go through messages and check for potential demo opportunities
+      for (let i = 0; i < conversation.messages.length - 1; i++) {
+        const current = conversation.messages[i];
+        const next = conversation.messages[i + 1];
+        
+        // Check for the specific pattern from the screenshot:
+        // "Okay, one minute..." followed by a response containing a table
+        if (
+          current.content.includes("Okay, one minute") && 
+          next.content.includes("[table]")
+        ) {
+          records[`${current.id}-${next.id}`] = {
+            id: `demo-${i}`,
+            duration: "54 seconds",
+            timestamp: new Date().toISOString()
+          };
+          console.log(`Added demo record between: "${current.content}" and "${next.content}"`);
+        }
+        
+        // Check for other assistant questions followed by user responses with data
+        // This pattern often indicates a demonstration happened
+        if (
+          current.role === "assistant" &&
+          next.role === "user" &&
+          (current.content.toLowerCase().includes("show me") || 
+           current.content.toLowerCase().includes("can you please show") ||
+           current.content.toLowerCase().includes("please show")) && 
+          (next.content.includes("[table]") || 
+           next.content.includes("Here is") ||
+           next.content.includes("I found"))
+        ) {
+          records[`${current.id}-${next.id}`] = {
+            id: `demo-${i}`,
+            duration: "54 seconds",
+            timestamp: new Date().toISOString()
+          };
+          console.log(`Added demo record between: "${current.content}" and "${next.content}"`);
+        }
+      }
       
       console.log("Demo records created:", records);
       setDemoRecords(records);
       
       // Show toast notification about demo records
-      toast({
-        title: "Demonstration records loaded",
-        description: `Loaded ${Object.keys(records).length} demonstration records in this conversation.`
-      });
+      if (Object.keys(records).length > 0) {
+        toast({
+          title: "Demonstration records loaded",
+          description: `Loaded ${Object.keys(records).length} demonstration records in this conversation.`
+        });
+      }
     } else {
       setMessages([]);
       setDemoRecords({});
@@ -144,18 +173,14 @@ export const ChatInterface = ({
                   </div>
                 </div>
                 
-                {/* Demonstration record indicator - only show between specific message pairs */}
-                {index < messages.length - 1 && (
-                  <>
-                    {hasDemoRecord(message, messages[index + 1]) && (
-                      <div className="flex justify-center my-4">
-                        <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
-                          <Video className="w-4 h-4" />
-                          <span>Demonstration record, {demoRecords[`${message.id}-${messages[index + 1].id}`]?.duration}</span>
-                        </div>
-                      </div>
-                    )}
-                  </>
+                {/* Demonstration record indicator */}
+                {index < messages.length - 1 && hasDemoRecord(message, messages[index + 1]) && (
+                  <div className="flex justify-center my-6">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
+                      <Video className="w-4 h-4" />
+                      <span>Demonstration record, {demoRecords[`${message.id}-${messages[index + 1].id}`]?.duration}</span>
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
