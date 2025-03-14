@@ -4,6 +4,8 @@ import { CornerDownLeft, Loader2, Film } from "lucide-react";
 import { mockConversations } from "@/data/mockData";
 import { Message } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -27,59 +29,91 @@ export const ChatInterface = ({
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [chatId] = useState(() => conversationId || uuidv4());
 
   useEffect(() => {
-    const conversation = mockConversations.find(conv => conv.id === conversationId);
-    if (conversation) {
-      setMessages(conversation.messages);
-      
-      // Create screen recordings for specific messages where the agent asks to be shown something
-      const recordings: Record<string, ScreenRecording> = {};
-      
-      // Go through messages and add recordings after specific agent questions
-      for (let i = 0; i < conversation.messages.length - 1; i++) {
-        const current = conversation.messages[i];
-        const next = conversation.messages[i + 1];
+    // Load existing messages for this conversation from Supabase
+    const loadMessages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('*')
+          .eq('chat_id', conversationId)
+          .order('created_at', { ascending: true });
         
-        // Specifically look for messages where the agent asks to be shown something
-        if (current.role === "assistant" && 
-            (current.content.includes("show me") || 
-             current.content.includes("Can you show me") ||
-             current.content.includes("please show"))) {
-          
-          // For the first instance, set 54s duration
-          if (current.id === "msg-9" && next.id === "msg-10") {
-            recordings[current.id] = {
-              id: `recording-${i}`,
-              duration: "54s",
-              timestamp: new Date().toISOString()
-            };
-          }
-          // For the second instance, set 76s duration
-          else if (current.id === "msg-14" && next.id === "msg-15") {
-            recordings[current.id] = {
-              id: `recording-${i}`,
-              duration: "76s",
-              timestamp: new Date().toISOString()
-            };
+        if (error) {
+          console.error('Error loading messages:', error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          // Convert Supabase data to Message format
+          const loadedMessages = data.map(msg => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content
+          }));
+          setMessages(loadedMessages);
+        } else {
+          // If no messages in database, use mock data
+          const conversation = mockConversations.find(conv => conv.id === conversationId);
+          if (conversation) {
+            setMessages(conversation.messages);
+            
+            // Create screen recordings for specific messages where the agent asks to be shown something
+            const recordings: Record<string, ScreenRecording> = {};
+            
+            // Go through messages and add recordings after specific agent questions
+            for (let i = 0; i < conversation.messages.length - 1; i++) {
+              const current = conversation.messages[i];
+              const next = conversation.messages[i + 1];
+              
+              // Specifically look for messages where the agent asks to be shown something
+              if (current.role === "assistant" && 
+                  (current.content.includes("show me") || 
+                  current.content.includes("Can you show me") ||
+                  current.content.includes("please show"))) {
+                
+                // For the first instance, set 54s duration
+                if (current.id === "msg-9" && next.id === "msg-10") {
+                  recordings[current.id] = {
+                    id: `recording-${i}`,
+                    duration: "54s",
+                    timestamp: new Date().toISOString()
+                  };
+                }
+                // For the second instance, set 76s duration
+                else if (current.id === "msg-14" && next.id === "msg-15") {
+                  recordings[current.id] = {
+                    id: `recording-${i}`,
+                    duration: "76s",
+                    timestamp: new Date().toISOString()
+                  };
+                }
+              }
+            }
+            
+            console.log("Screen recordings created:", recordings);
+            setScreenRecordings(recordings);
+            
+            // Show toast notification about screen recordings
+            if (Object.keys(recordings).length > 0) {
+              toast({
+                title: "Screen recordings loaded",
+                description: `Loaded ${Object.keys(recordings).length} screen recordings in this conversation.`
+              });
+            }
+          } else {
+            setMessages([]);
+            setScreenRecordings({});
           }
         }
+      } catch (error) {
+        console.error('Error in loadMessages:', error);
       }
-      
-      console.log("Screen recordings created:", recordings);
-      setScreenRecordings(recordings);
-      
-      // Show toast notification about screen recordings
-      if (Object.keys(recordings).length > 0) {
-        toast({
-          title: "Screen recordings loaded",
-          description: `Loaded ${Object.keys(recordings).length} screen recordings in this conversation.`
-        });
-      }
-    } else {
-      setMessages([]);
-      setScreenRecordings({});
-    }
+    };
+
+    loadMessages();
   }, [conversationId]);
 
   useEffect(() => {
@@ -88,6 +122,30 @@ export const ChatInterface = ({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Function to save message to Supabase
+  const saveMessageToSupabase = async (message: Message, messageRole: "user" | "assistant") => {
+    try {
+      const { error } = await supabase
+        .from('conversations')
+        .insert({
+          chat_id: chatId,
+          role: messageRole,
+          content: message.content
+        });
+      
+      if (error) {
+        console.error('Error saving message to Supabase:', error);
+        toast({
+          title: "Error saving message",
+          description: "There was a problem saving your message.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Exception saving message:', error);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,6 +162,10 @@ export const ChatInterface = ({
     };
     
     setMessages(prev => [...prev, newUserMessage]);
+    
+    // Save user message to Supabase
+    saveMessageToSupabase(newUserMessage, "user");
+    
     setInputValue("");
     
     // Simulate sending message to API
@@ -118,6 +180,10 @@ export const ChatInterface = ({
       };
       
       setMessages(prev => [...prev, botResponse]);
+      
+      // Save assistant response to Supabase
+      saveMessageToSupabase(botResponse, "assistant");
+      
       setIsLoading(false);
     }, 800);
   };
