@@ -1,6 +1,6 @@
 
 import { useRef, useEffect, useState } from "react";
-import { CornerDownLeft, Loader2, Video } from "lucide-react";
+import { CornerDownLeft, Loader2, Film } from "lucide-react";
 import { mockConversations } from "@/data/mockData";
 import { Message } from "@/types";
 import { toast } from "@/components/ui/use-toast";
@@ -10,10 +10,10 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
 }
 
-// Interface to represent a demonstration record
-interface DemonstrationRecord {
+// Interface to represent a screen recording
+interface ScreenRecording {
   id: string;
-  duration: string; // e.g., "54 seconds"
+  duration: string; // e.g., "54s"
   timestamp: string;
 }
 
@@ -23,7 +23,7 @@ export const ChatInterface = ({
 }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [demoRecords, setDemoRecords] = useState<Record<string, DemonstrationRecord>>({});
+  const [screenRecordings, setScreenRecordings] = useState<Record<string, ScreenRecording>>({});
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -33,63 +33,52 @@ export const ChatInterface = ({
     if (conversation) {
       setMessages(conversation.messages);
       
-      // Instead of hard-coding message IDs, we'll identify demonstration points
-      // by checking the message content and patterns
-      const records: Record<string, DemonstrationRecord> = {};
+      // Create screen recordings for specific messages where the agent asks to be shown something
+      const recordings: Record<string, ScreenRecording> = {};
       
-      // Go through messages and check for potential demo opportunities
+      // Go through messages and add recordings after specific agent questions
       for (let i = 0; i < conversation.messages.length - 1; i++) {
         const current = conversation.messages[i];
         const next = conversation.messages[i + 1];
         
-        // Check for the specific pattern from the screenshot:
-        // "Okay, one minute..." followed by a response containing a table
-        if (
-          current.content.includes("Okay, one minute") && 
-          next.content.includes("[table]")
-        ) {
-          records[`${current.id}-${next.id}`] = {
-            id: `demo-${i}`,
-            duration: "54 seconds",
-            timestamp: new Date().toISOString()
-          };
-          console.log(`Added demo record between: "${current.content}" and "${next.content}"`);
-        }
-        
-        // Check for other assistant questions followed by user responses with data
-        // This pattern often indicates a demonstration happened
-        if (
-          current.role === "assistant" &&
-          next.role === "user" &&
-          (current.content.toLowerCase().includes("show me") || 
-           current.content.toLowerCase().includes("can you please show") ||
-           current.content.toLowerCase().includes("please show")) && 
-          (next.content.includes("[table]") || 
-           next.content.includes("Here is") ||
-           next.content.includes("I found"))
-        ) {
-          records[`${current.id}-${next.id}`] = {
-            id: `demo-${i}`,
-            duration: "54 seconds",
-            timestamp: new Date().toISOString()
-          };
-          console.log(`Added demo record between: "${current.content}" and "${next.content}"`);
+        // Specifically look for messages where the agent asks to be shown something
+        if (current.role === "assistant" && 
+            (current.content.includes("show me") || 
+             current.content.includes("Can you show me") ||
+             current.content.includes("please show"))) {
+          
+          // For the first instance, set 54s duration
+          if (current.id === "msg-9" && next.id === "msg-10") {
+            recordings[current.id] = {
+              id: `recording-${i}`,
+              duration: "54s",
+              timestamp: new Date().toISOString()
+            };
+          }
+          // For the second instance, set 76s duration
+          else if (current.id === "msg-14" && next.id === "msg-15") {
+            recordings[current.id] = {
+              id: `recording-${i}`,
+              duration: "76s",
+              timestamp: new Date().toISOString()
+            };
+          }
         }
       }
       
-      console.log("Demo records created:", records);
-      setDemoRecords(records);
+      console.log("Screen recordings created:", recordings);
+      setScreenRecordings(recordings);
       
-      // Show toast notification about demo records
-      if (Object.keys(records).length > 0) {
+      // Show toast notification about screen recordings
+      if (Object.keys(recordings).length > 0) {
         toast({
-          title: "Demonstration records loaded",
-          description: `Loaded ${Object.keys(records).length} demonstration records in this conversation.`
+          title: "Screen recordings loaded",
+          description: `Loaded ${Object.keys(recordings).length} screen recordings in this conversation.`
         });
       }
     } else {
       setMessages([]);
-      setDemoRecords({});
+      setScreenRecordings({});
     }
   }, [conversationId]);
 
@@ -143,10 +132,9 @@ export const ChatInterface = ({
     autoResizeTextarea();
   };
 
-  // Function to check if there's a demonstration record between messages
-  const hasDemoRecord = (currentMsg: Message, nextMsg: Message) => {
-    const key = `${currentMsg.id}-${nextMsg.id}`;
-    return key in demoRecords;
+  // Function to check if there's a screen recording for a message
+  const hasScreenRecording = (message: Message) => {
+    return message.id in screenRecordings;
   };
 
   return (
@@ -173,12 +161,12 @@ export const ChatInterface = ({
                   </div>
                 </div>
                 
-                {/* Demonstration record indicator */}
-                {index < messages.length - 1 && hasDemoRecord(message, messages[index + 1]) && (
-                  <div className="flex justify-center my-6">
+                {/* Screen recording indicator - show after messages where asked to be shown something */}
+                {hasScreenRecording(message) && (
+                  <div className="flex justify-center my-4">
                     <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
-                      <Video className="w-4 h-4" />
-                      <span>Demonstration record, {demoRecords[`${message.id}-${messages[index + 1].id}`]?.duration}</span>
+                      <Film className="w-4 h-4" />
+                      <span>Screen recording, {screenRecordings[message.id]?.duration}</span>
                     </div>
                   </div>
                 )}
