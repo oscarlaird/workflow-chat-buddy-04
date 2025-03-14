@@ -6,6 +6,11 @@ import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import { mockConversations } from "@/data/mockData";
 import { useToast } from "@/components/ui/use-toast";
+import { 
+  ResizablePanelGroup, 
+  ResizablePanel, 
+  ResizableHandle 
+} from "@/components/ui/resizable";
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -118,18 +123,37 @@ const Index = () => {
           
           {/* Chat and Workflow Area */}
           <div className="flex-1 flex items-stretch p-4 gap-4 overflow-hidden">
-            {/* Chat Interface */}
-            <div className="flex-1 min-w-0 glass-panel animate-fade-in">
-              <ChatInterface
-                conversationId={selectedConversationId}
-                onSendMessage={handleSendMessage}
-              />
-            </div>
-            
-            {/* Workflow Panel */}
-            <div className="hidden md:block w-1/2 min-w-[450px] max-w-[550px] glass-panel animate-fade-in">
-              <WorkflowPanel onRunWorkflow={handleRunWorkflow} />
-            </div>
+            <ResizablePanelGroup 
+              direction="horizontal"
+              className="w-full h-full gap-4"
+            >
+              {/* Chat Interface */}
+              <ResizablePanel 
+                defaultSize={50} 
+                minSize={30}
+                className="min-w-[300px]"
+              >
+                <div className="h-full glass-panel animate-fade-in">
+                  <ChatInterface
+                    conversationId={selectedConversationId}
+                    onSendMessage={handleSendMessage}
+                  />
+                </div>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              {/* Workflow Panel */}
+              <ResizablePanel 
+                defaultSize={50} 
+                minSize={25} 
+                className="hidden md:block min-w-[300px]"
+              >
+                <div className="h-full glass-panel animate-fade-in">
+                  <WorkflowPanel onRunWorkflow={handleRunWorkflow} />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </div>
         </div>
       </div>
