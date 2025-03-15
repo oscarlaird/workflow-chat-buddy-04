@@ -33,8 +33,15 @@ export const ChatInterface = ({
     setTimeout(async () => {
       onSendMessage(inputValue);
       
-      // Add the automated "Okay" response from the assistant
-      await addMessage("Okay", "assistant");
+      // Determine the assistant's response based on content
+      const containsReady = inputValue.toLowerCase().includes("ready");
+      
+      // Add the appropriate assistant response
+      if (containsReady) {
+        await addMessage("I'm ready when you are. Click the button below to start screen recording.", "assistant");
+      } else {
+        await addMessage("Okay", "assistant");
+      }
       
       setIsLoading(false);
     }, 800);

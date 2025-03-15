@@ -29,37 +29,16 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
 
   const loadMessages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('chat_id', conversationId)
-        .order('created_at', { ascending: true });
-      
-      if (error) {
-        console.error('Error loading messages:', error);
-        return;
-      }
-      
-      if (data && data.length > 0) {
-        // Convert Supabase data to Message format
-        const loadedMessages = data.map(msg => ({
-          id: msg.id,
-          role: msg.role as "user" | "assistant",
-          content: msg.content
-        }));
-        setMessages(loadedMessages);
+      // Load from mock data instead of database
+      const conversation = mockConversations.find(conv => conv.id === conversationId);
+      if (conversation) {
+        setMessages(conversation.messages);
+        
+        // Create screen recordings for specific messages
+        createMockScreenRecordings(conversation.messages);
       } else {
-        // If no messages in database, use mock data
-        const conversation = mockConversations.find(conv => conv.id === conversationId);
-        if (conversation) {
-          setMessages(conversation.messages);
-          
-          // Create screen recordings for specific messages
-          createMockScreenRecordings(conversation.messages);
-        } else {
-          setMessages([]);
-          setScreenRecordings({});
-        }
+        setMessages([]);
+        setScreenRecordings({});
       }
     } catch (error) {
       console.error('Error in loadMessages:', error);
@@ -112,26 +91,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   };
 
   const saveMessageToSupabase = async (message: Message, messageRole: "user" | "assistant") => {
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .insert({
-          chat_id: chatId,
-          role: messageRole,
-          content: message.content
-        });
-      
-      if (error) {
-        console.error('Error saving message to Supabase:', error);
-        toast({
-          title: "Error saving message",
-          description: "There was a problem saving your message.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Exception saving message:', error);
-    }
+    // Skip saving to database when using mock data
+    return;
   };
 
   const addMessage = async (content: string, role: "user" | "assistant") => {
@@ -143,8 +104,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     
     setMessages(prev => [...prev, newMessage]);
     
-    // Save message to Supabase
-    await saveMessageToSupabase(newMessage, role);
+    // Skip saving to Supabase
+    // await saveMessageToSupabase(newMessage, role);
     
     return newMessage;
   };
