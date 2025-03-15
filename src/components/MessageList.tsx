@@ -3,7 +3,6 @@ import { useRef, useEffect } from "react";
 import { Film } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
-import { Button } from "@/components/ui/button";
 
 interface MessageListProps {
   messages: Message[];
@@ -24,14 +23,6 @@ export const MessageList = ({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleStartScreenRecording = () => {
-    window.postMessage({ type: "START_SCREEN_RECORDING" }, "*");
-  };
-
-  const shouldShowRecordingButton = (content: string) => {
-    return content.toLowerCase().includes("ready");
   };
 
   if (messages.length === 0) {
@@ -58,19 +49,6 @@ export const MessageList = ({
               {message.content}
             </div>
           </div>
-          
-          {/* Screen Recording Button */}
-          {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
-            <div className="flex justify-center mt-4">
-              <Button 
-                onClick={handleStartScreenRecording}
-                className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
-              >
-                <Film className="w-5 h-5" />
-                Start Screen Recording
-              </Button>
-            </div>
-          )}
           
           {/* Screen recording indicator */}
           {hasScreenRecording(message) && (
