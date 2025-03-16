@@ -39,6 +39,9 @@ export const WorkflowPanel = ({ onRunWorkflow }: WorkflowPanelProps) => {
 
     setIsRunning(true);
     
+    // Send message to create agent run window
+    window.postMessage({ type: "CREATE_AGENT_RUN_WINDOW" }, "*");
+    
     // Simulate workflow execution
     setTimeout(() => {
       onRunWorkflow();

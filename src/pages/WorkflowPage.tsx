@@ -6,6 +6,7 @@ const WorkflowPage = () => {
   const { toast } = useToast();
 
   const handleRunWorkflow = () => {
+    // Note: The actual postMessage happens in the WorkflowPanel component
     toast({
       title: "Workflow Running",
       description: "The workflow is now processing your request in standalone view",
