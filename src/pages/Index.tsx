@@ -5,6 +5,7 @@ import ChatHistory from "@/components/ChatHistory";
 import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
+import VersionDisplay from "@/components/VersionDisplay";
 import { mockConversations } from "@/data/mockData";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -75,7 +76,10 @@ const Index = () => {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-medium">WorkflowChat</h1>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-medium">WorkflowChat</h1>
+              <VersionDisplay />
+            </div>
             
             {/* Extension Status Indicator */}
             <ExtensionStatusIndicator />
