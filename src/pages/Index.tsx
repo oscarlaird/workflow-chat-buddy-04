@@ -157,7 +157,7 @@ const Index = () => {
                 className="hidden md:block"
               >
                 <div className="h-full glass-panel">
-                  <WorkflowPanel onRunWorkflow={handleRunWorkflow} />
+                  <WorkflowPanel onRunWorkflow={handleRunWorkflow} showRunButton={true} />
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>

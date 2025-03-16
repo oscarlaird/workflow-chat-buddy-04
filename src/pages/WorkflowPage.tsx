@@ -17,7 +17,7 @@ const WorkflowPage = () => {
     <div className="h-screen bg-gray-50 dark:bg-gray-950">
       <div className="h-full p-4">
         <div className="h-full glass-panel">
-          <WorkflowPanel onRunWorkflow={handleRunWorkflow} />
+          <WorkflowPanel onRunWorkflow={handleRunWorkflow} showRunButton={false} />
         </div>
       </div>
     </div>

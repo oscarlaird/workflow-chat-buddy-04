@@ -10,9 +10,10 @@ import { toast } from "@/components/ui/use-toast";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
+  showRunButton?: boolean;
 }
 
-export const WorkflowPanel = ({ onRunWorkflow }: WorkflowPanelProps) => {
+export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [workflow, setWorkflow] = useState(mockWorkflow);
   const [state, setState] = useState("");
@@ -49,8 +50,6 @@ export const WorkflowPanel = ({ onRunWorkflow }: WorkflowPanelProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-xl font-medium mb-4">Workflow</h2>
-        
         <div className="space-y-4 mb-4">
           <div className="space-y-2">
             <Label htmlFor="state" className="flex items-center gap-1.5">
@@ -85,23 +84,25 @@ export const WorkflowPanel = ({ onRunWorkflow }: WorkflowPanelProps) => {
           </div>
         </div>
         
-        <button
-          onClick={handleRunWorkflow}
-          disabled={isRunning}
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
-        >
-          {isRunning ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Running...</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-5 h-5" />
-              <span>Run Workflow</span>
-            </>
-          )}
-        </button>
+        {showRunButton && (
+          <button
+            onClick={handleRunWorkflow}
+            disabled={isRunning}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
+          >
+            {isRunning ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Running...</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5" />
+                <span>Run Workflow</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
       
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-secondary/50">
