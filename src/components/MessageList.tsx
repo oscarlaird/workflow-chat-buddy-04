@@ -1,6 +1,6 @@
 
 import { useRef, useEffect } from "react";
-import { Film } from "lucide-react";
+import { Film, Download } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,12 @@ export const MessageList = ({
 
   const handleStartScreenRecording = () => {
     window.postMessage({ type: "START_SCREEN_RECORDING" }, "*");
+  };
+
+  const isExtensionInstalled = () => {
+    return typeof window !== 'undefined' && 
+           window.hasOwnProperty('macroAgentsExtensionInstalled') &&
+           (window as any).macroAgentsExtensionInstalled === true;
   };
 
   const shouldShowRecordingButton = (content: string) => {
@@ -59,16 +65,31 @@ export const MessageList = ({
             </div>
           </div>
           
-          {/* Screen Recording Button */}
+          {/* Screen Recording Button or Extension Download Prompt */}
           {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
             <div className="flex justify-center mt-4">
-              <Button 
-                onClick={handleStartScreenRecording}
-                className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
-              >
-                <Film className="w-5 h-5" />
-                Start Screen Recording
-              </Button>
+              {isExtensionInstalled() ? (
+                <Button 
+                  onClick={handleStartScreenRecording}
+                  className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
+                >
+                  <Film className="w-5 h-5" />
+                  Start Screen Recording
+                </Button>
+              ) : (
+                <div className="flex flex-col items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-center">
+                  <p className="text-amber-800 dark:text-amber-300 mb-2">
+                    To use screen recording, you need to install the Macro Agents extension first.
+                  </p>
+                  <Button 
+                    onClick={() => window.open('https://chrome.google.com/webstore/category/extensions', '_blank')}
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download Extension
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           

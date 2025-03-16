@@ -21,6 +21,12 @@ export const ChatInterface = ({
     hasScreenRecording 
   } = useConversations({ conversationId });
 
+  const isExtensionInstalled = () => {
+    return typeof window !== 'undefined' && 
+           window.hasOwnProperty('macroAgentsExtensionInstalled') &&
+           (window as any).macroAgentsExtensionInstalled === true;
+  };
+
   const handleSubmit = async (inputValue: string) => {
     if (!inputValue.trim()) return;
     
@@ -38,7 +44,11 @@ export const ChatInterface = ({
       
       // Add the appropriate assistant response
       if (containsReady) {
-        await addMessage("I'm ready when you are. Click the button below to start screen recording.", "assistant");
+        const responseMessage = isExtensionInstalled()
+          ? "I'm ready when you are. Click the button below to start screen recording."
+          : "I'm ready when you are. You'll need to install the Macro Agents extension to record your screen.";
+          
+        await addMessage(responseMessage, "assistant");
       } else {
         await addMessage("Okay", "assistant");
       }
