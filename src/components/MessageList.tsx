@@ -9,12 +9,14 @@ interface MessageListProps {
   messages: Message[];
   hasScreenRecording: (message: Message) => boolean;
   screenRecordings: Record<string, ScreenRecording>;
+  isExtensionInstalled: boolean;
 }
 
 export const MessageList = ({ 
   messages, 
   hasScreenRecording, 
-  screenRecordings 
+  screenRecordings,
+  isExtensionInstalled
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -28,12 +30,6 @@ export const MessageList = ({
 
   const handleStartScreenRecording = () => {
     window.postMessage({ type: "START_SCREEN_RECORDING" }, "*");
-  };
-
-  const isExtensionInstalled = () => {
-    return typeof window !== 'undefined' && 
-           window.hasOwnProperty('macroAgentsExtensionInstalled') &&
-           (window as any).macroAgentsExtensionInstalled === true;
   };
 
   const shouldShowRecordingButton = (content: string) => {
@@ -68,7 +64,7 @@ export const MessageList = ({
           {/* Screen Recording Button or Extension Download Prompt */}
           {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
             <div className="flex justify-center mt-4">
-              {isExtensionInstalled() ? (
+              {isExtensionInstalled ? (
                 <Button 
                   onClick={handleStartScreenRecording}
                   className="flex items-center gap-2 bg-red-500 hover:bg-red-600"

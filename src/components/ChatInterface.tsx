@@ -79,7 +79,8 @@ export const ChatInterface = ({
         <MessageList 
           messages={messages} 
           hasScreenRecording={hasScreenRecording} 
-          screenRecordings={screenRecordings} 
+          screenRecordings={screenRecordings}
+          isExtensionInstalled={isExtensionInstalled}
         />
       </div>
 
