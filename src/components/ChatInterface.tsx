@@ -2,6 +2,7 @@
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
+import { useState, useEffect } from "react";
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -20,12 +21,27 @@ export const ChatInterface = ({
     addMessage, 
     hasScreenRecording 
   } = useConversations({ conversationId });
+  
+  const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
 
-  const isExtensionInstalled = () => {
-    return typeof window !== 'undefined' && 
-           window.hasOwnProperty('macroAgentsExtensionInstalled') &&
-           (window as any).macroAgentsExtensionInstalled === true;
-  };
+  useEffect(() => {
+    // Function to handle messages from the extension
+    const handleExtensionMessage = (event: MessageEvent) => {
+      // Check if the message is from our extension
+      if (event.data && event.data.type === "EXTENSION_INSTALLED") {
+        console.log("Extension installation detected in ChatInterface:", event.data);
+        setIsExtensionInstalled(true);
+      }
+    };
+
+    // Add the event listener
+    window.addEventListener("message", handleExtensionMessage);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("message", handleExtensionMessage);
+    };
+  }, []);
 
   const handleSubmit = async (inputValue: string) => {
     if (!inputValue.trim()) return;
@@ -44,7 +60,7 @@ export const ChatInterface = ({
       
       // Add the appropriate assistant response
       if (containsReady) {
-        const responseMessage = isExtensionInstalled()
+        const responseMessage = isExtensionInstalled
           ? "I'm ready when you are. Click the button below to start screen recording."
           : "I'm ready when you are. You'll need to install the Macro Agents extension to record your screen.";
           

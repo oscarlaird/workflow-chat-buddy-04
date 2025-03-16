@@ -5,24 +5,23 @@ import { Check, X } from "lucide-react";
 export const ExtensionStatusIndicator = () => {
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
 
-  const checkExtensionStatus = () => {
-    const installed = typeof window !== 'undefined' && 
-      window.hasOwnProperty('macroAgentsExtensionInstalled') &&
-      (window as any).macroAgentsExtensionInstalled === true;
-    
-    setIsInstalled(installed);
-    console.log("Extension status check:", installed);
-  };
-
   useEffect(() => {
-    // Check immediately on mount
-    checkExtensionStatus();
+    // Function to handle messages from the extension
+    const handleExtensionMessage = (event: MessageEvent) => {
+      // Check if the message is from our extension
+      if (event.data && event.data.type === "EXTENSION_INSTALLED") {
+        console.log("Extension installation detected via message:", event.data);
+        setIsInstalled(true);
+      }
+    };
+
+    // Add the event listener
+    window.addEventListener("message", handleExtensionMessage);
     
-    // Set up interval to check every 500ms
-    const intervalId = setInterval(checkExtensionStatus, 500);
-    
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("message", handleExtensionMessage);
+    };
   }, []);
 
   return (
