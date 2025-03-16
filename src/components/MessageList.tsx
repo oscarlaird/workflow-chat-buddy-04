@@ -29,7 +29,7 @@ export const MessageList = ({
   };
 
   const handleStartScreenRecording = () => {
-    window.postMessage({ type: "START_SCREEN_RECORDING" }, "*");
+    window.postMessage({ type: "CREATE_RECORDING_WINDOW" }, "*");
   };
 
   const shouldShowRecordingButton = (content: string) => {
