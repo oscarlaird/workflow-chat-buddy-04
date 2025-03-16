@@ -19,24 +19,6 @@ export const WorkflowPanel = ({ onRunWorkflow }: WorkflowPanelProps) => {
   const [billInput, setBillInput] = useState("");
 
   const handleRunWorkflow = () => {
-    if (!state) {
-      toast({
-        title: "Missing information",
-        description: "Please select a state before running the workflow",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!billInput) {
-      toast({
-        title: "Missing information",
-        description: "Please enter a bill number or name before running the workflow",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsRunning(true);
     
     // Send message to create agent run window
