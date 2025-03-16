@@ -4,6 +4,7 @@ import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
 import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
+import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 import { mockConversations } from "@/data/mockData";
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -75,6 +76,9 @@ const Index = () => {
               <Menu className="w-5 h-5" />
             </button>
             <h1 className="text-xl font-medium">WorkflowChat</h1>
+            
+            {/* Extension Status Indicator */}
+            <ExtensionStatusIndicator />
           </div>
           
           <div className="flex items-center gap-2">
