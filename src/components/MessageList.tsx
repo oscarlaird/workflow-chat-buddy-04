@@ -1,6 +1,5 @@
-
 import { useRef, useEffect } from "react";
-import { Film, Download, Loader2 } from "lucide-react";
+import { Film, Download, Loader2, Circle, CheckCircle } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
@@ -74,6 +73,24 @@ export const MessageList = ({
                 ? "bg-primary text-primary-foreground" 
                 : "bg-muted"
             }`}>
+              <div className="flex justify-between items-start mb-1">
+                {message.role === "assistant" && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                    {streamingMessageIds.has(message.id) ? (
+                      <>
+                        <Circle className="h-3 w-3 fill-current text-amber-500 animate-pulse" />
+                        <span>Streaming</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-3 w-3 text-green-500" />
+                        <span>Completed</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+              
               {message.content ? (
                 formatMessageContent(message.content)
               ) : message.role === "assistant" ? (
@@ -83,16 +100,11 @@ export const MessageList = ({
                   <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse delay-300" />
                 </div>
               ) : null}
+              
               {pendingMessageIds.has(message.id) && (
                 <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Sending...</span>
-                </div>
-              )}
-              {streamingMessageIds.has(message.id) && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Streaming...</span>
                 </div>
               )}
             </div>
