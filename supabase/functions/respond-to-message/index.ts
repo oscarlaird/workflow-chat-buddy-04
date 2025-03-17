@@ -26,14 +26,31 @@ serve(async (req) => {
     
     console.log(`Creating assistant response for conversation ${conversationId}`);
     
+    // Retrieve the last message from the user to create a contextual response
+    const { data: lastMessages, error: fetchError } = await supabaseAdmin
+      .from('messages')
+      .select('*')
+      .eq('chat_id', conversationId)
+      .eq('role', 'user')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (fetchError) {
+      console.error('Error fetching last message:', fetchError);
+      throw fetchError;
+    }
+    
+    const lastMessage = lastMessages && lastMessages.length > 0 ? lastMessages[0].content : '';
+    const responseContent = `Responding to: "${lastMessage}". This is a test response from the AI assistant.`;
+    
     // Create an assistant response
     const { data, error } = await supabaseAdmin
       .from('messages')
       .insert({
         chat_id: conversationId,
         role: 'assistant',
-        content: 'testing',
-        username: username
+        content: responseContent,
+        username: 'assistant'
       });
       
     if (error) {
