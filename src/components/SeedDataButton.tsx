@@ -22,7 +22,7 @@ export const SeedDataButton = () => {
         
         toast({
           title: "Example workflow loaded",
-          description: "You can now explore the conversation and workflow."
+          description: "You can now explore the Vote Data Scraping workflow."
         });
       }
     } finally {
@@ -39,7 +39,7 @@ export const SeedDataButton = () => {
       className="gap-2 text-xs"
     >
       {isSeeding && <Loader2 className="h-3 w-3 animate-spin" />}
-      {isSeeding ? 'Loading examples...' : 'Load example workflow'}
+      {isSeeding ? 'Loading example...' : 'Load example workflow'}
     </Button>
   );
 };

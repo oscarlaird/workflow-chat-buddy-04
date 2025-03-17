@@ -1,4 +1,3 @@
-
 import { Conversation, Workflow } from "@/types";
 
 export const mockConversations: Conversation[] = [
@@ -138,39 +137,6 @@ export const mockConversations: Conversation[] = [
         content: "Happy to assist."
       },
     ]
-  },
-  {
-    id: "conv-2",
-    title: "Multiple Bills Analysis",
-    date: "Yesterday",
-    messages: [
-      {
-        id: "msg-1",
-        role: "user",
-        content: "Can you please run this for multiple bills at the same time?"
-      },
-      {
-        id: "msg-2",
-        role: "assistant",
-        content: "Yes, just a minute...\nOkay, you can input as many bills as you like"
-      },
-      {
-        id: "msg-3",
-        role: "user",
-        content: "Hmmm. This isn't quite right, I want to the votes for each bill to be in the same spreadsheet; one column per bill."
-      },
-      {
-        id: "msg-4",
-        role: "assistant",
-        content: "Okay, let me think...\nThe bills should now appear in a single spreadsheet."
-      }
-    ]
-  },
-  {
-    id: "conv-3",
-    title: "Data Export Options",
-    date: "March 20",
-    messages: []
   }
 ];
 
