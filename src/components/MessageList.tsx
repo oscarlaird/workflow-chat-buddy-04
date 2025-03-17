@@ -67,11 +67,15 @@ export const MessageList = ({
       {messages.map((message, index) => (
         <div key={message.id} className="space-y-4">
           <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
-              message.role === "user" 
-                ? "bg-primary text-primary-foreground" 
-                : "bg-muted"
-            }`}>
+            <div 
+              className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
+                message.role === "user" 
+                  ? "bg-primary text-primary-foreground" 
+                  : streamingMessageIds.has(message.id)
+                    ? "bg-muted animate-pulse-soft" 
+                    : "bg-muted"
+              }`}
+            >
               {message.content ? (
                 formatMessageContent(message.content)
               ) : message.role === "assistant" ? (
@@ -86,16 +90,6 @@ export const MessageList = ({
                 <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Sending...</span>
-                </div>
-              )}
-              
-              {message.role === "assistant" && (
-                <div className="absolute bottom-1 right-1">
-                  {streamingMessageIds.has(message.id) ? (
-                    <Circle className="h-3 w-3 fill-current text-amber-500 animate-pulse" />
-                  ) : (
-                    <CheckCircle className="h-3 w-3 text-green-500" />
-                  )}
                 </div>
               )}
             </div>
