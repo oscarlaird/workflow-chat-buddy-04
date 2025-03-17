@@ -2,7 +2,7 @@
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
@@ -41,6 +41,17 @@ export const ChatInterface = ({
     window.addEventListener("message", handleExtensionMessage);
     return () => window.removeEventListener("message", handleExtensionMessage);
   }, []);
+
+  // Memoize message update function to avoid recreating it on each render
+  const updateMessageContent = useCallback((messageId: string, newContent: string) => {
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, content: newContent } 
+          : msg
+      )
+    );
+  }, [setMessages]);
 
   // Set up real-time subscription to messages
   useEffect(() => {
@@ -99,18 +110,9 @@ export const ChatInterface = ({
         console.log('Received real-time UPDATE message:', payload);
         const updatedMessage = payload.new;
         
-        // Update the message content in our local state
-        setMessages(prev => {
-          return prev.map(msg => {
-            if (msg.id === updatedMessage.id) {
-              return {
-                ...msg,
-                content: updatedMessage.content
-              };
-            }
-            return msg;
-          });
-        });
+        // Use our memoized function to update the message content
+        // This should help with race conditions when updates come in rapidly
+        updateMessageContent(updatedMessage.id, updatedMessage.content);
       })
       .subscribe();
 
@@ -118,7 +120,7 @@ export const ChatInterface = ({
       console.log('Removing channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [conversationId, setMessages, localMessageIds]);
+  }, [conversationId, setMessages, localMessageIds, updateMessageContent]);
 
   const handleSubmit = async (inputValue: string) => {
     if (!inputValue.trim()) return;
