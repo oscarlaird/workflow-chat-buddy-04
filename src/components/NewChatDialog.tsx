@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,17 @@ export const NewChatDialog = ({
   isLoading 
 }: NewChatDialogProps) => {
   const [title, setTitle] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the input when dialog opens
+  useEffect(() => {
+    if (open && inputRef.current) {
+      // Use a small timeout to ensure the dialog is fully rendered
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,11 +48,11 @@ export const NewChatDialog = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Input
+              ref={inputRef}
               placeholder="Workflow title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={isLoading}
-              autoFocus
             />
           </div>
           <DialogFooter>
