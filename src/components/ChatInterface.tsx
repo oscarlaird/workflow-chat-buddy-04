@@ -3,6 +3,7 @@ import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -51,26 +52,31 @@ export const ChatInterface = ({
     // Add user message immediately with username
     await addMessage(inputValue, "user");
     
-    // Simulate sending message to API
-    setTimeout(async () => {
-      onSendMessage(inputValue);
+    try {
+      // Call the Supabase edge function
+      const { data, error } = await supabase.functions.invoke('respond-to-message', {
+        body: { 
+          message: inputValue,
+          conversationId
+        }
+      });
       
-      // Determine the assistant's response based on content
-      const containsReady = inputValue.toLowerCase().includes("ready");
-      
-      // Add the appropriate assistant response with username
-      if (containsReady) {
-        const responseMessage = isExtensionInstalled
-          ? "I'm ready when you are. Click the button below to start screen recording."
-          : "I'm ready when you are. You'll need to install the Macro Agents extension to record your screen.";
-          
-        await addMessage(responseMessage, "assistant");
+      if (error) {
+        console.error('Error calling edge function:', error);
+        // Fallback to default response if edge function fails
+        await addMessage("Sorry, there was an error processing your message.", "assistant");
       } else {
-        await addMessage("Okay", "assistant");
+        // Use the response from the edge function
+        await addMessage(data.message, "assistant");
       }
-      
+    } catch (err) {
+      console.error('Exception when calling edge function:', err);
+      // Fallback if exception occurs
+      await addMessage("An unexpected error occurred.", "assistant");
+    } finally {
       setIsLoading(false);
-    }, 800);
+      onSendMessage(inputValue);
+    }
   };
 
   return (
