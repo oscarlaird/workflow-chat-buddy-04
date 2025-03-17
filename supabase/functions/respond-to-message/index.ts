@@ -15,39 +15,25 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Received request to respond-to-message function');
-    
     // Parse the request body to get the message data
-    const requestData = await req.json();
-    console.log('Request data:', requestData);
+    const { conversationId, username } = await req.json();
     
-    // Create a Supabase client with the service role key to bypass RLS
+    // Create a Supabase client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    // Extract message information
-    const { message, conversationId, username } = requestData;
-    
     // Create an assistant response
-    const { data, error } = await supabaseAdmin
+    await supabaseAdmin
       .from('messages')
       .insert({
         chat_id: conversationId,
         role: 'assistant',
         content: 'testing',
-        username: username  // Use the same username
+        username: username
       });
     
-    if (error) {
-      console.error('Error adding assistant message to database:', error);
-      throw new Error('Failed to insert assistant message');
-    }
-    
-    console.log('Added assistant response to database');
-    
-    // Return success response
     return new Response(
       JSON.stringify({ success: true }),
       {
@@ -56,8 +42,6 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in respond-to-message function:', error);
-    
     return new Response(
       JSON.stringify({ error: error.message }),
       {

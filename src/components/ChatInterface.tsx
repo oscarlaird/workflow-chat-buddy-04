@@ -15,11 +15,10 @@ export const ChatInterface = ({
   onSendMessage
 }: ChatInterfaceProps) => {
   const { 
-    messages, 
-    screenRecordings, 
+    messages,
+    screenRecordings,
     isLoading, 
-    setIsLoading, 
-    addMessage, 
+    setIsLoading,
     hasScreenRecording,
     setMessages 
   } = useConversations({ conversationId });
@@ -27,31 +26,20 @@ export const ChatInterface = ({
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
 
   useEffect(() => {
-    // Function to handle messages from the extension
     const handleExtensionMessage = (event: MessageEvent) => {
-      // Check if the message is from our extension
       if (event.data && event.data.type === "EXTENSION_INSTALLED") {
-        console.log("Extension installation detected in ChatInterface:", event.data);
         setIsExtensionInstalled(true);
       }
     };
 
-    // Add the event listener
     window.addEventListener("message", handleExtensionMessage);
-    
-    // Clean up the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("message", handleExtensionMessage);
-    };
+    return () => window.removeEventListener("message", handleExtensionMessage);
   }, []);
 
   // Set up real-time subscription to messages
   useEffect(() => {
     if (!conversationId) return;
-
-    console.log("Setting up real-time subscription for chat:", conversationId);
     
-    // Subscribe to messages for this conversation
     const channel = supabase
       .channel('public:messages')
       .on('postgres_changes', {
@@ -60,10 +48,7 @@ export const ChatInterface = ({
         table: 'messages',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
-        console.log("Real-time message received:", payload);
         const newMessage = payload.new;
-        
-        // Add the message to the UI
         setMessages(prev => [
           ...prev, 
           {
@@ -76,7 +61,6 @@ export const ChatInterface = ({
       })
       .subscribe();
 
-    // Clean up subscription
     return () => {
       supabase.removeChannel(channel);
     };
@@ -89,30 +73,23 @@ export const ChatInterface = ({
     
     try {
       // Save user message to database
-      const { data, error } = await supabase
+      await supabase
         .from('messages')
         .insert({
           chat_id: conversationId,
           role: 'user',
           content: inputValue,
-          username: 'current_user' // Default username for new messages
+          username: 'current_user'
         });
-      
-      if (error) {
-        console.error('Error saving message:', error);
-        return;
-      }
       
       // Trigger the edge function to respond
       await supabase.functions.invoke('respond-to-message', {
         body: { 
-          message: inputValue,
           conversationId,
-          username: 'current_user' // Pass the same username
+          username: 'current_user'
         }
       });
       
-      // Notification that message was sent
       onSendMessage(inputValue);
     } catch (err) {
       console.error('Exception when processing message:', err);

@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 // Interface to represent a screen recording
 export interface ScreenRecording {
   id: string;
-  duration: string; // e.g., "54s"
+  duration: string;
   timestamp: string;
 }
 
@@ -30,7 +30,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   const loadMessages = async () => {
     try {
       if (conversationId) {
-        // First try to load from Supabase
         const { data, error } = await supabase
           .from('messages')
           .select('*')
@@ -39,10 +38,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
         
         if (error) {
           console.error('Error loading messages from Supabase:', error);
-          // Fall back to mock data
           loadMockData();
         } else if (data && data.length > 0) {
-          // Map Supabase data to Message type
           const messagesData = data.map(msg => ({
             id: msg.id,
             role: msg.role as "user" | "assistant",
@@ -52,11 +49,10 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           setMessages(messagesData);
           createMockScreenRecordings(messagesData);
         } else {
-          // No data found in Supabase, use mock data
-          loadMockData();
+          setMessages([]);
+          setScreenRecordings({});
         }
       } else {
-        // No conversation ID, start with empty state
         setMessages([]);
         setScreenRecordings({});
       }
@@ -67,7 +63,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   };
 
   const loadMockData = () => {
-    // Load from mock data as fallback
     const conversation = mockConversations.find(conv => conv.id === conversationId);
     if (conversation) {
       setMessages(conversation.messages);
@@ -81,18 +76,15 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   const createMockScreenRecordings = (messages: Message[]) => {
     const recordings: Record<string, ScreenRecording> = {};
     
-    // Go through messages and add recordings after specific agent questions
     for (let i = 0; i < messages.length - 1; i++) {
       const current = messages[i];
       const next = messages[i + 1];
       
-      // Specifically look for messages where the agent asks to be shown something
       if (current.role === "assistant" && 
           (current.content.includes("show me") || 
           current.content.includes("Can you show me") ||
           current.content.includes("please show"))) {
         
-        // For the first instance, set 54s duration
         if (current.id === "msg-9" && next.id === "msg-10") {
           recordings[current.id] = {
             id: `recording-${i}`,
@@ -100,7 +92,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
             timestamp: new Date().toISOString()
           };
         }
-        // For the second instance, set 76s duration
         else if (current.id === "msg-14" && next.id === "msg-15") {
           recordings[current.id] = {
             id: `recording-${i}`,
@@ -111,10 +102,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
       }
     }
     
-    console.log("Screen recordings created:", recordings);
     setScreenRecordings(recordings);
     
-    // Show toast notification about screen recordings
     if (Object.keys(recordings).length > 0) {
       toast({
         title: "Screen recordings loaded",
@@ -123,50 +112,13 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     }
   };
 
-  const saveMessageToSupabase = async (message: Message, messageRole: "user" | "assistant") => {
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          id: message.id,
-          chat_id: conversationId,
-          role: messageRole,
-          content: message.content,
-          username: message.username || 'current_user'
-        });
-      
-      if (error) {
-        console.error('Error saving message to Supabase:', error);
-      }
-    } catch (err) {
-      console.error('Exception saving message to Supabase:', err);
-    }
-  };
-
-  const addMessage = async (content: string, role: "user" | "assistant") => {
-    const newMessage: Message = {
-      id: `${role}-${Date.now()}`,
-      role,
-      content,
-      username: "current_user" // Default username for new messages
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Save to Supabase
-    await saveMessageToSupabase(newMessage, role);
-    
-    return newMessage;
-  };
-
   return {
     messages,
     screenRecordings,
     isLoading,
     setIsLoading,
     chatId,
-    addMessage,
     hasScreenRecording: (message: Message) => message.id in screenRecordings,
-    setMessages // Expose setMessages for real-time updates
+    setMessages
   };
 };
