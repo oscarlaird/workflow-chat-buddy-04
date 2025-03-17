@@ -7,14 +7,21 @@ import { toast } from "@/components/ui/use-toast";
 export const seedMockData = async () => {
   try {
     toast({
-      title: "Seeding mock data",
+      title: "Loading example data",
       description: "Please wait while we populate the database with sample conversations..."
     });
+
+    let firstChatId = null;
 
     // Create chats first
     for (const conversation of mockConversations) {
       // Generate a new UUID for this chat (to avoid potential conflicts)
       const chatId = uuidv4();
+      
+      // Save the ID of the first chat to return later
+      if (!firstChatId) {
+        firstChatId = chatId;
+      }
       
       // Insert the chat
       const { error: chatError } = await supabase
@@ -54,20 +61,25 @@ export const seedMockData = async () => {
     }
 
     toast({
-      title: "Mock data seeded successfully",
+      title: "Example data loaded successfully",
       description: `${mockConversations.length} conversations and their messages have been added to the database.`
     });
 
-    return true;
+    return { 
+      success: true,
+      chatId: firstChatId 
+    };
   } catch (error) {
     console.error('Error seeding mock data:', error);
     
     toast({
-      title: "Error seeding data",
+      title: "Error loading example data",
       description: error.message || "An unexpected error occurred",
       variant: "destructive"
     });
     
-    return false;
+    return { 
+      success: false 
+    };
   }
 };
