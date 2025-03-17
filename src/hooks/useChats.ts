@@ -16,9 +16,11 @@ export interface Chat {
 export const useChats = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [exampleChats, setExampleChats] = useState<Chat[]>([]);
+  const [systemExampleChats, setSystemExampleChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const currentUsername = 'current_user'; // The current user's username
+  const systemUsername = 'system'; // The system username for examples
   
   useEffect(() => {
     const fetchChats = async () => {
@@ -44,18 +46,32 @@ export const useChats = () => {
           setChats(userChats || []);
         }
         
-        // Fetch example chats - but only those created by the current user
-        const { data: examples, error: examplesError } = await supabase
+        // Fetch user-created example chats
+        const { data: userExamples, error: userExamplesError } = await supabase
           .from('chats')
           .select('*')
           .eq('is_example', true)
           .eq('username', currentUsername) // Only get the current user's example chats
           .order('created_at', { ascending: false });
           
-        if (examplesError) {
-          console.error('Error fetching example chats:', examplesError);
+        if (userExamplesError) {
+          console.error('Error fetching user example chats:', userExamplesError);
         } else {
-          setExampleChats(examples || []);
+          setExampleChats(userExamples || []);
+        }
+
+        // Fetch system example chats
+        const { data: systemExamples, error: systemExamplesError } = await supabase
+          .from('chats')
+          .select('*')
+          .eq('is_example', true)
+          .eq('username', systemUsername) // Get system example chats
+          .order('created_at', { ascending: false });
+          
+        if (systemExamplesError) {
+          console.error('Error fetching system example chats:', systemExamplesError);
+        } else {
+          setSystemExampleChats(systemExamples || []);
         }
       } catch (error) {
         console.error('Error in fetchChats:', error);
@@ -150,6 +166,7 @@ export const useChats = () => {
   return {
     chats,
     exampleChats,
+    systemExampleChats,
     isLoading,
     createChat,
     deleteChat

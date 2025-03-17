@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, PlusCircle, Sparkles } from "lucide-react";
+import { Loader2, PlusCircle, Sparkles, User } from "lucide-react";
 import { Chat } from "@/hooks/useChats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "@/components/ui/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 interface NewChatDialogProps {
   open: boolean;
@@ -16,6 +16,7 @@ interface NewChatDialogProps {
   onCreateChat: (title: string) => Promise<void>;
   isLoading: boolean;
   exampleChats: Chat[];
+  systemExampleChats: Chat[];
   onSelectExampleChat: (chatId: string) => void;
 }
 
@@ -25,6 +26,7 @@ export const NewChatDialog = ({
   onCreateChat, 
   isLoading,
   exampleChats,
+  systemExampleChats,
   onSelectExampleChat
 }: NewChatDialogProps) => {
   const [title, setTitle] = useState("");
@@ -32,17 +34,14 @@ export const NewChatDialog = ({
   const [copyingExampleId, setCopyingExampleId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus the input when dialog opens and create tab is active
   useEffect(() => {
     if (open && inputRef.current && activeTab === "create") {
-      // Use a longer timeout to ensure the dialog is fully rendered and visible
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
     }
   }, [open, activeTab]);
 
-  // Reset title and tab when dialog closes
   useEffect(() => {
     if (!open) {
       setTitle("");
@@ -63,7 +62,6 @@ export const NewChatDialog = ({
     setCopyingExampleId(exampleChat.id);
     
     try {
-      // 1. Create a new chat based on the example
       const newChatId = uuidv4();
       
       const { error: chatError } = await supabase
@@ -72,13 +70,12 @@ export const NewChatDialog = ({
           id: newChatId,
           title: exampleChat.title,
           created_at: new Date().toISOString(),
-          is_example: false, // This is a user chat, not an example
+          is_example: false,
           username: 'current_user'
         });
         
       if (chatError) throw chatError;
       
-      // 2. Get all messages from the example chat
       const { data: exampleMessages, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -87,14 +84,13 @@ export const NewChatDialog = ({
         
       if (messagesError) throw messagesError;
       
-      // 3. Copy all messages to the new chat
       if (exampleMessages && exampleMessages.length > 0) {
         const newMessages = exampleMessages.map(message => ({
           id: uuidv4(),
           chat_id: newChatId,
           role: message.role,
           content: message.content,
-          username: 'current_user', // Assign to current user
+          username: 'current_user',
           created_at: new Date().toISOString()
         }));
         
@@ -105,13 +101,12 @@ export const NewChatDialog = ({
         if (insertError) throw insertError;
       }
       
-      // 4. Close dialog and select the new chat
       onOpenChange(false);
       onSelectExampleChat(newChatId);
       
       toast({
         title: "Example workflow copied",
-        description: `"${exampleChat.title}" has been copied to your chats.`
+        description: `"${exampleChat.title}" has been copied to your chats."
       });
     } catch (error) {
       console.error('Error copying example chat:', error);
@@ -124,6 +119,8 @@ export const NewChatDialog = ({
       setCopyingExampleId(null);
     }
   };
+
+  const allExampleChats = [...systemExampleChats, ...exampleChats];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -181,31 +178,74 @@ export const NewChatDialog = ({
           
           <TabsContent value="examples" className="pt-4">
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              {exampleChats.length === 0 ? (
+              {allExampleChats.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No example workflows available</p>
                   <p className="text-sm mt-1">Example workflows may be added by the administrator</p>
                 </div>
               ) : (
-                exampleChats.map(chat => (
-                  <Button
-                    key={chat.id}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-3 px-4"
-                    onClick={() => handleExampleSelect(chat)}
-                    disabled={copyingExampleId === chat.id}
-                  >
-                    {copyingExampleId === chat.id ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-2 flex-shrink-0" />
-                    )}
-                    <div className="truncate">
-                      {chat.title}
-                      {copyingExampleId === chat.id && " (copying...)"}
+                <>
+                  {systemExampleChats.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm font-medium">System Examples</span>
+                      </div>
+                      <div className="space-y-2">
+                        {systemExampleChats.map(chat => (
+                          <Button
+                            key={chat.id}
+                            variant="outline"
+                            className="w-full justify-start text-left h-auto py-3 px-4"
+                            onClick={() => handleExampleSelect(chat)}
+                            disabled={copyingExampleId === chat.id}
+                          >
+                            {copyingExampleId === chat.id ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 mr-2 flex-shrink-0 text-yellow-500" />
+                            )}
+                            <div className="truncate">
+                              {chat.title}
+                              {copyingExampleId === chat.id && " (copying...)"}
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                  </Button>
-                ))
+                  )}
+                  
+                  {exampleChats.length > 0 && (
+                    <div>
+                      {systemExampleChats.length > 0 && <Separator className="my-4" />}
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium">Your Examples</span>
+                      </div>
+                      <div className="space-y-2">
+                        {exampleChats.map(chat => (
+                          <Button
+                            key={chat.id}
+                            variant="outline"
+                            className="w-full justify-start text-left h-auto py-3 px-4"
+                            onClick={() => handleExampleSelect(chat)}
+                            disabled={copyingExampleId === chat.id}
+                          >
+                            {copyingExampleId === chat.id ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 mr-2 flex-shrink-0 text-blue-500" />
+                            )}
+                            <div className="truncate">
+                              {chat.title}
+                              {copyingExampleId === chat.id && " (copying...)"}
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <DialogFooter className="mt-4">

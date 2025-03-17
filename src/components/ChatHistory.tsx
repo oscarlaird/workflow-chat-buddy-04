@@ -13,6 +13,7 @@ interface ChatHistoryProps {
   onNewConversation: () => void;
   chats: Chat[];
   exampleChats: Chat[];
+  systemExampleChats: Chat[];
   isLoading: boolean;
   onCreateChat: (title: string) => Promise<void>;
   onDeleteChat: (chatId: string) => Promise<void>;
@@ -24,6 +25,7 @@ export const ChatHistory = ({
   onNewConversation,
   chats,
   exampleChats,
+  systemExampleChats,
   isLoading,
   onCreateChat,
   onDeleteChat
@@ -171,6 +173,7 @@ export const ChatHistory = ({
         onCreateChat={handleCreateChat}
         isLoading={isCreatingChat}
         exampleChats={exampleChats}
+        systemExampleChats={systemExampleChats}
         onSelectExampleChat={onSelectConversation}
       />
     </div>

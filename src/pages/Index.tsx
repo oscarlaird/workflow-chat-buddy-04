@@ -18,7 +18,7 @@ import {
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const { chats, exampleChats, isLoading, createChat, deleteChat } = useChats();
+  const { chats, exampleChats, systemExampleChats, isLoading, createChat, deleteChat } = useChats();
   const [selectedConversationId, setSelectedConversationId] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -46,8 +46,10 @@ const Index = () => {
       setSelectedConversationId(chats[0].id);
     } else if (!isLoading && chats.length === 0 && exampleChats.length > 0 && !selectedConversationId) {
       setSelectedConversationId(exampleChats[0].id);
+    } else if (!isLoading && chats.length === 0 && systemExampleChats.length > 0 && !selectedConversationId) {
+      setSelectedConversationId(systemExampleChats[0].id);
     }
-  }, [chats, exampleChats, isLoading, selectedConversationId]);
+  }, [chats, exampleChats, systemExampleChats, isLoading, selectedConversationId]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -138,6 +140,7 @@ const Index = () => {
                 onNewConversation={handleNewConversation}
                 chats={chats}
                 exampleChats={exampleChats}
+                systemExampleChats={systemExampleChats}
                 isLoading={isLoading}
                 onCreateChat={handleCreateChat}
                 onDeleteChat={handleDeleteChat}
