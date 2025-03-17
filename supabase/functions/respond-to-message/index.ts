@@ -24,7 +24,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    console.log(`Creating assistant response for conversation ${conversationId}`);
+    console.log(`Function disabled - not creating assistant response for conversation ${conversationId}`);
+    
+    /*
+    // The following code is commented out to disable the mock response functionality
     
     // Retrieve the last message from the user to create a contextual response
     const { data: lastMessages, error: fetchError } = await supabaseAdmin
@@ -59,9 +62,10 @@ serve(async (req) => {
     }
     
     console.log('Successfully created assistant response');
+    */
     
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, message: "Function disabled - not creating assistant response" }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
