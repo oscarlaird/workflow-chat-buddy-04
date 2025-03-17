@@ -56,7 +56,7 @@ export const ChatInterface = ({
         table: 'messages',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
-        console.log('Received real-time message:', payload);
+        console.log('Received real-time INSERT message:', payload);
         const newMessage = payload.new;
         
         // Skip messages that were created locally (optimistic updates)
@@ -88,6 +88,28 @@ export const ChatInterface = ({
               username: newMessage.username
             }
           ];
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `chat_id=eq.${conversationId}`
+      }, (payload) => {
+        console.log('Received real-time UPDATE message:', payload);
+        const updatedMessage = payload.new;
+        
+        // Update the message content in our local state
+        setMessages(prev => {
+          return prev.map(msg => {
+            if (msg.id === updatedMessage.id) {
+              return {
+                ...msg,
+                content: updatedMessage.content
+              };
+            }
+            return msg;
+          });
         });
       })
       .subscribe();
