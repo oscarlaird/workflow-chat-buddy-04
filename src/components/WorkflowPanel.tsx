@@ -43,9 +43,9 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
             title: step.title,
             description: step.description,
             status: step.status as "complete" | "active" | "waiting",
-            screenshots: step.screenshots ? JSON.parse(step.screenshots) : undefined,
+            screenshots: step.screenshots ? JSON.parse(String(step.screenshots)) : undefined,
             code: step.code || undefined,
-            exampleData: step.example_data ? JSON.parse(step.example_data) : undefined,
+            exampleData: step.example_data ? JSON.parse(String(step.example_data)) : undefined,
           }));
 
           const completeSteps = workflowSteps.filter(step => step.status === "complete").length;
