@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Loader2, PlusCircle, Sparkles } from "lucide-react";
 import { Chat } from "@/hooks/useChats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from "@/components/ui/use-toast";
 
 interface NewChatDialogProps {
   open: boolean;
@@ -26,6 +29,7 @@ export const NewChatDialog = ({
 }: NewChatDialogProps) => {
   const [title, setTitle] = useState("");
   const [activeTab, setActiveTab] = useState<string>("create");
+  const [copyingExampleId, setCopyingExampleId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus the input when dialog opens and create tab is active
@@ -43,6 +47,7 @@ export const NewChatDialog = ({
     if (!open) {
       setTitle("");
       setActiveTab("create");
+      setCopyingExampleId(null);
     }
   }, [open]);
 
@@ -54,9 +59,70 @@ export const NewChatDialog = ({
     setTitle("");
   };
 
-  const handleExampleSelect = (chatId: string) => {
-    onSelectExampleChat(chatId);
-    onOpenChange(false);
+  const handleExampleSelect = async (exampleChat: Chat) => {
+    setCopyingExampleId(exampleChat.id);
+    
+    try {
+      // 1. Create a new chat based on the example
+      const newChatId = uuidv4();
+      
+      const { error: chatError } = await supabase
+        .from('chats')
+        .insert({
+          id: newChatId,
+          title: exampleChat.title,
+          created_at: new Date().toISOString(),
+          is_example: false, // This is a user chat, not an example
+          username: 'current_user'
+        });
+        
+      if (chatError) throw chatError;
+      
+      // 2. Get all messages from the example chat
+      const { data: exampleMessages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', exampleChat.id)
+        .order('created_at', { ascending: true });
+        
+      if (messagesError) throw messagesError;
+      
+      // 3. Copy all messages to the new chat
+      if (exampleMessages && exampleMessages.length > 0) {
+        const newMessages = exampleMessages.map(message => ({
+          id: uuidv4(),
+          chat_id: newChatId,
+          role: message.role,
+          content: message.content,
+          username: 'current_user', // Assign to current user
+          created_at: new Date().toISOString()
+        }));
+        
+        const { error: insertError } = await supabase
+          .from('messages')
+          .insert(newMessages);
+          
+        if (insertError) throw insertError;
+      }
+      
+      // 4. Close dialog and select the new chat
+      onOpenChange(false);
+      onSelectExampleChat(newChatId);
+      
+      toast({
+        title: "Example workflow copied",
+        description: `"${exampleChat.title}" has been copied to your chats.`
+      });
+    } catch (error) {
+      console.error('Error copying example chat:', error);
+      toast({
+        title: "Error copying example",
+        description: error.message || "Failed to copy the example workflow",
+        variant: "destructive"
+      });
+    } finally {
+      setCopyingExampleId(null);
+    }
   };
 
   return (
@@ -126,10 +192,18 @@ export const NewChatDialog = ({
                     key={chat.id}
                     variant="outline"
                     className="w-full justify-start text-left h-auto py-3 px-4"
-                    onClick={() => handleExampleSelect(chat.id)}
+                    onClick={() => handleExampleSelect(chat)}
+                    disabled={copyingExampleId === chat.id}
                   >
-                    <Sparkles className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <div className="truncate">{chat.title}</div>
+                    {copyingExampleId === chat.id ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin flex-shrink-0" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2 flex-shrink-0" />
+                    )}
+                    <div className="truncate">
+                      {chat.title}
+                      {copyingExampleId === chat.id && " (copying...)"}
+                    </div>
                   </Button>
                 ))
               )}

@@ -16,13 +16,10 @@ export const SeedDataButton = () => {
     try {
       const result = await seedMockData();
       
-      if (result && result.chatId) {
-        // Redirect to the newly seeded conversation
-        window.location.href = `/?id=${result.chatId}`;
-        
+      if (result && result.success) {
         toast({
-          title: "Example workflow loaded",
-          description: "You can now explore the Vote Data Scraping workflow."
+          title: "Example workflows loaded",
+          description: "You can now select example workflows when creating a new chat."
         });
       }
     } finally {
@@ -39,7 +36,7 @@ export const SeedDataButton = () => {
       className="gap-2 text-xs"
     >
       {isSeeding && <Loader2 className="h-3 w-3 animate-spin" />}
-      {isSeeding ? 'Loading example...' : 'Load example workflow'}
+      {isSeeding ? 'Loading examples...' : 'Load example workflows'}
     </Button>
   );
 };
