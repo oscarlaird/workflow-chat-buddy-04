@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { mockConversations } from "@/data/mockData";
+import { mockConversations } from "@/data/mockConversations";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "@/components/ui/use-toast";
 
@@ -66,7 +66,7 @@ export const seedMockData = async () => {
 
     toast({
       title: "Example data loaded successfully",
-      description: `${mockConversations.length} example workflows have been added to the database.`
+      description: `Example workflow has been added to the database.`
     });
 
     return { 
