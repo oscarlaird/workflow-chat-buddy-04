@@ -1,9 +1,21 @@
 
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import { useToast } from "@/components/ui/use-toast";
 
 const WorkflowPage = () => {
   const { toast } = useToast();
+  const location = useLocation();
+  const [chatId, setChatId] = useState("conv-1");
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const idFromUrl = searchParams.get('id');
+    if (idFromUrl) {
+      setChatId(idFromUrl);
+    }
+  }, [location.search]);
 
   const handleRunWorkflow = () => {
     // Note: The actual postMessage happens in the WorkflowPanel component
@@ -17,7 +29,11 @@ const WorkflowPage = () => {
     <div className="h-screen bg-gray-50 dark:bg-gray-950">
       <div className="h-full p-4">
         <div className="h-full glass-panel">
-          <WorkflowPanel onRunWorkflow={handleRunWorkflow} showRunButton={false} />
+          <WorkflowPanel 
+            onRunWorkflow={handleRunWorkflow} 
+            showRunButton={false} 
+            chatId={chatId}
+          />
         </div>
       </div>
     </div>

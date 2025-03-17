@@ -114,7 +114,15 @@ export type Database = {
           title?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_workflow_steps_chat_id"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

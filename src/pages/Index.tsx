@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
@@ -185,7 +186,11 @@ const Index = () => {
                 className="hidden md:block"
               >
                 <div className="h-full glass-panel">
-                  <WorkflowPanel onRunWorkflow={handleRunWorkflow} showRunButton={true} />
+                  <WorkflowPanel 
+                    onRunWorkflow={handleRunWorkflow} 
+                    showRunButton={true} 
+                    chatId={selectedConversationId} 
+                  />
                 </div>
               </ResizablePanel>
             </ResizablePanelGroup>
