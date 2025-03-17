@@ -27,6 +27,8 @@ export const ChatInterface = ({
   
   // Track locally created message IDs to avoid duplicates from realtime
   const [localMessageIds, setLocalMessageIds] = useState<Set<string>>(new Set());
+  // Track pending messages waiting for Supabase confirmation
+  const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(new Set());
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
 
   useEffect(() => {
@@ -60,6 +62,14 @@ export const ChatInterface = ({
         // Skip messages that were created locally (optimistic updates)
         if (localMessageIds.has(newMessage.id)) {
           console.log('Skipping already displayed local message:', newMessage.id);
+          
+          // Remove the message from pending state since we got confirmation
+          setPendingMessageIds(prev => {
+            const updated = new Set(prev);
+            updated.delete(newMessage.id);
+            return updated;
+          });
+          
           return;
         }
         
@@ -99,6 +109,9 @@ export const ChatInterface = ({
       
       // Track this ID locally to avoid duplicate display
       setLocalMessageIds(prev => new Set(prev).add(messageId));
+      
+      // Add to pending messages
+      setPendingMessageIds(prev => new Set(prev).add(messageId));
       
       // Add message optimistically to the UI
       const optimisticMessage: Message = {
@@ -146,6 +159,7 @@ export const ChatInterface = ({
           hasScreenRecording={hasScreenRecording} 
           screenRecordings={screenRecordings}
           isExtensionInstalled={isExtensionInstalled}
+          pendingMessageIds={pendingMessageIds}
         />
       </div>
 

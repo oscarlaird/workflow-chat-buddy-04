@@ -1,6 +1,6 @@
 
 import { useRef, useEffect } from "react";
-import { Film, Download } from "lucide-react";
+import { Film, Download, Loader2 } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,15 @@ interface MessageListProps {
   hasScreenRecording: (message: Message) => boolean;
   screenRecordings: Record<string, ScreenRecording>;
   isExtensionInstalled: boolean;
+  pendingMessageIds?: Set<string>;
 }
 
 export const MessageList = ({ 
   messages, 
   hasScreenRecording, 
   screenRecordings,
-  isExtensionInstalled
+  isExtensionInstalled,
+  pendingMessageIds = new Set()
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +60,12 @@ export const MessageList = ({
                 : "bg-muted"
             }`}>
               {message.content}
+              {pendingMessageIds.has(message.id) && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Sending...</span>
+                </div>
+              )}
             </div>
           </div>
           
