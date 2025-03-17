@@ -37,32 +37,51 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
   const handleCopyImagesToSupabase = async () => {
     setIsCopyingImages(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      let url = `${window.location.origin}/functions/v1/copy-images`;
+      // Determine the appropriate URL to use for the function
+      let functionUrl = `${window.location.origin}/functions/v1/copy-images`;
       
-      // If running locally with no domain, use Supabase's function URL directly
-      if (window.location.hostname === 'localhost') {
-        url = 'https://scydgsnstcmcdfxrgvoh.supabase.co/functions/v1/copy-images';
+      // For local development or direct testing
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        functionUrl = 'https://scydgsnstcmcdfxrgvoh.supabase.co/functions/v1/copy-images';
       }
       
-      const response = await fetch(url, {
+      console.log(`Calling function at: ${functionUrl}`);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      const jwt = session?.access_token || '';
+      
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token || ''}`
+          'Authorization': `Bearer ${jwt}`
         },
         body: JSON.stringify({})
       });
       
-      const result = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', response.status, errorText);
+        throw new Error(`HTTP error ${response.status}: ${errorText || 'No response body'}`);
+      }
       
-      if (result.success) {
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        console.error('Failed to parse JSON response:', e);
+        throw new Error(`Failed to parse response: ${e.message}`);
+      }
+      
+      console.log('Function response:', result);
+      
+      if (result && result.success) {
         toast({
           title: "Images copied successfully",
           description: "All workflow images have been copied to Supabase storage",
         });
       } else {
-        throw new Error(result.error || 'Unknown error occurred');
+        throw new Error((result && result.error) || 'Unknown error occurred');
       }
     } catch (error) {
       console.error('Error copying images:', error);

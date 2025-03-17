@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.36.0";
 
@@ -20,6 +19,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    console.log('Starting image copy process');
+
     // File paths to copy
     const filesToCopy = [
       '/lovable-uploads/3787fcb9-6ee1-4dc1-8ba4-f128921dac07.png',
@@ -35,29 +36,50 @@ serve(async (req) => {
         // Get the file name from the path
         const fileName = filePath.split('/').pop();
         
-        // Fetch the file from the public URL
-        const fileUrl = `http://localhost:3000${filePath}`;
-        console.log(`Fetching file from: ${fileUrl}`);
+        // Get the fully qualified URL
+        // If we're in a local environment, use the origin from the request
+        // Otherwise, use a default URL (modify as needed)
+        const origin = req.headers.get('origin') || 'https://scydgsnstcmcdfxrgvoh.supabase.co';
+        const fileUrl = new URL(filePath, origin).toString();
         
-        const fileResponse = await fetch(fileUrl);
+        console.log(`Attempting to fetch file from: ${fileUrl}`);
+        
+        const fileResponse = await fetch(fileUrl, {
+          headers: {
+            'Accept': 'image/png,image/*',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
         if (!fileResponse.ok) {
-          throw new Error(`Failed to fetch file: ${fileResponse.statusText}`);
+          throw new Error(`Failed to fetch file: ${fileResponse.status} ${fileResponse.statusText}`);
         }
+        
+        // Check content type
+        const contentType = fileResponse.headers.get('content-type');
+        console.log(`File ${fileName} content type: ${contentType}`);
         
         // Get the file as an array buffer
         const fileBuffer = await fileResponse.arrayBuffer();
+        console.log(`File ${fileName} size: ${fileBuffer.byteLength} bytes`);
+        
+        if (fileBuffer.byteLength === 0) {
+          throw new Error('File is empty');
+        }
         
         // Upload to Supabase Storage
         const { data, error } = await supabaseAdmin.storage
           .from('workflow-screenshots')
           .upload(fileName, fileBuffer, {
-            contentType: 'image/png',
+            contentType: contentType || 'image/png',
             upsert: true
           });
         
         if (error) {
           throw error;
         }
+        
+        console.log(`Successfully uploaded ${fileName} to Supabase storage`);
         
         // Get the public URL
         const { data: urlData } = supabaseAdmin.storage
@@ -80,6 +102,9 @@ serve(async (req) => {
       }
     }
 
+    // Log the final results
+    console.log('Image copy results:', JSON.stringify(copyResults, null, 2));
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -94,7 +119,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in edge function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'Unknown error',
+        stack: error.stack
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
