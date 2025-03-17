@@ -18,16 +18,19 @@ export const useChats = () => {
   const [exampleChats, setExampleChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  const currentUsername = 'current_user'; // The current user's username
+  
   useEffect(() => {
     const fetchChats = async () => {
       try {
         setIsLoading(true);
         
-        // Fetch regular user chats
+        // Fetch regular user chats - only for the current user
         const { data: userChats, error: userChatsError } = await supabase
           .from('chats')
           .select('*')
           .eq('is_example', false)
+          .eq('username', currentUsername) // Only get current user's chats
           .order('created_at', { ascending: false });
           
         if (userChatsError) {
@@ -41,7 +44,7 @@ export const useChats = () => {
           setChats(userChats || []);
         }
         
-        // Fetch example chats
+        // Fetch example chats - also include system examples
         const { data: examples, error: examplesError } = await supabase
           .from('chats')
           .select('*')
@@ -68,7 +71,8 @@ export const useChats = () => {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'chats'
+        table: 'chats',
+        filter: `username=eq.${currentUsername}` // Only listen for changes to current user's chats
       }, (payload) => {
         console.log('Real-time update on chats:', payload);
         
