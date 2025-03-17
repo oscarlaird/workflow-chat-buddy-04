@@ -1,10 +1,9 @@
 
 import { useRef, useEffect } from "react";
-import { Film, Download, Loader2, Circle, CheckCircle } from "lucide-react";
+import { Film, Download, Loader2 } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageListProps {
   messages: Message[];
@@ -41,14 +40,27 @@ export const MessageList = ({
     return content.toLowerCase().includes("ready");
   };
 
-  const formatMessageContent = (content: string) => {
+  const formatMessageContent = (content: string, isStreaming: boolean) => {
     if (!content) return null;
     
-    return content.split('\n').map((line, index) => (
-      <p key={index} className={index > 0 ? "mt-1" : ""}>
-        {line || " "}
-      </p>
-    ));
+    const lines = content.split('\n');
+    return (
+      <>
+        {lines.map((line, index) => {
+          // Only add the cursor to the last line when streaming
+          const isLastLine = index === lines.length - 1;
+          
+          return (
+            <p key={index} className={index > 0 ? "mt-1" : ""}>
+              {line || " "}
+              {isStreaming && isLastLine && (
+                <span className="inline-block w-1.5 h-3 bg-black dark:bg-white opacity-70 ml-0.5 rounded-sm animate-pulse"></span>
+              )}
+            </p>
+          );
+        })}
+      </>
+    );
   };
 
   if (messages.length === 0) {
@@ -71,20 +83,18 @@ export const MessageList = ({
               className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
                 message.role === "user" 
                   ? "bg-primary text-primary-foreground" 
-                  : streamingMessageIds.has(message.id)
-                    ? "bg-muted animate-pulse-soft" 
-                    : "bg-muted"
+                  : "bg-muted"
               }`}
             >
               {message.content ? (
-                formatMessageContent(message.content)
-              ) : message.role === "assistant" ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse" />
-                  <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse delay-150" />
-                  <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse delay-300" />
-                </div>
-              ) : null}
+                formatMessageContent(
+                  message.content, 
+                  message.role === "assistant" && streamingMessageIds.has(message.id)
+                )
+              ) : (
+                // Empty message - waiting for content
+                <p> </p>
+              )}
               
               {pendingMessageIds.has(message.id) && (
                 <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
