@@ -25,6 +25,8 @@ export const ChatInterface = ({
     setMessages 
   } = useConversations({ conversationId });
   
+  // Track locally created message IDs to avoid duplicates from realtime
+  const [localMessageIds, setLocalMessageIds] = useState<Set<string>>(new Set());
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
 
   useEffect(() => {
@@ -55,8 +57,14 @@ export const ChatInterface = ({
         console.log('Received real-time message:', payload);
         const newMessage = payload.new;
         
-        // Check if this message is already in the list to avoid duplicates
+        // Skip messages that were created locally (optimistic updates)
+        if (localMessageIds.has(newMessage.id)) {
+          console.log('Skipping already displayed local message:', newMessage.id);
+          return;
+        }
+        
         setMessages(prev => {
+          // Still check if this message is already in the list as a fallback
           if (prev.some(msg => msg.id === newMessage.id)) {
             return prev;
           }
@@ -78,7 +86,7 @@ export const ChatInterface = ({
       console.log('Removing channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [conversationId, setMessages]);
+  }, [conversationId, setMessages, localMessageIds]);
 
   const handleSubmit = async (inputValue: string) => {
     if (!inputValue.trim()) return;
@@ -86,12 +94,15 @@ export const ChatInterface = ({
     setIsLoading(true);
     
     try {
-      // Create a temporary ID for the optimistic update
-      const optimisticId = uuidv4();
+      // Create a message ID - we'll use the same ID for both local state and database
+      const messageId = uuidv4();
+      
+      // Track this ID locally to avoid duplicate display
+      setLocalMessageIds(prev => new Set(prev).add(messageId));
       
       // Add message optimistically to the UI
       const optimisticMessage: Message = {
-        id: optimisticId,
+        id: messageId,
         role: 'user',
         content: inputValue,
         username: 'current_user'
@@ -99,10 +110,11 @@ export const ChatInterface = ({
       
       setMessages(prev => [...prev, optimisticMessage]);
       
-      // Save user message to database
+      // Save user message to database with the SAME ID as the optimistic update
       await supabase
         .from('messages')
         .insert({
+          id: messageId, // Use the same ID
           chat_id: conversationId,
           role: 'user',
           content: inputValue,
@@ -120,6 +132,7 @@ export const ChatInterface = ({
       onSendMessage(inputValue);
     } catch (err) {
       console.error('Exception when processing message:', err);
+      // Consider removing the optimistic message if saving fails
     } finally {
       setIsLoading(false);
     }
