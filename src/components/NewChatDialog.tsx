@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,8 @@ export const NewChatDialog = ({
           role: message.role,
           content: message.content,
           username: 'current_user',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          from_template: true // Set from_template to true for copied messages
         }));
       }
       
