@@ -74,6 +74,48 @@ export type Database = {
           },
         ]
       }
+      workflow_steps: {
+        Row: {
+          chat_id: string
+          code: string | null
+          created_at: string | null
+          description: string
+          example_data: Json | null
+          id: string
+          screenshots: Json | null
+          status: string
+          step_order: number
+          title: string
+          username: string
+        }
+        Insert: {
+          chat_id: string
+          code?: string | null
+          created_at?: string | null
+          description: string
+          example_data?: Json | null
+          id?: string
+          screenshots?: Json | null
+          status: string
+          step_order: number
+          title: string
+          username?: string
+        }
+        Update: {
+          chat_id?: string
+          code?: string | null
+          created_at?: string | null
+          description?: string
+          example_data?: Json | null
+          id?: string
+          screenshots?: Json | null
+          status?: string
+          step_order?: number
+          title?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

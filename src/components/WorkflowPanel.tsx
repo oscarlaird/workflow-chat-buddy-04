@@ -1,12 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Play, Loader2, MapPin, FileText } from "lucide-react";
-import { mockWorkflow } from "@/data/mockData";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Workflow, WorkflowStep as WorkflowStepType } from "@/types";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
@@ -15,9 +16,62 @@ interface WorkflowPanelProps {
 
 export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [workflow, setWorkflow] = useState(mockWorkflow);
+  const [isLoading, setIsLoading] = useState(true);
+  const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [state, setState] = useState("");
   const [billInput, setBillInput] = useState("");
+
+  // Fetch workflow steps from Supabase
+  useEffect(() => {
+    async function fetchWorkflowSteps() {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('workflow_steps')
+          .select('*')
+          .eq('chat_id', '1')
+          .order('step_order', { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          // Transform Supabase data into our Workflow type
+          const workflowSteps: WorkflowStepType[] = data.map(step => ({
+            id: step.id,
+            title: step.title,
+            description: step.description,
+            status: step.status as "complete" | "active" | "waiting",
+            screenshots: step.screenshots ? JSON.parse(step.screenshots) : undefined,
+            code: step.code || undefined,
+            exampleData: step.example_data ? JSON.parse(step.example_data) : undefined,
+          }));
+
+          const completeSteps = workflowSteps.filter(step => step.status === "complete").length;
+          
+          setWorkflow({
+            id: "workflow-1",
+            title: "Website Vote Data Scraper",
+            currentStep: completeSteps + 1,
+            totalSteps: workflowSteps.length,
+            steps: workflowSteps
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching workflow steps:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load workflow steps",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchWorkflowSteps();
+  }, []);
 
   const handleRunWorkflow = () => {
     setIsRunning(true);
@@ -33,6 +87,7 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
   };
 
   const getProgressPercentage = () => {
+    if (!workflow) return 0;
     const completeSteps = workflow.steps.filter(step => step.status === "complete").length;
     return (completeSteps / workflow.totalSteps) * 100;
   };
@@ -46,6 +101,23 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
     "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", 
     "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="mt-2 text-sm text-gray-500">Loading workflow...</p>
+      </div>
+    );
+  }
+
+  if (!workflow) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center">
+        <p className="text-sm text-gray-500">No workflow data available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
