@@ -55,15 +55,50 @@ export const WorkflowPanel = ({
 
         if (data && data.length > 0) {
           console.log("Workflow steps found:", data.length);
-          const workflowSteps: WorkflowStepType[] = data.map(step => ({
-            id: step.id,
-            title: step.title,
-            description: step.description,
-            status: step.status as "complete" | "active" | "waiting",
-            screenshots: step.screenshots ? JSON.parse(String(step.screenshots)) : undefined,
-            code: step.code || undefined,
-            exampleData: step.example_data ? JSON.parse(String(step.example_data)) : undefined,
-          }));
+          const workflowSteps: WorkflowStepType[] = data.map(step => {
+            let parsedScreenshots;
+            let parsedExampleData;
+            
+            try {
+              // Handle screenshots parsing safely
+              if (step.screenshots) {
+                if (typeof step.screenshots === 'string') {
+                  parsedScreenshots = JSON.parse(step.screenshots);
+                } else {
+                  // If it's already an object, use it directly
+                  parsedScreenshots = step.screenshots;
+                }
+              }
+              
+              // Handle example data parsing safely
+              if (step.example_data) {
+                if (typeof step.example_data === 'string') {
+                  parsedExampleData = JSON.parse(step.example_data);
+                } else {
+                  // If it's already an object, use it directly
+                  parsedExampleData = step.example_data;
+                }
+              }
+            } catch (parseError) {
+              console.error("JSON parsing error:", parseError, 
+                "Screenshots:", step.screenshots, 
+                "Example Data:", step.example_data);
+              
+              // Continue without the problematic data
+              parsedScreenshots = undefined;
+              parsedExampleData = undefined;
+            }
+
+            return {
+              id: step.id,
+              title: step.title,
+              description: step.description,
+              status: step.status as "complete" | "active" | "waiting",
+              screenshots: parsedScreenshots,
+              code: step.code || undefined,
+              exampleData: parsedExampleData,
+            };
+          });
 
           const completeSteps = workflowSteps.filter(step => step.status === "complete").length;
           
