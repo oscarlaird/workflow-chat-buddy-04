@@ -44,11 +44,12 @@ export const useChats = () => {
           setChats(userChats || []);
         }
         
-        // Fetch example chats - also include system examples
+        // Fetch example chats - but only those created by the current user
         const { data: examples, error: examplesError } = await supabase
           .from('chats')
           .select('*')
           .eq('is_example', true)
+          .eq('username', currentUsername) // Only get the current user's example chats
           .order('created_at', { ascending: false });
           
         if (examplesError) {

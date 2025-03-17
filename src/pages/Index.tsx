@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
@@ -6,6 +5,7 @@ import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 import VersionDisplay from "@/components/VersionDisplay";
+import UserIndicator from "@/components/UserIndicator";
 import { useChats } from "@/hooks/useChats";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -25,7 +25,6 @@ const Index = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Extract the id from the URL search parameters
     const searchParams = new URLSearchParams(location.search);
     const idFromUrl = searchParams.get('id');
     if (idFromUrl) {
@@ -68,7 +67,6 @@ const Index = () => {
       setSelectedConversationId(newChatId);
       setIsMobileSidebarOpen(false);
       
-      // Update URL without page reload
       navigate(`?id=${newChatId}`, { replace: true });
     } catch (error) {
       console.error("Failed to create chat:", error);
@@ -79,7 +77,6 @@ const Index = () => {
     setSelectedConversationId(conversationId);
     setIsMobileSidebarOpen(false);
     
-    // Update URL without page reload
     navigate(`?id=${conversationId}`, { replace: true });
   };
 
@@ -87,7 +84,6 @@ const Index = () => {
     await deleteChat(chatId);
     
     if (selectedConversationId === chatId) {
-      // Remove the id parameter from URL without page reload
       navigate('', { replace: true });
       setSelectedConversationId("");
     }
@@ -125,9 +121,7 @@ const Index = () => {
                 <Moon className="w-5 h-5" />
               )}
             </button>
-            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-medium">
-              U
-            </div>
+            <UserIndicator username="current_user" className="h-8 px-2" />
           </div>
         </header>
         <div className="flex-1 flex overflow-hidden">
