@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles } from "lucide-react";
+import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles, Hash } from "lucide-react";
 import { Chat } from "@/hooks/useChats";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +38,6 @@ export const ChatHistory = ({
     chat => chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  // Group chats by date
   const groupChatsByDate = (chats: Chat[]) => {
     const groups: { [key: string]: Chat[] } = {};
     
@@ -73,7 +71,6 @@ export const ChatHistory = ({
     if (confirm("Are you sure you want to delete this chat?")) {
       await onDeleteChat(chatId);
       
-      // If the deleted chat was selected, select another one
       if (selectedConversationId === chatId && allChats.length > 1) {
         const otherChat = allChats.find(c => c.id !== chatId);
         if (otherChat) {
@@ -148,6 +145,10 @@ export const ChatHistory = ({
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{chat.title}</div>
+                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                        <Hash className="w-3 h-3 mr-1" />
+                        <span className="truncate">{chat.id}</span>
+                      </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         {format(new Date(chat.created_at), 'h:mm a')}
                       </div>
