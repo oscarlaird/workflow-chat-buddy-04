@@ -7,13 +7,16 @@ import { useToast } from "@/components/ui/use-toast";
 const WorkflowPage = () => {
   const { toast } = useToast();
   const location = useLocation();
-  const [chatId, setChatId] = useState("conv-1");
+  const [chatId, setChatId] = useState("");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const idFromUrl = searchParams.get('id');
     if (idFromUrl) {
       setChatId(idFromUrl);
+    } else {
+      // Default to empty if no ID is provided
+      setChatId("");
     }
   }, [location.search]);
 

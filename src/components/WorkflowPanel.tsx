@@ -17,7 +17,7 @@ interface WorkflowPanelProps {
 export const WorkflowPanel = ({ 
   onRunWorkflow, 
   showRunButton = true, 
-  chatId = 'conv-1'
+  chatId
 }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,9 +26,17 @@ export const WorkflowPanel = ({
   const [billInput, setBillInput] = useState("");
 
   useEffect(() => {
+    if (!chatId) {
+      setIsLoading(false);
+      setWorkflow(null);
+      return;
+    }
+
     async function fetchWorkflowSteps() {
       try {
         setIsLoading(true);
+        console.log("Fetching workflow steps for chat ID:", chatId);
+        
         const { data, error } = await supabase
           .from('workflow_steps')
           .select('*')
@@ -36,10 +44,12 @@ export const WorkflowPanel = ({
           .order('step_order', { ascending: true });
 
         if (error) {
+          console.error("Supabase error:", error);
           throw error;
         }
 
-        if (data) {
+        if (data && data.length > 0) {
+          console.log("Workflow steps found:", data.length);
           const workflowSteps: WorkflowStepType[] = data.map(step => ({
             id: step.id,
             title: step.title,
@@ -59,6 +69,9 @@ export const WorkflowPanel = ({
             totalSteps: workflowSteps.length,
             steps: workflowSteps
           });
+        } else {
+          console.log("No workflow steps found for chat ID:", chatId);
+          setWorkflow(null);
         }
       } catch (error) {
         console.error("Error fetching workflow steps:", error);
@@ -67,6 +80,7 @@ export const WorkflowPanel = ({
           description: "Failed to load workflow steps",
           variant: "destructive"
         });
+        setWorkflow(null);
       } finally {
         setIsLoading(false);
       }
@@ -114,7 +128,7 @@ export const WorkflowPanel = ({
   if (!workflow) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
-        <p className="text-sm text-gray-500">No workflow data available</p>
+        <p className="text-sm text-gray-500">No workflow data available for this chat</p>
       </div>
     );
   }

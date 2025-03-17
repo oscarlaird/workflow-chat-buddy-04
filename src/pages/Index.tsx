@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
