@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Play, Loader2, MapPin, FileText } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -24,17 +25,20 @@ export const WorkflowPanel = ({
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [state, setState] = useState("");
   const [billInput, setBillInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!chatId) {
       setIsLoading(false);
       setWorkflow(null);
+      setError(null);
       return;
     }
 
     async function fetchWorkflowSteps() {
       try {
         setIsLoading(true);
+        setError(null);
         console.log("Fetching workflow steps for chat ID:", chatId);
         
         const { data, error } = await supabase
@@ -45,6 +49,7 @@ export const WorkflowPanel = ({
 
         if (error) {
           console.error("Supabase error:", error);
+          setError(`Database error: ${error.message}`);
           throw error;
         }
 
@@ -73,8 +78,9 @@ export const WorkflowPanel = ({
           console.log("No workflow steps found for chat ID:", chatId);
           setWorkflow(null);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching workflow steps:", error);
+        setError(error?.message || "Unknown error occurred");
         toast({
           title: "Error",
           description: "Failed to load workflow steps",
@@ -120,7 +126,19 @@ export const WorkflowPanel = ({
     return (
       <div className="flex flex-col h-full items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="mt-2 text-sm text-gray-500">Loading workflow...</p>
+        <p className="mt-2 text-sm text-gray-500">Loading workflow for chat ID: {chatId || "none"}</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-4">
+        <div className="text-red-500 mb-2">⚠️ Error loading workflow</div>
+        <p className="text-sm text-gray-500 text-center">
+          Failed to load workflow steps for chat ID: {chatId || "none"}
+        </p>
+        <p className="text-xs text-gray-400 mt-2 text-center">{error}</p>
       </div>
     );
   }
@@ -128,7 +146,7 @@ export const WorkflowPanel = ({
   if (!workflow) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
-        <p className="text-sm text-gray-500">No workflow data available for this chat</p>
+        <p className="text-sm text-gray-500">No workflow data available for chat ID: {chatId || "none"}</p>
       </div>
     );
   }
