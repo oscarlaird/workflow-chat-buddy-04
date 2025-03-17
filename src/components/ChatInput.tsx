@@ -12,6 +12,7 @@ interface ChatInputProps {
 export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Focus the textarea when component mounts
   useEffect(() => {
@@ -19,6 +20,13 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
       textareaRef.current.focus();
     }
   }, []);
+
+  // This effect will run after state updates and maintain focus
+  useEffect(() => {
+    if (!isLoading && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isLoading]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +61,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
   return (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-      <form onSubmit={handleSubmit} className="relative">
+      <form ref={formRef} onSubmit={handleSubmit} className="relative">
         <Textarea
           ref={textareaRef}
           value={inputValue}
