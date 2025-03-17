@@ -6,7 +6,7 @@ import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 import VersionDisplay from "@/components/VersionDisplay";
-import { mockConversations } from "@/data/mockData";
+import { useChats } from "@/hooks/useChats";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   ResizablePanelGroup, 
@@ -17,7 +17,8 @@ import {
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [selectedConversationId, setSelectedConversationId] = useState(mockConversations[0]?.id || "");
+  const { chats, isLoading, createChat, deleteChat } = useChats();
+  const [selectedConversationId, setSelectedConversationId] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,19 +30,33 @@ const Index = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // Set initial conversation when chats are loaded
+    if (!isLoading && chats.length > 0 && !selectedConversationId) {
+      setSelectedConversationId(chats[0].id);
+    }
+  }, [chats, isLoading, selectedConversationId]);
+
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle("dark");
   };
 
-  const handleNewConversation = () => {
-    // In a real app, would create a new conversation
+  const handleNewConversation = async () => {
     toast({
-      title: "New Conversation",
-      description: "A new conversation would be created here",
+      title: "Creating new chat",
+      description: "Please provide a title for your new workflow chat",
     });
-    
-    setIsMobileSidebarOpen(false);
+  };
+
+  const handleCreateChat = async (title: string) => {
+    try {
+      const newChatId = await createChat(title);
+      setSelectedConversationId(newChatId);
+      setIsMobileSidebarOpen(false);
+    } catch (error) {
+      console.error("Failed to create chat:", error);
+    }
   };
 
   const handleSelectConversation = (conversationId: string) => {
@@ -50,11 +65,7 @@ const Index = () => {
   };
 
   const handleSendMessage = (message: string) => {
-    // In a real app, would send message to API
-    toast({
-      title: "Message Sent",
-      description: "Your message was sent successfully",
-    });
+    // This is handled within ChatInterface now
   };
 
   const handleRunWorkflow = () => {
@@ -117,6 +128,10 @@ const Index = () => {
                 selectedConversationId={selectedConversationId}
                 onSelectConversation={handleSelectConversation}
                 onNewConversation={handleNewConversation}
+                chats={chats}
+                isLoading={isLoading}
+                onCreateChat={handleCreateChat}
+                onDeleteChat={deleteChat}
               />
             </div>
             
@@ -141,10 +156,19 @@ const Index = () => {
                 minSize={30}
               >
                 <div className="h-full glass-panel">
-                  <ChatInterface
-                    conversationId={selectedConversationId}
-                    onSendMessage={handleSendMessage}
-                  />
+                  {selectedConversationId ? (
+                    <ChatInterface
+                      conversationId={selectedConversationId}
+                      onSendMessage={handleSendMessage}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <div className="text-center text-gray-500 dark:text-gray-400">
+                        <p className="text-lg mb-2">Select or create a chat to get started</p>
+                        <p className="text-sm">You can create a new chat from the sidebar.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </ResizablePanel>
               

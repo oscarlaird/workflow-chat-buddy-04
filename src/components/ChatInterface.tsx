@@ -123,7 +123,7 @@ export const ChatInterface = ({
   }, [conversationId, setMessages, localMessageIds, updateMessageContent]);
 
   const handleSubmit = async (inputValue: string) => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || !conversationId) return;
     
     setIsLoading(true);
     
