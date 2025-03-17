@@ -28,6 +28,7 @@ export const ChatInterface = ({
   const [localMessageIds, setLocalMessageIds] = useState<Set<string>>(new Set());
   const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(new Set());
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
+  const [streamingMessages, setStreamingMessages] = useState<Set<string>>(new Set());
   
   const prevConversationIdRef = useRef<string | null>(null);
 
@@ -108,6 +109,11 @@ export const ChatInterface = ({
             }
           ];
         });
+
+        // Check if the message is streaming and update the streaming messages set
+        if (newMessage.is_currently_streaming) {
+          setStreamingMessages(prev => new Set(prev).add(newMessage.id));
+        }
       })
       .on('postgres_changes', {
         event: 'UPDATE',
@@ -119,6 +125,17 @@ export const ChatInterface = ({
         const updatedMessage = payload.new;
         
         updateMessageContent(updatedMessage.id, updatedMessage.content);
+        
+        // Check if the streaming status has changed
+        if (!updatedMessage.is_currently_streaming) {
+          setStreamingMessages(prev => {
+            const updated = new Set(prev);
+            updated.delete(updatedMessage.id);
+            return updated;
+          });
+        } else if (updatedMessage.is_currently_streaming) {
+          setStreamingMessages(prev => new Set(prev).add(updatedMessage.id));
+        }
       })
       .subscribe();
 
@@ -156,7 +173,8 @@ export const ChatInterface = ({
           chat_id: conversationId,
           role: 'user',
           content: inputValue,
-          username: 'current_user'
+          username: 'current_user',
+          is_currently_streaming: false
         });
       
       await supabase.functions.invoke('respond-to-message', {
@@ -195,6 +213,7 @@ export const ChatInterface = ({
             screenRecordings={screenRecordings}
             isExtensionInstalled={isExtensionInstalled}
             pendingMessageIds={pendingMessageIds}
+            streamingMessageIds={streamingMessages}
           />
         )}
       </div>

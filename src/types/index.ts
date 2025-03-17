@@ -4,6 +4,7 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   username?: string;
+  is_currently_streaming?: boolean;
 }
 
 export interface Conversation {

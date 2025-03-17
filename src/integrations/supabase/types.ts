@@ -43,6 +43,7 @@ export type Database = {
           created_at: string | null
           from_template: boolean | null
           id: string
+          is_currently_streaming: boolean | null
           role: string
           username: string
         }
@@ -52,6 +53,7 @@ export type Database = {
           created_at?: string | null
           from_template?: boolean | null
           id?: string
+          is_currently_streaming?: boolean | null
           role: string
           username: string
         }
@@ -61,6 +63,7 @@ export type Database = {
           created_at?: string | null
           from_template?: boolean | null
           id?: string
+          is_currently_streaming?: boolean | null
           role?: string
           username?: string
         }

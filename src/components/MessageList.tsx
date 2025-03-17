@@ -12,6 +12,7 @@ interface MessageListProps {
   screenRecordings: Record<string, ScreenRecording>;
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
+  streamingMessageIds?: Set<string>;
 }
 
 export const MessageList = ({ 
@@ -19,7 +20,8 @@ export const MessageList = ({
   hasScreenRecording, 
   screenRecordings,
   isExtensionInstalled,
-  pendingMessageIds = new Set()
+  pendingMessageIds = new Set(),
+  streamingMessageIds = new Set()
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +87,12 @@ export const MessageList = ({
                 <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   <span>Sending...</span>
+                </div>
+              )}
+              {streamingMessageIds.has(message.id) && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Streaming...</span>
                 </div>
               )}
             </div>
