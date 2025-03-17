@@ -29,7 +29,7 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
         const { data, error } = await supabase
           .from('workflow_steps')
           .select('*')
-          .eq('chat_id', '1')
+          .eq('chat_id', 'conv-1')
           .order('step_order', { ascending: true });
 
         if (error) {
