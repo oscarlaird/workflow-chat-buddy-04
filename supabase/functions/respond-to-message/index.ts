@@ -24,8 +24,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
+    console.log(`Creating assistant response for conversation ${conversationId}`);
+    
     // Create an assistant response
-    await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('messages')
       .insert({
         chat_id: conversationId,
@@ -33,6 +35,13 @@ serve(async (req) => {
         content: 'testing',
         username: username
       });
+      
+    if (error) {
+      console.error('Error creating response:', error);
+      throw error;
+    }
+    
+    console.log('Successfully created assistant response');
     
     return new Response(
       JSON.stringify({ success: true }),
@@ -42,6 +51,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('Error in edge function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

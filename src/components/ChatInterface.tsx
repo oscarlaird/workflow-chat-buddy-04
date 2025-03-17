@@ -4,6 +4,8 @@ import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Message } from "@/types";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -40,28 +42,40 @@ export const ChatInterface = ({
   useEffect(() => {
     if (!conversationId) return;
     
+    console.log(`Setting up realtime subscription for chat ${conversationId}`);
+    
     const channel = supabase
-      .channel('public:messages')
+      .channel(`messages:${conversationId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
+        console.log('Received real-time message:', payload);
         const newMessage = payload.new;
-        setMessages(prev => [
-          ...prev, 
-          {
-            id: newMessage.id,
-            role: newMessage.role,
-            content: newMessage.content,
-            username: newMessage.username
+        
+        // Check if this message is already in the list to avoid duplicates
+        setMessages(prev => {
+          if (prev.some(msg => msg.id === newMessage.id)) {
+            return prev;
           }
-        ]);
+          
+          return [
+            ...prev, 
+            {
+              id: newMessage.id,
+              role: newMessage.role,
+              content: newMessage.content,
+              username: newMessage.username
+            }
+          ];
+        });
       })
       .subscribe();
 
     return () => {
+      console.log('Removing channel subscription');
       supabase.removeChannel(channel);
     };
   }, [conversationId, setMessages]);
@@ -72,6 +86,19 @@ export const ChatInterface = ({
     setIsLoading(true);
     
     try {
+      // Create a temporary ID for the optimistic update
+      const optimisticId = uuidv4();
+      
+      // Add message optimistically to the UI
+      const optimisticMessage: Message = {
+        id: optimisticId,
+        role: 'user',
+        content: inputValue,
+        username: 'current_user'
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      
       // Save user message to database
       await supabase
         .from('messages')
