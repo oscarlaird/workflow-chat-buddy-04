@@ -27,6 +27,26 @@ export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
     }
   };
 
+  // Detect code language based on content or use default
+  const detectLanguage = (code: string) => {
+    if (code.includes("function") || code.includes("const") || code.includes("let") || code.includes("var")) {
+      return "javascript";
+    }
+    if (code.includes("<html") || code.includes("</div>")) {
+      return "html";
+    }
+    if (code.includes("SELECT") || code.includes("FROM") || code.includes("WHERE")) {
+      return "sql";
+    }
+    if (code.includes("import") && code.includes("from") && (code.includes("React") || code.includes("useState"))) {
+      return "jsx";
+    }
+    if (code.includes("python") || code.includes("def ") || code.includes("import ") && code.includes(":")) {
+      return "python";
+    }
+    return "javascript"; // Default
+  };
+
   return (
     <div className={`workflow-step ${getStatusClass()}`}>
       <div className="mb-2">
@@ -70,7 +90,7 @@ export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
           
           {isCodeExpanded && (
             <div className="mt-2 overflow-hidden rounded-md animate-slide-in-bottom">
-              <CodeBlock code={step.code} />
+              <CodeBlock code={step.code} language={detectLanguage(step.code)} />
             </div>
           )}
         </div>
