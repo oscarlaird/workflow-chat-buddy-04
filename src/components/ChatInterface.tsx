@@ -48,7 +48,7 @@ export const ChatInterface = ({
     
     setIsLoading(true);
     
-    // Add user message immediately
+    // Add user message immediately with username
     await addMessage(inputValue, "user");
     
     // Simulate sending message to API
@@ -58,7 +58,7 @@ export const ChatInterface = ({
       // Determine the assistant's response based on content
       const containsReady = inputValue.toLowerCase().includes("ready");
       
-      // Add the appropriate assistant response
+      // Add the appropriate assistant response with username
       if (containsReady) {
         const responseMessage = isExtensionInstalled
           ? "I'm ready when you are. Click the button below to start screen recording."

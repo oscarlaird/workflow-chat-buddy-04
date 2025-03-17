@@ -91,7 +91,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   };
 
   const saveMessageToSupabase = async (message: Message, messageRole: "user" | "assistant") => {
-    // Skip saving to database when using mock data
+    // If we were using Supabase, we'd save to the messages table with username
+    // Since we're using mock data, we'll skip this
     return;
   };
 
@@ -99,7 +100,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     const newMessage: Message = {
       id: `${role}-${Date.now()}`,
       role,
-      content
+      content,
+      username: "current_user" // Default username for new messages
     };
     
     setMessages(prev => [...prev, newMessage]);

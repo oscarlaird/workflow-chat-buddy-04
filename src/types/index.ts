@@ -3,6 +3,7 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  username?: string;
 }
 
 export interface Conversation {

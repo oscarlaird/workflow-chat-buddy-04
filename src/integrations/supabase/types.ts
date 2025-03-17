@@ -9,13 +9,14 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      conversations: {
+      messages: {
         Row: {
           chat_id: string
           content: string
           created_at: string | null
           id: string
           role: string
+          username: string
         }
         Insert: {
           chat_id: string
@@ -23,6 +24,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           role: string
+          username: string
         }
         Update: {
           chat_id?: string
@@ -30,6 +32,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           role?: string
+          username?: string
         }
         Relationships: []
       }
