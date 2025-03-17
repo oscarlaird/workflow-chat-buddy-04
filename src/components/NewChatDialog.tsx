@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "@/components/ui/use-toast";
-import SeedDataButton from "./SeedDataButton";
 
 interface NewChatDialogProps {
   open: boolean;
@@ -185,10 +184,7 @@ export const NewChatDialog = ({
               {exampleChats.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No example workflows available</p>
-                  <p className="text-sm mt-1">Click below to load example workflows:</p>
-                  <div className="mt-4 flex justify-center">
-                    <SeedDataButton />
-                  </div>
+                  <p className="text-sm mt-1">Example workflows may be added by the administrator</p>
                 </div>
               ) : (
                 exampleChats.map(chat => (

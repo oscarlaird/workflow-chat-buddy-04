@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
@@ -5,9 +6,9 @@ import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 import VersionDisplay from "@/components/VersionDisplay";
-import SeedDataButton from "@/components/SeedDataButton";
 import { useChats } from "@/hooks/useChats";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   ResizablePanelGroup, 
   ResizablePanel, 
@@ -20,14 +21,17 @@ const Index = () => {
   const { chats, exampleChats, isLoading, createChat, deleteChat } = useChats();
   const [selectedConversationId, setSelectedConversationId] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const idFromUrl = params.get('id');
+    // Extract the id from the URL search parameters
+    const searchParams = new URLSearchParams(location.search);
+    const idFromUrl = searchParams.get('id');
     if (idFromUrl) {
       setSelectedConversationId(idFromUrl);
     }
-  }, []);
+  }, [location.search]);
 
   useEffect(() => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -64,9 +68,8 @@ const Index = () => {
       setSelectedConversationId(newChatId);
       setIsMobileSidebarOpen(false);
       
-      const url = new URL(window.location.href);
-      url.searchParams.set('id', newChatId);
-      window.history.pushState({}, '', url);
+      // Update URL without page reload
+      navigate(`?id=${newChatId}`, { replace: true });
     } catch (error) {
       console.error("Failed to create chat:", error);
     }
@@ -76,19 +79,16 @@ const Index = () => {
     setSelectedConversationId(conversationId);
     setIsMobileSidebarOpen(false);
     
-    const url = new URL(window.location.href);
-    url.searchParams.set('id', conversationId);
-    window.history.pushState({}, '', url);
+    // Update URL without page reload
+    navigate(`?id=${conversationId}`, { replace: true });
   };
 
   const handleDeleteChat = async (chatId: string) => {
     await deleteChat(chatId);
     
     if (selectedConversationId === chatId) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('id');
-      window.history.pushState({}, '', url);
-      
+      // Remove the id parameter from URL without page reload
+      navigate('', { replace: true });
       setSelectedConversationId("");
     }
   };
@@ -115,7 +115,6 @@ const Index = () => {
             <ExtensionStatusIndicator />
           </div>
           <div className="flex items-center gap-2">
-            <SeedDataButton />
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

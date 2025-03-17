@@ -1,7 +1,7 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import SeedDataButton from "@/components/SeedDataButton";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types";
@@ -184,11 +184,8 @@ export const ChatInterface = ({
                 Start a new conversation
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
-                Type a message below to begin, or seed this chat with an example workflow conversation.
+                Type a message below to begin, or select an example workflow from the "New Chat" menu.
               </p>
-              <div className="py-4">
-                <SeedDataButton />
-              </div>
             </div>
           </div>
         ) : (
