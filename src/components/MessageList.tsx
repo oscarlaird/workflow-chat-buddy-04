@@ -40,14 +40,12 @@ export const MessageList = ({
     return content.toLowerCase().includes("ready");
   };
 
-  // Function to preserve newlines in message content
   const formatMessageContent = (content: string) => {
     if (!content) return null;
     
-    // Split by newlines and create paragraph elements
     return content.split('\n').map((line, index) => (
       <p key={index} className={index > 0 ? "mt-1" : ""}>
-        {line || " "} {/* Use a space if line is empty to preserve line height */}
+        {line || " "}
       </p>
     ));
   };
@@ -73,23 +71,15 @@ export const MessageList = ({
                 ? "bg-primary text-primary-foreground" 
                 : "bg-muted"
             }`}>
-              <div className="flex justify-between items-start mb-1">
-                {message.role === "assistant" && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                    {streamingMessageIds.has(message.id) ? (
-                      <>
-                        <Circle className="h-3 w-3 fill-current text-amber-500 animate-pulse" />
-                        <span>Streaming</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                        <span>Completed</span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+              {message.role === "assistant" && (
+                <div className="flex justify-end mb-2">
+                  {streamingMessageIds.has(message.id) ? (
+                    <Circle className="h-3 w-3 fill-current text-amber-500 animate-pulse" />
+                  ) : (
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  )}
+                </div>
+              )}
               
               {message.content ? (
                 formatMessageContent(message.content)
@@ -110,7 +100,6 @@ export const MessageList = ({
             </div>
           </div>
           
-          {/* Screen Recording Button or Extension Download Prompt */}
           {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
             <div className="flex justify-center mt-4">
               {isExtensionInstalled ? (
@@ -138,7 +127,6 @@ export const MessageList = ({
             </div>
           )}
           
-          {/* Screen recording indicator */}
           {hasScreenRecording(message) && (
             <div className="flex justify-center my-4">
               <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
