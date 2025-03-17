@@ -1,13 +1,12 @@
 
 import { useState } from "react";
-import { Play, Loader2, MapPin, FileText, Upload } from "lucide-react";
+import { Play, Loader2, MapPin, FileText } from "lucide-react";
 import { mockWorkflow } from "@/data/mockData";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
@@ -16,7 +15,6 @@ interface WorkflowPanelProps {
 
 export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [isCopyingImages, setIsCopyingImages] = useState(false);
   const [workflow, setWorkflow] = useState(mockWorkflow);
   const [state, setState] = useState("");
   const [billInput, setBillInput] = useState("");
@@ -32,42 +30,6 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
       onRunWorkflow();
       setIsRunning(false);
     }, 2000);
-  };
-
-  const handleCopyImagesToSupabase = async () => {
-    setIsCopyingImages(true);
-    try {
-      // Use the supabase client's functions.invoke to call the edge function
-      const { data, error } = await supabase.functions.invoke('copy-images', {
-        method: 'POST',
-        body: {} // Empty body, but required
-      });
-      
-      if (error) {
-        console.error('Error calling function:', error);
-        throw new Error(error.message || 'Failed to call edge function');
-      }
-      
-      console.log('Function response:', data);
-      
-      if (data && data.success) {
-        toast({
-          title: "Images copied successfully",
-          description: "All workflow images have been copied to Supabase storage",
-        });
-      } else {
-        throw new Error((data && data.error) || 'Unknown error occurred');
-      }
-    } catch (error) {
-      console.error('Error copying images:', error);
-      toast({
-        title: "Error copying images",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCopyingImages(false);
-    }
   };
 
   const getProgressPercentage = () => {
@@ -120,24 +82,6 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
               onChange={(e) => setBillInput(e.target.value)}
             />
           </div>
-
-          <button
-            onClick={handleCopyImagesToSupabase}
-            disabled={isCopyingImages}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors disabled:opacity-70"
-          >
-            {isCopyingImages ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Copying Images...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-5 h-5" />
-                <span>Copy Images to Supabase</span>
-              </>
-            )}
-          </button>
         </div>
         
         {showRunButton && (
