@@ -29,19 +29,52 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
 
   const loadMessages = async () => {
     try {
-      // Load from mock data instead of database
-      const conversation = mockConversations.find(conv => conv.id === conversationId);
-      if (conversation) {
-        setMessages(conversation.messages);
+      if (conversationId) {
+        // First try to load from Supabase
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', conversationId)
+          .order('created_at', { ascending: true });
         
-        // Create screen recordings for specific messages
-        createMockScreenRecordings(conversation.messages);
+        if (error) {
+          console.error('Error loading messages from Supabase:', error);
+          // Fall back to mock data
+          loadMockData();
+        } else if (data && data.length > 0) {
+          // Map Supabase data to Message type
+          const messagesData = data.map(msg => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+            username: msg.username
+          }));
+          setMessages(messagesData);
+          createMockScreenRecordings(messagesData);
+        } else {
+          // No data found in Supabase, use mock data
+          loadMockData();
+        }
       } else {
+        // No conversation ID, start with empty state
         setMessages([]);
         setScreenRecordings({});
       }
     } catch (error) {
       console.error('Error in loadMessages:', error);
+      loadMockData();
+    }
+  };
+
+  const loadMockData = () => {
+    // Load from mock data as fallback
+    const conversation = mockConversations.find(conv => conv.id === conversationId);
+    if (conversation) {
+      setMessages(conversation.messages);
+      createMockScreenRecordings(conversation.messages);
+    } else {
+      setMessages([]);
+      setScreenRecordings({});
     }
   };
 
@@ -91,9 +124,23 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   };
 
   const saveMessageToSupabase = async (message: Message, messageRole: "user" | "assistant") => {
-    // If we were using Supabase, we'd save to the messages table with username
-    // Since we're using mock data, we'll skip this
-    return;
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          id: message.id,
+          chat_id: conversationId,
+          role: messageRole,
+          content: message.content,
+          username: message.username || 'current_user'
+        });
+      
+      if (error) {
+        console.error('Error saving message to Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Exception saving message to Supabase:', err);
+    }
   };
 
   const addMessage = async (content: string, role: "user" | "assistant") => {
@@ -106,8 +153,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     
     setMessages(prev => [...prev, newMessage]);
     
-    // Skip saving to Supabase
-    // await saveMessageToSupabase(newMessage, role);
+    // Save to Supabase
+    await saveMessageToSupabase(newMessage, role);
     
     return newMessage;
   };
@@ -119,6 +166,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     setIsLoading,
     chatId,
     addMessage,
-    hasScreenRecording: (message: Message) => message.id in screenRecordings
+    hasScreenRecording: (message: Message) => message.id in screenRecordings,
+    setMessages // Expose setMessages for real-time updates
   };
 };

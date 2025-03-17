@@ -20,7 +20,8 @@ export const ChatInterface = ({
     isLoading, 
     setIsLoading, 
     addMessage, 
-    hasScreenRecording 
+    hasScreenRecording,
+    setMessages 
   } = useConversations({ conversationId });
   
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
@@ -44,38 +45,79 @@ export const ChatInterface = ({
     };
   }, []);
 
+  // Set up real-time subscription to messages
+  useEffect(() => {
+    if (!conversationId) return;
+
+    console.log("Setting up real-time subscription for chat:", conversationId);
+    
+    // Subscribe to messages for this conversation
+    const channel = supabase
+      .channel('public:messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `chat_id=eq.${conversationId}`
+      }, (payload) => {
+        console.log("Real-time message received:", payload);
+        const newMessage = payload.new;
+        
+        // Add the message to the UI
+        setMessages(prev => [
+          ...prev, 
+          {
+            id: newMessage.id,
+            role: newMessage.role,
+            content: newMessage.content,
+            username: newMessage.username
+          }
+        ]);
+      })
+      .subscribe();
+
+    // Clean up subscription
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, setMessages]);
+
   const handleSubmit = async (inputValue: string) => {
     if (!inputValue.trim()) return;
     
     setIsLoading(true);
     
-    // Add user message immediately with username
-    await addMessage(inputValue, "user");
-    
     try {
-      // Call the Supabase edge function
-      const { data, error } = await supabase.functions.invoke('respond-to-message', {
+      // Save user message to database
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: conversationId,
+          role: 'user',
+          content: inputValue,
+          username: 'current_user' // Default username for new messages
+        });
+      
+      if (error) {
+        console.error('Error saving message:', error);
+        return;
+      }
+      
+      // Trigger the edge function to respond
+      await supabase.functions.invoke('respond-to-message', {
         body: { 
           message: inputValue,
-          conversationId
+          conversationId,
+          username: 'current_user' // Pass the same username
         }
       });
       
-      if (error) {
-        console.error('Error calling edge function:', error);
-        // Fallback to default response if edge function fails
-        await addMessage("Sorry, there was an error processing your message.", "assistant");
-      } else {
-        // Use the response from the edge function
-        await addMessage(data.message, "assistant");
-      }
+      // Notification that message was sent
+      onSendMessage(inputValue);
     } catch (err) {
-      console.error('Exception when calling edge function:', err);
-      // Fallback if exception occurs
-      await addMessage("An unexpected error occurred.", "assistant");
+      console.error('Exception when processing message:', err);
     } finally {
       setIsLoading(false);
-      onSendMessage(inputValue);
     }
   };
 
