@@ -102,7 +102,7 @@ export const NewChatDialog = ({
           content: message.content,
           username: 'current_user',
           created_at: new Date().toISOString(),
-          from_template: true // Set from_template to true for copied messages
+          from_template: true
         }));
       }
       
@@ -124,13 +124,14 @@ export const NewChatDialog = ({
         }));
       }
       
-      // Use sequential operations instead of RPC which might not be available
+      // Insert new chat
       const { error: chatError } = await supabase
         .from('chats')
         .insert(chatInsert);
         
       if (chatError) throw chatError;
       
+      // Insert new messages if any
       if (newMessages.length > 0) {
         const { error: insertError } = await supabase
           .from('messages')
@@ -139,6 +140,7 @@ export const NewChatDialog = ({
         if (insertError) throw insertError;
       }
       
+      // Insert new workflow steps if any
       if (newWorkflowSteps.length > 0) {
         const { error: workflowInsertError } = await supabase
           .from('workflow_steps')
