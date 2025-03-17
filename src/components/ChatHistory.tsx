@@ -1,17 +1,19 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, MessageSquare, Clock, Search, Loader2 } from "lucide-react";
+import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles } from "lucide-react";
 import { Chat } from "@/hooks/useChats";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewChatDialog from "./NewChatDialog";
+import SeedDataButton from "./SeedDataButton";
 
 interface ChatHistoryProps {
   selectedConversationId: string;
   onSelectConversation: (conversationId: string) => void;
   onNewConversation: () => void;
   chats: Chat[];
+  exampleChats: Chat[];
   isLoading: boolean;
   onCreateChat: (title: string) => Promise<void>;
   onDeleteChat: (chatId: string) => Promise<void>;
@@ -22,6 +24,7 @@ export const ChatHistory = ({
   onSelectConversation,
   onNewConversation,
   chats,
+  exampleChats,
   isLoading,
   onCreateChat,
   onDeleteChat
@@ -30,7 +33,8 @@ export const ChatHistory = ({
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
 
-  const filteredChats = chats.filter(
+  const allChats = [...chats, ...exampleChats];
+  const filteredChats = allChats.filter(
     chat => chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -69,8 +73,8 @@ export const ChatHistory = ({
       await onDeleteChat(chatId);
       
       // If the deleted chat was selected, select another one
-      if (selectedConversationId === chatId && chats.length > 1) {
-        const otherChat = chats.find(c => c.id !== chatId);
+      if (selectedConversationId === chatId && allChats.length > 1) {
+        const otherChat = allChats.find(c => c.id !== chatId);
         if (otherChat) {
           onSelectConversation(otherChat.id);
         }
@@ -112,11 +116,14 @@ export const ChatHistory = ({
               </div>
             ))}
           </div>
-        ) : chats.length === 0 ? (
+        ) : allChats.length === 0 ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             <MessageSquare className="mx-auto h-12 w-12 mb-3 opacity-20" />
             <h3 className="font-medium text-lg mb-1">No chats yet</h3>
-            <p className="text-sm">Create a new chat to get started</p>
+            <p className="text-sm mb-4">Create a new chat to get started</p>
+            <div className="flex justify-center">
+              <SeedDataButton />
+            </div>
           </div>
         ) : (
           Object.entries(groupedChats).map(([date, dateChats]) => (
@@ -136,7 +143,11 @@ export const ChatHistory = ({
                     )}
                     onClick={() => onSelectConversation(chat.id)}
                   >
-                    <MessageSquare className="w-5 h-5 mt-0.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                    {chat.is_example ? (
+                      <Sparkles className="w-5 h-5 mt-0.5 text-yellow-500 flex-shrink-0" />
+                    ) : (
+                      <MessageSquare className="w-5 h-5 mt-0.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{chat.title}</div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -163,6 +174,8 @@ export const ChatHistory = ({
         onOpenChange={setIsNewChatDialogOpen}
         onCreateChat={handleCreateChat}
         isLoading={isCreatingChat}
+        exampleChats={exampleChats}
+        onSelectExampleChat={onSelectConversation}
       />
     </div>
   );

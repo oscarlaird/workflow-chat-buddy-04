@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
@@ -17,9 +18,18 @@ import {
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const { chats, isLoading, createChat, deleteChat } = useChats();
+  const { chats, exampleChats, isLoading, createChat, deleteChat } = useChats();
   const [selectedConversationId, setSelectedConversationId] = useState("");
   const { toast } = useToast();
+
+  // Get conversationId from URL if provided
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const idFromUrl = params.get('id');
+    if (idFromUrl) {
+      setSelectedConversationId(idFromUrl);
+    }
+  }, []);
 
   useEffect(() => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -34,8 +44,11 @@ const Index = () => {
     // Set initial conversation when chats are loaded
     if (!isLoading && chats.length > 0 && !selectedConversationId) {
       setSelectedConversationId(chats[0].id);
+    } else if (!isLoading && chats.length === 0 && exampleChats.length > 0 && !selectedConversationId) {
+      // If no regular chats but we have example chats, select the first example
+      setSelectedConversationId(exampleChats[0].id);
     }
-  }, [chats, isLoading, selectedConversationId]);
+  }, [chats, exampleChats, isLoading, selectedConversationId]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -54,6 +67,11 @@ const Index = () => {
       const newChatId = await createChat(title);
       setSelectedConversationId(newChatId);
       setIsMobileSidebarOpen(false);
+      
+      // Update URL to include the new chat ID
+      const url = new URL(window.location.href);
+      url.searchParams.set('id', newChatId);
+      window.history.pushState({}, '', url);
     } catch (error) {
       console.error("Failed to create chat:", error);
     }
@@ -62,17 +80,24 @@ const Index = () => {
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId);
     setIsMobileSidebarOpen(false);
+    
+    // Update URL to include the selected chat ID
+    const url = new URL(window.location.href);
+    url.searchParams.set('id', conversationId);
+    window.history.pushState({}, '', url);
   };
 
-  const handleSendMessage = (message: string) => {
-    // This is handled within ChatInterface now
-  };
-
-  const handleRunWorkflow = () => {
-    toast({
-      title: "Workflow Running",
-      description: "The workflow is now processing your request",
-    });
+  const handleDeleteChat = async (chatId: string) => {
+    await deleteChat(chatId);
+    
+    // If we deleted the currently selected chat, clear the URL parameter
+    if (selectedConversationId === chatId) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('id');
+      window.history.pushState({}, '', url);
+      
+      setSelectedConversationId("");
+    }
   };
 
   return (
@@ -97,6 +122,8 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            <SeedDataButton />
+            
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -129,9 +156,10 @@ const Index = () => {
                 onSelectConversation={handleSelectConversation}
                 onNewConversation={handleNewConversation}
                 chats={chats}
+                exampleChats={exampleChats}
                 isLoading={isLoading}
                 onCreateChat={handleCreateChat}
-                onDeleteChat={deleteChat}
+                onDeleteChat={handleDeleteChat}
               />
             </div>
             
@@ -159,7 +187,6 @@ const Index = () => {
                   {selectedConversationId ? (
                     <ChatInterface
                       conversationId={selectedConversationId}
-                      onSendMessage={handleSendMessage}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center">
@@ -190,6 +217,11 @@ const Index = () => {
       </div>
     </div>
   );
+};
+
+const handleRunWorkflow = () => {
+  // This function would trigger the execution of the workflow
+  console.log("Running workflow...");
 };
 
 export default Index;

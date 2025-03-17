@@ -30,7 +30,10 @@ export const seedMockData = async () => {
           id: chatId,
           title: conversation.title,
           // Use the same created_at time for all messages in this conversation
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          // Mark as example chat
+          is_example: true,
+          username: 'example_user'
         });
 
       if (chatError) {
@@ -46,7 +49,7 @@ export const seedMockData = async () => {
           chat_id: chatId,
           role: message.role,
           content: message.content,
-          username: message.username || 'current_user',
+          username: message.username || 'example_user',
           created_at: new Date().toISOString()
         }));
 
@@ -63,7 +66,7 @@ export const seedMockData = async () => {
 
     toast({
       title: "Example data loaded successfully",
-      description: `${mockConversations.length} conversations and their messages have been added to the database.`
+      description: `${mockConversations.length} example workflows have been added to the database.`
     });
 
     return { 

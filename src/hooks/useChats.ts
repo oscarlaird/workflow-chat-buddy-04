@@ -9,30 +9,49 @@ export interface Chat {
   title: string;
   created_at: string;
   updated_at: string;
+  is_example?: boolean;
+  username?: string;
 }
 
 export const useChats = () => {
   const [chats, setChats] = useState<Chat[]>([]);
+  const [exampleChats, setExampleChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const fetchChats = async () => {
       try {
         setIsLoading(true);
-        const { data, error } = await supabase
+        
+        // Fetch regular user chats
+        const { data: userChats, error: userChatsError } = await supabase
           .from('chats')
           .select('*')
+          .eq('is_example', false)
           .order('created_at', { ascending: false });
           
-        if (error) {
-          console.error('Error fetching chats:', error);
+        if (userChatsError) {
+          console.error('Error fetching user chats:', userChatsError);
           toast({
             title: "Error loading chats",
-            description: error.message,
+            description: userChatsError.message,
             variant: "destructive"
           });
         } else {
-          setChats(data || []);
+          setChats(userChats || []);
+        }
+        
+        // Fetch example chats
+        const { data: examples, error: examplesError } = await supabase
+          .from('chats')
+          .select('*')
+          .eq('is_example', true)
+          .order('created_at', { ascending: false });
+          
+        if (examplesError) {
+          console.error('Error fetching example chats:', examplesError);
+        } else {
+          setExampleChats(examples || []);
         }
       } catch (error) {
         console.error('Error in fetchChats:', error);
@@ -71,7 +90,9 @@ export const useChats = () => {
         .from('chats')
         .insert({
           id: chatId,
-          title
+          title,
+          is_example: false,
+          username: 'current_user'
         });
 
       if (error) {
@@ -123,6 +144,7 @@ export const useChats = () => {
 
   return {
     chats,
+    exampleChats,
     isLoading,
     createChat,
     deleteChat
