@@ -39,6 +39,18 @@ export const MessageList = ({
     return content.toLowerCase().includes("ready");
   };
 
+  // Function to preserve newlines in message content
+  const formatMessageContent = (content: string) => {
+    if (!content) return null;
+    
+    // Split by newlines and create paragraph elements
+    return content.split('\n').map((line, index) => (
+      <p key={index} className={index > 0 ? "mt-1" : ""}>
+        {line || " "} {/* Use a space if line is empty to preserve line height */}
+      </p>
+    ));
+  };
+
   if (messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -61,7 +73,7 @@ export const MessageList = ({
                 : "bg-muted"
             }`}>
               {message.content ? (
-                message.content
+                formatMessageContent(message.content)
               ) : message.role === "assistant" ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse" />
