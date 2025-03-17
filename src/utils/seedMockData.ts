@@ -41,7 +41,8 @@ export const seedMockData = async () => {
       // Then insert all messages for this chat
       if (conversation.messages.length > 0) {
         const messagesWithChatId = conversation.messages.map(message => ({
-          id: message.id,
+          // Generate a new UUID for each message instead of using string IDs
+          id: uuidv4(), 
           chat_id: chatId,
           role: message.role,
           content: message.content,
