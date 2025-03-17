@@ -1,5 +1,15 @@
 
 import { Workflow } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+
+// Function to get the Supabase URL for an image
+export const getSupabaseImageUrl = (fileName: string) => {
+  const { data } = supabase.storage
+    .from('workflow-screenshots')
+    .getPublicUrl(fileName);
+  
+  return data.publicUrl;
+};
 
 export const mockWorkflow: Workflow = {
   id: "workflow-1",
@@ -15,7 +25,7 @@ export const mockWorkflow: Workflow = {
       screenshots: [
         {
           id: "screenshot-1",
-          url: "/lovable-uploads/3787fcb9-6ee1-4dc1-8ba4-f128921dac07.png",
+          url: getSupabaseImageUrl("3787fcb9-6ee1-4dc1-8ba4-f128921dac07.png"),
           caption: "Login screen for the LegiScan website"
         }
       ],
@@ -43,7 +53,7 @@ export const mockWorkflow: Workflow = {
       screenshots: [
         {
           id: "screenshot-2",
-          url: "/lovable-uploads/d77919d8-ec33-4b18-88e4-b0bd6273c649.png",
+          url: getSupabaseImageUrl("d77919d8-ec33-4b18-88e4-b0bd6273c649.png"),
           caption: "Bill search results on LegiScan"
         }
       ],
@@ -80,7 +90,7 @@ export const mockWorkflow: Workflow = {
       screenshots: [
         {
           id: "screenshot-3",
-          url: "/lovable-uploads/1b371124-f8f8-4ab5-8d93-541f9c1b0bfd.png",
+          url: getSupabaseImageUrl("1b371124-f8f8-4ab5-8d93-541f9c1b0bfd.png"),
           caption: "Representative profiles on CPAC website"
         }
       ],
@@ -119,7 +129,7 @@ export const mockWorkflow: Workflow = {
       screenshots: [
         {
           id: "screenshot-4",
-          url: "/lovable-uploads/3651c761-43bf-424a-b48f-6b0ae1f45811.png",
+          url: getSupabaseImageUrl("3651c761-43bf-424a-b48f-6b0ae1f45811.png"),
           caption: "Voting record page on LegiScan"
         }
       ],
