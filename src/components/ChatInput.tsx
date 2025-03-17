@@ -16,7 +16,10 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   // Focus the textarea when component mounts and whenever it changes
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.focus();
+      // Use a timeout to ensure the textarea is focused after DOM updates
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
     }
   }, []);
 
@@ -33,7 +36,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
       if (textareaRef.current) {
         textareaRef.current.focus();
       }
-    }, 10);
+    }, 100);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -67,6 +70,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           rows={1}
           className="w-full py-3 px-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading}
+          // This helps with initial focus but the ref is more reliable for refocusing
           autoFocus
         />
         <button

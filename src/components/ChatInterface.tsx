@@ -2,7 +2,7 @@
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
@@ -30,6 +30,9 @@ export const ChatInterface = ({
   // Track pending messages waiting for Supabase confirmation
   const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(new Set());
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
+  
+  // Track when conversationId changes to trigger input focus
+  const prevConversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -41,6 +44,22 @@ export const ChatInterface = ({
     window.addEventListener("message", handleExtensionMessage);
     return () => window.removeEventListener("message", handleExtensionMessage);
   }, []);
+
+  // Detect conversation ID changes to trigger input focus
+  useEffect(() => {
+    if (conversationId && prevConversationIdRef.current !== conversationId) {
+      prevConversationIdRef.current = conversationId;
+      
+      // Focus the chat input when conversationId changes (new chat created)
+      // Use the event loop to ensure DOM is ready
+      setTimeout(() => {
+        const textareaElement = document.querySelector('.chat-interface textarea') as HTMLTextAreaElement;
+        if (textareaElement) {
+          textareaElement.focus();
+        }
+      }, 200);
+    }
+  }, [conversationId]);
 
   // Memoize message update function to avoid recreating it on each render
   const updateMessageContent = useCallback((messageId: string, newContent: string) => {
@@ -176,7 +195,7 @@ export const ChatInterface = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full chat-interface">
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <MessageList 
           messages={messages} 
