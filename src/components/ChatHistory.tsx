@@ -6,7 +6,6 @@ import { Chat } from "@/hooks/useChats";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewChatDialog from "./NewChatDialog";
-import SeedDataButton from "./SeedDataButton";
 
 interface ChatHistoryProps {
   selectedConversationId: string;
@@ -121,9 +120,6 @@ export const ChatHistory = ({
             <MessageSquare className="mx-auto h-12 w-12 mb-3 opacity-20" />
             <h3 className="font-medium text-lg mb-1">No chats yet</h3>
             <p className="text-sm mb-4">Create a new chat to get started</p>
-            <div className="flex justify-center">
-              <SeedDataButton />
-            </div>
           </div>
         ) : (
           Object.entries(groupedChats).map(([date, dateChats]) => (
