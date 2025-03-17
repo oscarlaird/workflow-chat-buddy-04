@@ -4,6 +4,7 @@ import { Film, Download, Loader2 } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageListProps {
   messages: Message[];
@@ -59,7 +60,15 @@ export const MessageList = ({
                 ? "bg-primary text-primary-foreground" 
                 : "bg-muted"
             }`}>
-              {message.content}
+              {message.content ? (
+                message.content
+              ) : message.role === "assistant" ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse delay-150" />
+                  <div className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-pulse delay-300" />
+                </div>
+              ) : null}
               {pendingMessageIds.has(message.id) && (
                 <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
                   <Loader2 className="h-3 w-3 animate-spin" />
