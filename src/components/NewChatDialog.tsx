@@ -24,10 +24,17 @@ export const NewChatDialog = ({
   // Focus the input when dialog opens
   useEffect(() => {
     if (open && inputRef.current) {
-      // Use a small timeout to ensure the dialog is fully rendered
+      // Use a longer timeout to ensure the dialog is fully rendered and visible
       setTimeout(() => {
         inputRef.current?.focus();
-      }, 50);
+      }, 100);
+    }
+  }, [open]);
+
+  // Reset title when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setTitle("");
     }
   }, [open]);
 
@@ -53,6 +60,8 @@ export const NewChatDialog = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={isLoading}
+              // Adding both autofocus and the ref to ensure focus works
+              autoFocus
             />
           </div>
           <DialogFooter>

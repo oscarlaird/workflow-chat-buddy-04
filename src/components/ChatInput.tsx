@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { CornerDownLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -12,7 +13,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus the textarea when component mounts
+  // Focus the textarea when component mounts and whenever it changes
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.focus();
@@ -27,11 +28,12 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     setInputValue("");
     
     // Re-focus the textarea after sending a message
+    // Use a slightly longer timeout to ensure DOM updates complete first
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
       }
-    }, 0);
+    }, 10);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -65,6 +67,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           rows={1}
           className="w-full py-3 px-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading}
+          autoFocus
         />
         <button
           type="submit"
