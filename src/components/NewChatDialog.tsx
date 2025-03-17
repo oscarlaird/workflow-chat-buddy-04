@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -96,27 +95,19 @@ export const NewChatDialog = ({
         }));
       }
       
-      // Use a single transaction for both operations
-      const { error } = await supabase.rpc('copy_example_chat', {
-        new_chat: chatInsert,
-        new_messages: newMessages
-      }).single();
-      
-      if (error) {
-        // Fallback to sequential operations if RPC isn't available
-        const { error: chatError } = await supabase
-          .from('chats')
-          .insert(chatInsert);
-          
-        if (chatError) throw chatError;
+      // Use sequential operations instead of RPC which might not be available
+      const { error: chatError } = await supabase
+        .from('chats')
+        .insert(chatInsert);
         
-        if (newMessages.length > 0) {
-          const { error: insertError } = await supabase
-            .from('messages')
-            .insert(newMessages);
-            
-          if (insertError) throw insertError;
-        }
+      if (chatError) throw chatError;
+      
+      if (newMessages.length > 0) {
+        const { error: insertError } = await supabase
+          .from('messages')
+          .insert(newMessages);
+          
+        if (insertError) throw insertError;
       }
       
       onOpenChange(false);
