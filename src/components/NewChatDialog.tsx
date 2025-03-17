@@ -65,18 +65,7 @@ export const NewChatDialog = ({
     try {
       const newChatId = uuidv4();
       
-      const { error: chatError } = await supabase
-        .from('chats')
-        .insert({
-          id: newChatId,
-          title: exampleChat.title,
-          created_at: new Date().toISOString(),
-          is_example: false,
-          username: 'current_user'
-        });
-        
-      if (chatError) throw chatError;
-      
+      // Get example messages first to avoid multiple round trips
       const { data: exampleMessages, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -85,8 +74,19 @@ export const NewChatDialog = ({
         
       if (messagesError) throw messagesError;
       
+      // Prepare new chat
+      const chatInsert = {
+        id: newChatId,
+        title: exampleChat.title,
+        created_at: new Date().toISOString(),
+        is_example: false,
+        username: 'current_user'
+      };
+      
+      // Prepare messages
+      let newMessages = [];
       if (exampleMessages && exampleMessages.length > 0) {
-        const newMessages = exampleMessages.map(message => ({
+        newMessages = exampleMessages.map(message => ({
           id: uuidv4(),
           chat_id: newChatId,
           role: message.role,
@@ -94,12 +94,29 @@ export const NewChatDialog = ({
           username: 'current_user',
           created_at: new Date().toISOString()
         }));
-        
-        const { error: insertError } = await supabase
-          .from('messages')
-          .insert(newMessages);
+      }
+      
+      // Use a single transaction for both operations
+      const { error } = await supabase.rpc('copy_example_chat', {
+        new_chat: chatInsert,
+        new_messages: newMessages
+      }).single();
+      
+      if (error) {
+        // Fallback to sequential operations if RPC isn't available
+        const { error: chatError } = await supabase
+          .from('chats')
+          .insert(chatInsert);
           
-        if (insertError) throw insertError;
+        if (chatError) throw chatError;
+        
+        if (newMessages.length > 0) {
+          const { error: insertError } = await supabase
+            .from('messages')
+            .insert(newMessages);
+            
+          if (insertError) throw insertError;
+        }
       }
       
       onOpenChange(false);
@@ -107,7 +124,7 @@ export const NewChatDialog = ({
       
       toast({
         title: "Example workflow copied",
-        description: `"${exampleChat.title}" has been copied to your chats.` // Fixed: Added missing backtick here
+        description: `"${exampleChat.title}" has been copied to your chats.`
       });
     } catch (error) {
       console.error('Error copying example chat:', error);

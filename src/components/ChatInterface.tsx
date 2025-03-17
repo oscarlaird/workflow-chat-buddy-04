@@ -202,6 +202,7 @@ export const ChatInterface = ({
       <ChatInput 
         onSendMessage={handleSubmit} 
         isLoading={isLoading} 
+        disabled={!conversationId}
       />
     </div>
   );

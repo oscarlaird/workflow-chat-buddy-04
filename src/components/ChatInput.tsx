@@ -7,30 +7,31 @@ import { Textarea } from "@/components/ui/textarea";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  disabled?: boolean;
 }
 
-export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
+export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Focus the textarea when component mounts
   useEffect(() => {
-    if (textareaRef.current) {
+    if (textareaRef.current && !disabled) {
       textareaRef.current.focus();
     }
-  }, []);
+  }, [disabled]);
 
   // This effect will run after state updates and maintain focus
   useEffect(() => {
-    if (!isLoading && textareaRef.current) {
+    if (!isLoading && textareaRef.current && !disabled) {
       textareaRef.current.focus();
     }
-  }, [isLoading]);
+  }, [isLoading, disabled]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || disabled) return;
     
     // Store current input value and clear input before sending
     const messageToSend = inputValue;
@@ -67,16 +68,16 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
           value={inputValue}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
+          placeholder={disabled ? "Select or create a chat to start messaging..." : "Type your message..."}
           rows={1}
           className="w-full py-3 px-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
-          disabled={isLoading}
-          autoFocus
+          disabled={isLoading || disabled}
+          autoFocus={!disabled}
         />
         <button
           type="submit"
           className="absolute right-3 bottom-3 p-1.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-          disabled={!inputValue.trim() || isLoading}
+          disabled={!inputValue.trim() || isLoading || disabled}
         >
           {isLoading ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -86,7 +87,9 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         </button>
       </form>
       <div className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
-        Press Enter to send, Shift+Enter for a new line
+        {disabled ? 
+          "Select a chat from the sidebar or create a new one" : 
+          "Press Enter to send, Shift+Enter for a new line"}
       </div>
     </div>
   );
