@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,7 @@ export const NewChatDialog = ({
       
       toast({
         title: "Example workflow copied",
-        description: `"${exampleChat.title}" has been copied to your chats."
+        description: `"${exampleChat.title}" has been copied to your chats.` // Fixed: Added missing backtick here
       });
     } catch (error) {
       console.error('Error copying example chat:', error);
