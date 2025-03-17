@@ -16,7 +16,6 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   // Focus the textarea when component mounts
   useEffect(() => {
     if (textareaRef.current) {
-      // Use a timeout to ensure the textarea is focused after DOM updates
       textareaRef.current.focus();
     }
   }, []);
@@ -25,16 +24,12 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
     
-    onSendMessage(inputValue);
+    // Store current input value and clear input before sending
+    const messageToSend = inputValue;
     setInputValue("");
     
-    // Focus should be maintained because we're using the same component
-    // Just in case, force focus again in the next tick
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
-    }, 0);
+    // Send message after state update
+    onSendMessage(messageToSend);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -59,7 +54,7 @@ export const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   return (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
       <form onSubmit={handleSubmit} className="relative">
-        <textarea
+        <Textarea
           ref={textareaRef}
           value={inputValue}
           onChange={handleInputChange}
