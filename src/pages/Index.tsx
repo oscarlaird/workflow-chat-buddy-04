@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
@@ -6,6 +5,7 @@ import ChatInterface from "@/components/ChatInterface";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 import VersionDisplay from "@/components/VersionDisplay";
+import SeedDataButton from "@/components/SeedDataButton";
 import { useChats } from "@/hooks/useChats";
 import { useToast } from "@/components/ui/use-toast";
 import { 

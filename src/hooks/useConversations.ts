@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types";
-import { mockConversations } from "@/data/mockData";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -24,56 +23,59 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   const [chatId] = useState(() => conversationId || uuidv4());
 
   useEffect(() => {
-    loadMessages();
+    if (conversationId) {
+      loadMessages();
+    } else {
+      setMessages([]);
+      setScreenRecordings({});
+    }
   }, [conversationId]);
 
+  // Load messages from Supabase
   const loadMessages = async () => {
     try {
-      if (conversationId) {
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', conversationId)
-          .order('created_at', { ascending: true });
-        
-        if (error) {
-          console.error('Error loading messages from Supabase:', error);
-          loadMockData();
-        } else if (data && data.length > 0) {
-          const messagesData = data.map(msg => ({
-            id: msg.id,
-            role: msg.role as "user" | "assistant",
-            content: msg.content,
-            username: msg.username
-          }));
-          setMessages(messagesData);
-          createMockScreenRecordings(messagesData);
-        } else {
-          setMessages([]);
-          setScreenRecordings({});
-        }
+      if (!conversationId) return;
+      
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', conversationId)
+        .order('created_at', { ascending: true });
+      
+      if (error) {
+        console.error('Error loading messages from Supabase:', error);
+        toast({
+          title: "Error loading messages",
+          description: error.message,
+          variant: "destructive"
+        });
+        setMessages([]);
+      } else if (data && data.length > 0) {
+        const messagesData = data.map(msg => ({
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+          username: msg.username
+        }));
+        setMessages(messagesData);
+        createVirtualScreenRecordings(messagesData);
       } else {
         setMessages([]);
         setScreenRecordings({});
       }
     } catch (error) {
       console.error('Error in loadMessages:', error);
-      loadMockData();
-    }
-  };
-
-  const loadMockData = () => {
-    const conversation = mockConversations.find(conv => conv.id === conversationId);
-    if (conversation) {
-      setMessages(conversation.messages);
-      createMockScreenRecordings(conversation.messages);
-    } else {
       setMessages([]);
-      setScreenRecordings({});
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const createMockScreenRecordings = (messages: Message[]) => {
+  // Create virtual screen recordings based on message content
+  // This simulates screen recordings without needing a new database table
+  const createVirtualScreenRecordings = useCallback((messages: Message[]) => {
     const recordings: Record<string, ScreenRecording> = {};
     
     for (let i = 0; i < messages.length - 1; i++) {
@@ -85,17 +87,12 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           current.content.includes("Can you show me") ||
           current.content.includes("please show"))) {
         
-        if (current.id === "msg-9" && next.id === "msg-10") {
+        // If the assistant asks to see something and the next message is also from the assistant,
+        // assume a screen recording happened
+        if (next.role === "assistant" && next.content.includes("[table]")) {
           recordings[current.id] = {
             id: `recording-${i}`,
-            duration: "54s",
-            timestamp: new Date().toISOString()
-          };
-        }
-        else if (current.id === "msg-14" && next.id === "msg-15") {
-          recordings[current.id] = {
-            id: `recording-${i}`,
-            duration: "76s",
+            duration: `${Math.floor(30 + Math.random() * 60)}s`, // Random duration between 30-90s
             timestamp: new Date().toISOString()
           };
         }
@@ -105,12 +102,9 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     setScreenRecordings(recordings);
     
     if (Object.keys(recordings).length > 0) {
-      toast({
-        title: "Screen recordings loaded",
-        description: `Loaded ${Object.keys(recordings).length} screen recordings in this conversation.`
-      });
+      console.log(`Created ${Object.keys(recordings).length} virtual screen recordings`);
     }
-  };
+  }, []);
 
   return {
     messages,
