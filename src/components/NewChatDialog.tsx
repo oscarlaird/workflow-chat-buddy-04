@@ -65,7 +65,7 @@ export const NewChatDialog = ({
     try {
       const newChatId = uuidv4();
       
-      // Get example messages first to avoid multiple round trips
+      // Get example messages
       const { data: exampleMessages, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -124,13 +124,14 @@ export const NewChatDialog = ({
         }));
       }
       
-      // Use sequential operations instead of RPC which might not be available
+      // Insert the new chat
       const { error: chatError } = await supabase
         .from('chats')
         .insert(chatInsert);
         
       if (chatError) throw chatError;
       
+      // Insert the copied messages
       if (newMessages.length > 0) {
         const { error: insertError } = await supabase
           .from('messages')
@@ -139,6 +140,7 @@ export const NewChatDialog = ({
         if (insertError) throw insertError;
       }
       
+      // Insert the copied workflow steps
       if (newWorkflowSteps.length > 0) {
         const { error: workflowInsertError } = await supabase
           .from('workflow_steps')

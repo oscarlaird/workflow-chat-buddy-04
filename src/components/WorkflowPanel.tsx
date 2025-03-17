@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Play, Loader2, MapPin, FileText } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -12,16 +11,20 @@ import { Workflow, WorkflowStep as WorkflowStepType } from "@/types";
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
   showRunButton?: boolean;
+  chatId?: string;
 }
 
-export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
+export const WorkflowPanel = ({ 
+  onRunWorkflow, 
+  showRunButton = true, 
+  chatId = 'conv-1'
+}: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [state, setState] = useState("");
   const [billInput, setBillInput] = useState("");
 
-  // Fetch workflow steps from Supabase
   useEffect(() => {
     async function fetchWorkflowSteps() {
       try {
@@ -29,7 +32,7 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
         const { data, error } = await supabase
           .from('workflow_steps')
           .select('*')
-          .eq('chat_id', 'conv-1')
+          .eq('chat_id', chatId)
           .order('step_order', { ascending: true });
 
         if (error) {
@@ -37,7 +40,6 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
         }
 
         if (data) {
-          // Transform Supabase data into our Workflow type
           const workflowSteps: WorkflowStepType[] = data.map(step => ({
             id: step.id,
             title: step.title,
@@ -71,15 +73,13 @@ export const WorkflowPanel = ({ onRunWorkflow, showRunButton = true }: WorkflowP
     }
 
     fetchWorkflowSteps();
-  }, []);
+  }, [chatId]);
 
   const handleRunWorkflow = () => {
     setIsRunning(true);
     
-    // Send message to create agent run window
     window.postMessage({ type: "CREATE_AGENT_RUN_WINDOW" }, "*");
     
-    // Simulate workflow execution
     setTimeout(() => {
       onRunWorkflow();
       setIsRunning(false);
