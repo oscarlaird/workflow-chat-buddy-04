@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.36.0";
 
@@ -36,12 +37,19 @@ serve(async (req) => {
         // Get the file name from the path
         const fileName = filePath.split('/').pop();
         
-        // Get the fully qualified URL
-        // If we're in a local environment, use the origin from the request
-        // Otherwise, use a default URL (modify as needed)
-        const origin = req.headers.get('origin') || 'https://scydgsnstcmcdfxrgvoh.supabase.co';
-        const fileUrl = new URL(filePath, origin).toString();
+        // Construct a proper URL for fetching
+        // For development, use the request's origin or fallback to the Supabase URL
+        let baseUrl;
+        const requestOrigin = req.headers.get('origin');
         
+        if (requestOrigin) {
+          baseUrl = requestOrigin;
+        } else {
+          // Fallback to a hardcoded URL that matches your development server
+          baseUrl = 'http://localhost:8080';
+        }
+        
+        const fileUrl = `${baseUrl}${filePath}`;
         console.log(`Attempting to fetch file from: ${fileUrl}`);
         
         const fileResponse = await fetch(fileUrl, {
