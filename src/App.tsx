@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "./components/ChatInterface";
 import { Index } from "./pages/Index";
-import { NotFound } from "./pages/NotFound";
-import { ConversationPage } from "./pages/ConversationPage";
-import { WorkflowPage } from "./pages/WorkflowPage";
+import NotFound from "./pages/NotFound";
+import ConversationPage from "./pages/ConversationPage";
+import WorkflowPage from "./pages/WorkflowPage";
 import { useChats } from "./hooks/useChats";
 
 function App() {

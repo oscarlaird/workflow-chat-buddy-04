@@ -32,6 +32,10 @@ export const Index: React.FC<IndexProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  const handleSendMessage = (message: string) => {
+    console.log("Message sent from Index view:", message);
+  };
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <div className="w-1/4 min-w-[300px] max-w-md border-r border-gray-200 dark:border-gray-800">
@@ -50,7 +54,10 @@ export const Index: React.FC<IndexProps> = ({
       </div>
       <div className="flex-1 overflow-hidden">
         {selectedConversationId ? (
-          <ChatInterface conversationId={selectedConversationId} />
+          <ChatInterface 
+            conversationId={selectedConversationId} 
+            onSendMessage={handleSendMessage}
+          />
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="max-w-md text-center p-8">
