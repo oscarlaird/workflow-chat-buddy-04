@@ -41,6 +41,8 @@ export const Index: React.FC<IndexProps> = ({
 
   const handleRunWorkflow = () => {
     console.log("Running workflow for conversation:", selectedConversationId);
+    // Create a new message with content "run" when the user clicks "Run Workflow"
+    handleSendMessage("run");
   };
 
   return (

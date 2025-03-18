@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -69,7 +68,6 @@ export const ChatInterface = ({
       )
     );
     
-    // Update streaming state based on isStreaming parameter
     if (isStreaming) {
       setStreamingMessages(prev => new Set(prev).add(messageId));
     } else {
@@ -127,7 +125,6 @@ export const ChatInterface = ({
           ];
         });
 
-        // Check if the message is streaming and update the streaming messages set
         if (newMessage.is_currently_streaming) {
           setStreamingMessages(prev => new Set(prev).add(newMessage.id));
         }
@@ -141,7 +138,6 @@ export const ChatInterface = ({
         console.log('Received real-time UPDATE message:', payload);
         const updatedMessage = payload.new;
         
-        // Update message content, function name, and streaming status
         updateMessageContent(
           updatedMessage.id, 
           updatedMessage.content, 
