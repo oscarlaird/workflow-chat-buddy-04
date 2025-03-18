@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { ChevronDown, ChevronRight, Code, Table, Image } from "lucide-react";
 import { WorkflowStep as WorkflowStepType } from "@/types";
 import CodeBlock from "./CodeBlock";
@@ -10,18 +10,18 @@ interface WorkflowStepProps {
   index: number;
 }
 
-export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
+export const WorkflowStep = memo(({ step, index }: WorkflowStepProps) => {
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
   const [isDataExpanded, setIsDataExpanded] = useState(false);
-  // Add a key based on the step description to force re-render when it changes
-  const [stepKey, setStepKey] = useState(`${step.id}-${step.description}`);
-
-  // Update the key when the step description changes
-  useEffect(() => {
-    setStepKey(`${step.id}-${step.description}`);
-    // When description changes, log it to verify we're detecting changes
-    console.log(`Step description changed for step ${step.id}:`, step.description);
-  }, [step.id, step.description]);
+  
+  // Generate a more reliable key for forcing updates
+  const stepKey = `${step.id}-${step.description}-${step.title}-${step.status}`;
+  
+  // Log on every render to verify we're re-rendering when props change
+  console.log(`Rendering step ${step.id} with description: "${step.description.substring(0, 20)}..."`, {
+    stepKey,
+    fullStep: step
+  });
 
   const getStatusClass = () => {
     switch (step.status) {
@@ -125,6 +125,6 @@ export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
       )}
     </div>
   );
-};
+});
 
 export default WorkflowStep;

@@ -52,22 +52,38 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
 
     fetchWorkflowSteps();
 
-    // Set up real-time subscription for workflow steps
-    console.log(`Setting up realtime subscription for workflow steps of chat ${chatId}`);
+    // Create a general realtime subscription to ALL workflow_steps changes
+    console.log("Setting up universal realtime subscription for workflow_steps table");
     
-    // Create a channel specifically for this chat's workflow steps
-    const channelName = `workflow_steps_${chatId}`;
-    console.log(`Creating channel: ${channelName}`);
-    
-    const channel = supabase
-      .channel(channelName)
+    // First channel for ALL changes (debugging purpose)
+    const allChangesChannel = supabase
+      .channel('workflow_steps_all_changes')
+      .on('postgres_changes', {
+        event: '*',  // Listen to all events (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'workflow_steps'
+      }, (payload) => {
+        console.log('GLOBAL LISTENER - Received ANY workflow_steps change:', payload);
+        console.log('Change details:', {
+          event: payload.eventType,
+          new: payload.new,
+          old: payload.old
+        });
+      })
+      .subscribe((status) => {
+        console.log(`ALL changes subscription status: ${status}`);
+      });
+
+    // Second channel specifically for this chat's workflow steps
+    const chatSpecificChannel = supabase
+      .channel(`workflow_steps_${chatId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Received real-time INSERT workflow step:', payload);
+        console.log(`CHAT ${chatId} - Received INSERT workflow step:`, payload);
         const newStep = payload.new;
         
         setWorkflowSteps(prevSteps => {
@@ -87,7 +103,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Received real-time UPDATE workflow step:', payload);
+        console.log(`CHAT ${chatId} - Received UPDATE workflow step:`, payload);
         console.log('Update details - new value:', payload.new);
         console.log('Update details - old value:', payload.old);
         const updatedStep = payload.new;
@@ -108,7 +124,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Received real-time DELETE workflow step:', payload);
+        console.log(`CHAT ${chatId} - Received DELETE workflow step:`, payload);
         const deletedStep = payload.old;
         
         setWorkflowSteps(prevSteps => 
@@ -116,15 +132,16 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         );
       })
       .subscribe((status) => {
-        console.log(`Realtime subscription status for workflow steps: ${status}`);
+        console.log(`Chat-specific subscription status for chat ${chatId}: ${status}`);
         if (status !== 'SUBSCRIBED') {
-          console.error(`Failed to subscribe to workflow steps changes: ${status}`);
+          console.error(`Failed to subscribe to workflow steps changes for chat ${chatId}: ${status}`);
         }
       });
 
     return () => {
-      console.log('Removing channel subscription for workflow steps');
-      supabase.removeChannel(channel);
+      console.log('Removing channel subscriptions for workflow steps');
+      supabase.removeChannel(allChangesChannel);
+      supabase.removeChannel(chatSpecificChannel);
     };
   }, [chatId]);
 
