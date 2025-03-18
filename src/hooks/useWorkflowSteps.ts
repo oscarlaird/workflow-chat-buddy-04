@@ -162,6 +162,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       screenshots: parsedScreenshots,
       code: step.code || undefined,
       exampleData: parsedExampleData,
+      step_order: step.step_order, // Include step_order in the returned object
     };
   };
 

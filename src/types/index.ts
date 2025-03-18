@@ -28,6 +28,7 @@ export interface WorkflowStep {
   screenshots?: WorkflowStepScreenshot[];
   code?: string;
   exampleData?: any[];
+  step_order: number; // Added missing property
 }
 
 export interface Workflow {
