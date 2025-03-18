@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Play, Loader2, Check, X, Table, List, Plus } from "lucide-react";
+import { Play, Loader2, Check, X, Table, List, Plus, Trash } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,7 +96,6 @@ export const WorkflowPanel = ({
           });
           setInputValues(initialValues);
           
-          // Initialize tabular data with one empty row
           setTabularData([{...initialValues}]);
         }
       } catch (error) {
@@ -131,7 +129,6 @@ export const WorkflowPanel = ({
           description: error.message,
           variant: "destructive"
         });
-        // Revert state on error
         setMultiInput(multiInput);
       } else {
         toast({
@@ -287,7 +284,7 @@ export const WorkflowPanel = ({
                   {field.field_name}
                 </TableHead>
               ))}
-              <TableHead className="w-[80px]">Actions</TableHead>
+              <TableHead className="w-[80px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -308,10 +305,10 @@ export const WorkflowPanel = ({
                 <TableCell>
                   <button 
                     onClick={() => removeTableRow(rowIndex)}
-                    className="p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full"
+                    className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
                     disabled={tabularData.length <= 1}
                   >
-                    <X className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </button>
                 </TableCell>
               </TableRow>
