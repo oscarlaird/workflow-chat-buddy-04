@@ -1,18 +1,25 @@
 
-import { useState } from "react";
-import { Play, Loader2, MapPin, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Play, Loader2, Check, X } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
 import { Workflow, WorkflowStep as WorkflowStepType } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
+import { supabase } from "@/integrations/supabase/client";
+import { InputField } from "@/hooks/useChats";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
   showRunButton?: boolean;
   chatId?: string;
+}
+
+interface InputValues {
+  [key: string]: string | number | boolean;
 }
 
 export const WorkflowPanel = ({ 
@@ -21,10 +28,59 @@ export const WorkflowPanel = ({
   chatId
 }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [state, setState] = useState("");
-  const [billInput, setBillInput] = useState("");
+  const [inputValues, setInputValues] = useState<InputValues>({});
+  const [multiInput, setMultiInput] = useState(false);
+  const [inputSchema, setInputSchema] = useState<InputField[]>([]);
+  const [isLoadingChat, setIsLoadingChat] = useState(true);
   
   const { workflowSteps, isLoading, error, deletingStepIds } = useWorkflowSteps(chatId);
+
+  useEffect(() => {
+    const fetchChatSettings = async () => {
+      if (!chatId) {
+        setIsLoadingChat(false);
+        return;
+      }
+
+      try {
+        setIsLoadingChat(true);
+        const { data, error } = await supabase
+          .from('chats')
+          .select('multi_input, input_schema')
+          .eq('id', chatId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching chat settings:', error);
+          toast({
+            title: "Error loading chat settings",
+            description: error.message,
+            variant: "destructive"
+          });
+        } else if (data) {
+          setMultiInput(data.multi_input || false);
+          setInputSchema(data.input_schema || []);
+          
+          // Initialize input values based on schema
+          const initialValues: InputValues = {};
+          if (data.input_schema && Array.isArray(data.input_schema)) {
+            data.input_schema.forEach((field: InputField) => {
+              if (field.type === 'string') initialValues[field.field_name] = '';
+              else if (field.type === 'number') initialValues[field.field_name] = 0;
+              else if (field.type === 'bool') initialValues[field.field_name] = false;
+            });
+          }
+          setInputValues(initialValues);
+        }
+      } catch (error) {
+        console.error('Error in fetchChatSettings:', error);
+      } finally {
+        setIsLoadingChat(false);
+      }
+    };
+
+    fetchChatSettings();
+  }, [chatId]);
 
   const workflow = workflowSteps.length > 0 ? {
     id: "workflow-1",
@@ -37,7 +93,10 @@ export const WorkflowPanel = ({
   const handleRunWorkflow = () => {
     setIsRunning(true);
     
-    window.postMessage({ type: "CREATE_AGENT_RUN_WINDOW" }, "*");
+    window.postMessage({ 
+      type: "CREATE_AGENT_RUN_WINDOW",
+      inputs: inputValues 
+    }, "*");
     
     setTimeout(() => {
       onRunWorkflow();
@@ -51,6 +110,14 @@ export const WorkflowPanel = ({
     return (completeSteps / workflow.totalSteps) * 100;
   };
 
+  const handleInputChange = (name: string, value: string | number | boolean) => {
+    setInputValues(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Get states for dropdown if there's a state field
   const states = [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
     "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
@@ -61,7 +128,71 @@ export const WorkflowPanel = ({
     "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
   ];
 
-  if (isLoading) {
+  const renderInputField = (field: InputField) => {
+    const value = inputValues[field.field_name];
+    
+    switch(field.type) {
+      case 'string':
+        if (field.field_name.toLowerCase() === 'state') {
+          return (
+            <Select 
+              key={field.field_name}
+              value={value as string} 
+              onValueChange={(val) => handleInputChange(field.field_name, val)}
+            >
+              <SelectTrigger id={field.field_name} className="w-full">
+                <SelectValue placeholder={`Select ${field.field_name}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {states.map((stateName) => (
+                  <SelectItem key={stateName} value={stateName}>
+                    {stateName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        } else {
+          return (
+            <Input
+              key={field.field_name}
+              id={field.field_name}
+              placeholder={`Enter ${field.field_name}`}
+              value={value as string}
+              onChange={(e) => handleInputChange(field.field_name, e.target.value)}
+            />
+          );
+        }
+      case 'number':
+        return (
+          <Input
+            key={field.field_name}
+            id={field.field_name}
+            type="number"
+            placeholder={`Enter ${field.field_name}`}
+            value={value as number}
+            onChange={(e) => handleInputChange(field.field_name, parseInt(e.target.value) || 0)}
+          />
+        );
+      case 'bool':
+        return (
+          <div key={field.field_name} className="flex items-center space-x-2">
+            <Switch
+              id={field.field_name}
+              checked={value as boolean}
+              onCheckedChange={(checked) => handleInputChange(field.field_name, checked)}
+            />
+            <span className="text-sm text-gray-500">
+              {value ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-500" />}
+            </span>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  if (isLoading || isLoadingChat) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -94,37 +225,14 @@ export const WorkflowPanel = ({
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="space-y-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor="state" className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4" />
-              <span>State</span>
-            </Label>
-            <Select value={state} onValueChange={setState}>
-              <SelectTrigger id="state" className="w-full">
-                <SelectValue placeholder="Select a state" />
-              </SelectTrigger>
-              <SelectContent>
-                {states.map((stateName) => (
-                  <SelectItem key={stateName} value={stateName}>
-                    {stateName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="bill-input" className="flex items-center gap-1.5">
-              <FileText className="h-4 w-4" />
-              <span>Bill Number/Name</span>
-            </Label>
-            <Input
-              id="bill-input"
-              placeholder="Enter bill number or name"
-              value={billInput}
-              onChange={(e) => setBillInput(e.target.value)}
-            />
-          </div>
+          {inputSchema.map((field) => (
+            <div key={field.field_name} className="space-y-2">
+              <Label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
+                <span>{field.field_name}</span>
+              </Label>
+              {renderInputField(field)}
+            </div>
+          ))}
         </div>
         
         {showRunButton && (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Moon, Sun, Menu } from "lucide-react";
 import ChatHistory from "@/components/ChatHistory";
@@ -93,6 +94,10 @@ const Index = () => {
 
   const handleSendMessage = (message: string) => {
     console.log('Message sent:', message);
+  };
+
+  const handleRunWorkflow = () => {
+    console.log("Running workflow with inputs...");
   };
 
   return (
@@ -198,10 +203,6 @@ const Index = () => {
       </div>
     </div>
   );
-};
-
-const handleRunWorkflow = () => {
-  console.log("Running workflow...");
 };
 
 export default Index;

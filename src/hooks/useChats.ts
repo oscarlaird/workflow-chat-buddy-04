@@ -4,6 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 
+export interface InputField {
+  field_name: string;
+  type: 'string' | 'number' | 'bool';
+}
+
 export interface Chat {
   id: string;
   title: string;
@@ -11,6 +16,8 @@ export interface Chat {
   updated_at: string;
   is_example?: boolean;
   username?: string;
+  multi_input?: boolean;
+  input_schema?: InputField[];
 }
 
 export const useChats = () => {
@@ -43,7 +50,12 @@ export const useChats = () => {
             variant: "destructive"
           });
         } else {
-          setChats(userChats || []);
+          // Parse the input_schema JSON if it exists
+          const parsedUserChats = userChats?.map(chat => ({
+            ...chat,
+            input_schema: chat.input_schema ? chat.input_schema as InputField[] : undefined
+          }));
+          setChats(parsedUserChats || []);
         }
         
         // Fetch user-created example chats
@@ -57,7 +69,12 @@ export const useChats = () => {
         if (userExamplesError) {
           console.error('Error fetching user example chats:', userExamplesError);
         } else {
-          setExampleChats(userExamples || []);
+          // Parse the input_schema JSON if it exists
+          const parsedUserExamples = userExamples?.map(chat => ({
+            ...chat,
+            input_schema: chat.input_schema ? chat.input_schema as InputField[] : undefined
+          }));
+          setExampleChats(parsedUserExamples || []);
         }
 
         // Fetch system example chats
@@ -71,7 +88,12 @@ export const useChats = () => {
         if (systemExamplesError) {
           console.error('Error fetching system example chats:', systemExamplesError);
         } else {
-          setSystemExampleChats(systemExamples || []);
+          // Parse the input_schema JSON if it exists
+          const parsedSystemExamples = systemExamples?.map(chat => ({
+            ...chat,
+            input_schema: chat.input_schema ? chat.input_schema as InputField[] : undefined
+          }));
+          setSystemExampleChats(parsedSystemExamples || []);
         }
       } catch (error) {
         console.error('Error in fetchChats:', error);
@@ -113,7 +135,13 @@ export const useChats = () => {
           id: chatId,
           title,
           is_example: false,
-          username: 'current_user'
+          username: 'current_user',
+          multi_input: false,
+          input_schema: [
+            { field_name: "state", type: "string" },
+            { field_name: "bill", type: "string" },
+            { field_name: "passed", type: "bool" }
+          ]
         });
 
       if (error) {

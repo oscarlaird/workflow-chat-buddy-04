@@ -13,7 +13,9 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          input_schema: Json | null
           is_example: boolean | null
+          multi_input: boolean | null
           title: string
           updated_at: string | null
           username: string | null
@@ -21,7 +23,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id: string
+          input_schema?: Json | null
           is_example?: boolean | null
+          multi_input?: boolean | null
           title: string
           updated_at?: string | null
           username?: string | null
@@ -29,7 +33,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          input_schema?: Json | null
           is_example?: boolean | null
+          multi_input?: boolean | null
           title?: string
           updated_at?: string | null
           username?: string | null
