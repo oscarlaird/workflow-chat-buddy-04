@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Play, Loader2, Check, X, Table, List } from "lucide-react";
+import { Play, Loader2, Check, X, Table, List, Plus } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
