@@ -176,6 +176,6 @@ export const WorkflowPanel = ({
       </div>
     </div>
   );
-});
+};
 
 export default WorkflowPanel;

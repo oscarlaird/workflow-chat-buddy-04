@@ -1,6 +1,6 @@
 
 import { memo } from "react";
-import { ChevronDown, ChevronRight, Code, Table } from "lucide-react";
+import { ChevronDown, ChevronRight, Code, Table, Trash2 } from "lucide-react";
 import { WorkflowStep as WorkflowStepType } from "@/types";
 import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
@@ -67,6 +67,15 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
       transition={{ duration: 0.5, ease: "easeInOut" }}
       exit={{ opacity: 0, height: 0 }}
     >
+      {isDeleting && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-red-500/10 backdrop-blur-sm rounded-md">
+          <div className="bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 animate-pulse">
+            <Trash2 className="w-4 h-4" />
+            <span className="text-sm font-medium">Deleting...</span>
+          </div>
+        </div>
+      )}
+      
       <div className="mb-2">
         <h3 className="text-lg font-medium">
           Step {index + 1}: {step.title}
