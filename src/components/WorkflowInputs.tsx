@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
-import { Plus, Trash, Table, List } from "lucide-react";
+
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash, Table, List, Upload, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { InputField, InputValues } from "@/types";
 import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
 import { TypedInputField, InputFieldIcon } from "@/components/InputField";
-import { formatFieldName } from "@/lib/utils";
+import { formatFieldName, parseSpreadsheetFile, mapSpreadsheetToInputSchema } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 import { 
   Table as UITable,
   TableBody,
@@ -14,6 +16,14 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface WorkflowInputsProps {
   chatId?: string;
@@ -31,6 +41,11 @@ export const WorkflowInputs = ({
   const [isRunning, setIsRunning] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>({});
   const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   
   const { 
     multiInput, 
@@ -120,6 +135,68 @@ export const WorkflowInputs = ({
     setTabularData(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      // Only accept .csv files
+      if (!file.name.endsWith('.csv')) {
+        throw new Error('Only CSV files are supported');
+      }
+
+      // Parse the file
+      const data = await parseSpreadsheetFile(file);
+      
+      // Map the data to the input schema
+      const mappedData = mapSpreadsheetToInputSchema(data, inputSchema);
+      
+      if (mappedData.length === 0) {
+        throw new Error('No valid data found in the file');
+      }
+
+      if (!multiInput && mappedData.length > 0) {
+        // In single input mode, just use the first row
+        setInputValues(mappedData[0]);
+        toast({
+          title: "Data imported",
+          description: `Imported the first row from ${file.name}`,
+        });
+      } else {
+        // In tabular mode, use all rows
+        setTabularData(mappedData);
+        
+        // Switch to tabular mode if we're not already there
+        if (!multiInput) {
+          await updateMultiInput(true);
+        }
+        
+        toast({
+          title: "Data imported",
+          description: `Imported ${mappedData.length} rows from ${file.name}`,
+        });
+      }
+      
+      setShowUploadDialog(false);
+    } catch (error) {
+      console.error('File upload error:', error);
+      setUploadError(error instanceof Error ? error.message : 'Failed to process file');
+    } finally {
+      setIsUploading(false);
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const triggerFileUpload = () => {
+    setShowUploadDialog(true);
+  };
+
   const renderTabularInputs = () => {
     return (
       <div className="overflow-x-auto">
@@ -195,6 +272,15 @@ export const WorkflowInputs = ({
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium">Workflow Inputs</h3>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={triggerFileUpload}
+            className="mr-2"
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            <span>Import</span>
+          </Button>
           <Label htmlFor="input-mode" className="text-sm">
             {multiInput ? <Table className="h-4 w-4" /> : <List className="h-4 w-4" />}
           </Label>
@@ -251,8 +337,67 @@ export const WorkflowInputs = ({
           )}
         </button>
       )}
+
+      {/* File Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Import Spreadsheet Data</DialogTitle>
+            <DialogDescription>
+              Upload a CSV file to populate the workflow inputs. The first row should contain headers that match your input fields.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6">
+              <Upload className="h-8 w-8 text-gray-400 mb-2" />
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Drag and drop a CSV file, or click to browse
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <span>Browse Files</span>
+                )}
+              </Button>
+              
+              {uploadError && (
+                <div className="mt-3 text-destructive text-sm flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            <p>CSV file requirements:</p>
+            <ul className="list-disc ml-4 mt-1">
+              <li>First row must be headers that match your input fields</li>
+              <li>Each row represents one set of inputs</li>
+              <li>Format: text values, numbers, true/false for boolean fields</li>
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default WorkflowInputs;
+
