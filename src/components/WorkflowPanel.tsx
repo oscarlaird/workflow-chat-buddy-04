@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Play, Loader2, Check, X } from "lucide-react";
+import { Play, Loader2, Check, X, Table, List } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,15 @@ import { Workflow, InputValues, InputField } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
+import { 
+  Table as UITable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
@@ -46,6 +56,8 @@ export const WorkflowPanel = ({
   const [multiInput, setMultiInput] = useState(false);
   const [inputSchema, setInputSchema] = useState<InputField[]>([]);
   const [isLoadingChat, setIsLoadingChat] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
   
   const { workflowSteps, isLoading, error, deletingStepIds } = useWorkflowSteps(chatId);
 
@@ -84,6 +96,9 @@ export const WorkflowPanel = ({
             else if (field.type === 'bool') initialValues[field.field_name] = false;
           });
           setInputValues(initialValues);
+          
+          // Initialize tabular data with one empty row
+          setTabularData([{...initialValues}]);
         }
       } catch (error) {
         console.error('Error in fetchChatSettings:', error);
@@ -94,6 +109,42 @@ export const WorkflowPanel = ({
 
     fetchChatSettings();
   }, [chatId]);
+
+  const toggleInputMode = async () => {
+    if (!chatId) return;
+    
+    try {
+      setIsSaving(true);
+      
+      const newMultiInput = !multiInput;
+      setMultiInput(newMultiInput);
+      
+      const { error } = await supabase
+        .from('chats')
+        .update({ multi_input: newMultiInput })
+        .eq('id', chatId);
+        
+      if (error) {
+        console.error('Error updating input mode:', error);
+        toast({
+          title: "Error updating input mode",
+          description: error.message,
+          variant: "destructive"
+        });
+        // Revert state on error
+        setMultiInput(multiInput);
+      } else {
+        toast({
+          title: `${newMultiInput ? 'Tabular' : 'Single'} input mode enabled`,
+          description: `You can now use ${newMultiInput ? 'multiple rows of' : 'a single set of'} inputs.`
+        });
+      }
+    } catch (error) {
+      console.error('Error in toggleInputMode:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const workflow = workflowSteps.length > 0 ? {
     id: "workflow-1",
@@ -108,7 +159,7 @@ export const WorkflowPanel = ({
     
     window.postMessage({ 
       type: "CREATE_AGENT_RUN_WINDOW",
-      inputs: inputValues 
+      inputs: multiInput ? tabularData : inputValues 
     }, "*");
     
     setTimeout(() => {
@@ -130,6 +181,29 @@ export const WorkflowPanel = ({
     }));
   };
 
+  const handleTabularInputChange = (rowIndex: number, name: string, value: string | number | boolean) => {
+    setTabularData(prev => {
+      const newData = [...prev];
+      if (!newData[rowIndex]) {
+        newData[rowIndex] = {};
+      }
+      newData[rowIndex] = {
+        ...newData[rowIndex],
+        [name]: value
+      };
+      return newData;
+    });
+  };
+
+  const addTableRow = () => {
+    setTabularData(prev => [...prev, {}]);
+  };
+
+  const removeTableRow = (index: number) => {
+    if (tabularData.length <= 1) return;
+    setTabularData(prev => prev.filter((_, i) => i !== index));
+  };
+
   const states = [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
     "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
@@ -140,9 +214,7 @@ export const WorkflowPanel = ({
     "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
   ];
 
-  const renderInputField = (field: InputField) => {
-    const value = inputValues[field.field_name];
-    
+  const renderInputField = (field: InputField, value: any, onChange: (name: string, value: any) => void) => {
     switch(field.type) {
       case 'string':
         if (field.field_name.toLowerCase() === 'state') {
@@ -150,7 +222,7 @@ export const WorkflowPanel = ({
             <Select 
               key={field.field_name}
               value={value as string} 
-              onValueChange={(val) => handleInputChange(field.field_name, val)}
+              onValueChange={(val) => onChange(field.field_name, val)}
             >
               <SelectTrigger id={field.field_name} className="w-full">
                 <SelectValue placeholder={`Select ${field.field_name}`} />
@@ -171,7 +243,7 @@ export const WorkflowPanel = ({
               id={field.field_name}
               placeholder={`Enter ${field.field_name}`}
               value={value as string}
-              onChange={(e) => handleInputChange(field.field_name, e.target.value)}
+              onChange={(e) => onChange(field.field_name, e.target.value)}
             />
           );
         }
@@ -183,16 +255,16 @@ export const WorkflowPanel = ({
             type="number"
             placeholder={`Enter ${field.field_name}`}
             value={value as number}
-            onChange={(e) => handleInputChange(field.field_name, parseInt(e.target.value) || 0)}
+            onChange={(e) => onChange(field.field_name, parseInt(e.target.value) || 0)}
           />
         );
       case 'bool':
         return (
           <div key={field.field_name} className="flex items-center space-x-2">
-            <Switch
+            <Checkbox
               id={field.field_name}
               checked={value as boolean}
-              onCheckedChange={(checked) => handleInputChange(field.field_name, checked)}
+              onCheckedChange={(checked) => onChange(field.field_name, !!checked)}
             />
             <span className="text-sm text-gray-500">
               {value ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-500" />}
@@ -202,6 +274,59 @@ export const WorkflowPanel = ({
       default:
         return null;
     }
+  };
+
+  const renderTabularInputs = () => {
+    return (
+      <div className="overflow-x-auto">
+        <UITable>
+          <TableHeader>
+            <TableRow>
+              {inputSchema.map((field) => (
+                <TableHead key={field.field_name} className="capitalize">
+                  {field.field_name}
+                </TableHead>
+              ))}
+              <TableHead className="w-[80px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tabularData.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {inputSchema.map((field) => (
+                  <TableCell key={`${rowIndex}-${field.field_name}`}>
+                    {renderInputField(
+                      field, 
+                      row[field.field_name] !== undefined ? row[field.field_name] : 
+                        field.type === 'string' ? '' : 
+                        field.type === 'number' ? 0 : 
+                        field.type === 'bool' ? false : '',
+                      (name, value) => handleTabularInputChange(rowIndex, name, value)
+                    )}
+                  </TableCell>
+                ))}
+                <TableCell>
+                  <button 
+                    onClick={() => removeTableRow(rowIndex)}
+                    className="p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full"
+                    disabled={tabularData.length <= 1}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </UITable>
+        
+        <button 
+          onClick={addTableRow}
+          className="mt-2 text-sm flex items-center gap-1 text-primary hover:underline"
+        >
+          <Plus className="h-4 w-4" /> Add Row
+        </button>
+      </div>
+    );
   };
 
   if (isLoading || isLoadingChat) {
@@ -236,15 +361,37 @@ export const WorkflowPanel = ({
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Workflow Inputs</h3>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="input-mode" className="text-sm">
+              {multiInput ? <Table className="h-4 w-4" /> : <List className="h-4 w-4" />}
+            </Label>
+            <Switch
+              id="input-mode"
+              checked={multiInput}
+              onCheckedChange={toggleInputMode}
+              disabled={isSaving}
+            />
+            <span className="text-sm">
+              {multiInput ? 'Tabular' : 'Single'}
+            </span>
+          </div>
+        </div>
+        
         <div className="space-y-4 mb-4">
-          {inputSchema.map((field) => (
-            <div key={field.field_name} className="space-y-2">
-              <Label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
-                <span>{field.field_name}</span>
-              </Label>
-              {renderInputField(field)}
-            </div>
-          ))}
+          {multiInput ? (
+            renderTabularInputs()
+          ) : (
+            inputSchema.map((field) => (
+              <div key={field.field_name} className="space-y-2">
+                <Label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
+                  <span>{field.field_name}</span>
+                </Label>
+                {renderInputField(field, inputValues[field.field_name], handleInputChange)}
+              </div>
+            ))
+          )}
         </div>
         
         {showRunButton && (
