@@ -34,7 +34,7 @@ export const Index: React.FC<IndexProps> = ({
   onRenameChat
 }) => {
   const navigate = useNavigate();
-  const [chatInterfaceRef, setChatInterfaceRef] = React.useState<any>(null);
+  const chatInterfaceRef = React.useRef(null);
 
   const handleSendMessage = (message: string) => {
     console.log("Message sent from Index view:", message);
@@ -45,9 +45,9 @@ export const Index: React.FC<IndexProps> = ({
     console.log("Running workflow for conversation:", selectedConversationId);
     
     // If we have a chat interface reference, use it to send the message
-    if (chatInterfaceRef && typeof chatInterfaceRef.handleSubmit === 'function') {
+    if (chatInterfaceRef.current && typeof chatInterfaceRef.current.handleSubmit === 'function') {
       console.log("Sending 'run' message through chat interface reference");
-      chatInterfaceRef.handleSubmit("run");
+      chatInterfaceRef.current.handleSubmit("run");
     } else {
       console.error("Chat interface reference is not available or does not have handleSubmit method");
     }
@@ -77,7 +77,7 @@ export const Index: React.FC<IndexProps> = ({
             <ChatInterface 
               conversationId={selectedConversationId} 
               onSendMessage={handleSendMessage}
-              ref={setChatInterfaceRef}
+              ref={chatInterfaceRef}
             />
           ) : (
             <div className="h-full flex items-center justify-center">

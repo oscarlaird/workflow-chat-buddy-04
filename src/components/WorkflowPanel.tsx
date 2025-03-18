@@ -38,6 +38,7 @@ export const WorkflowPanel = ({
     // Only send the message once with a small delay to prevent duplicate calls
     setTimeout(() => {
       onRunWorkflow();
+      // Reset the running state after the operation
       setIsRunning(false);
     }, 300);
   };
