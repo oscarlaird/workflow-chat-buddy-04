@@ -53,49 +53,60 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
     fetchWorkflowSteps();
 
     // Set up real-time subscription for workflow steps
+    // Using the exact same pattern as in ChatInterface.tsx
     console.log(`Setting up realtime subscription for workflow steps of chat ${chatId}`);
     
     const channel = supabase
-      .channel(`public:workflow_steps:chat_id=eq.${chatId}`)
+      .channel(`workflow_steps:${chatId}`)
       .on('postgres_changes', {
-        event: '*',  // Listen to all events (INSERT, UPDATE, DELETE)
+        event: 'INSERT',
         schema: 'public',
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Received real-time workflow step change:', payload);
+        console.log('Received real-time INSERT workflow step:', payload);
+        const newStep = payload.new;
         
-        if (payload.eventType === 'INSERT') {
-          const newStep = payload.new;
-          setWorkflowSteps(prevSteps => {
-            // If step already exists, don't add it again
-            if (prevSteps.some(step => step.id === newStep.id)) {
-              return prevSteps;
-            }
-            
-            // Add the new step and sort by step_order
-            const updatedSteps = [...prevSteps, parseWorkflowStep(newStep)];
-            return updatedSteps.sort((a, b) => 
-              (a.id < b.id) ? -1 : (a.id > b.id) ? 1 : 0
-            );
-          });
-        } 
-        else if (payload.eventType === 'UPDATE') {
-          const updatedStep = payload.new;
-          setWorkflowSteps(prevSteps => 
-            prevSteps.map(step => 
-              step.id === updatedStep.id 
-                ? parseWorkflowStep(updatedStep)
-                : step
-            )
-          );
-        } 
-        else if (payload.eventType === 'DELETE') {
-          const deletedStep = payload.old;
-          setWorkflowSteps(prevSteps => 
-            prevSteps.filter(step => step.id !== deletedStep.id)
-          );
-        }
+        setWorkflowSteps(prevSteps => {
+          // If step already exists, don't add it again
+          if (prevSteps.some(step => step.id === newStep.id)) {
+            return prevSteps;
+          }
+          
+          // Add the new step and sort by step_order
+          const updatedSteps = [...prevSteps, parseWorkflowStep(newStep)];
+          return updatedSteps.sort((a, b) => a.step_order - b.step_order);
+        });
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'workflow_steps',
+        filter: `chat_id=eq.${chatId}`
+      }, (payload) => {
+        console.log('Received real-time UPDATE workflow step:', payload);
+        const updatedStep = payload.new;
+        
+        setWorkflowSteps(prevSteps => 
+          prevSteps.map(step => 
+            step.id === updatedStep.id 
+              ? parseWorkflowStep(updatedStep)
+              : step
+          )
+        );
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'workflow_steps',
+        filter: `chat_id=eq.${chatId}`
+      }, (payload) => {
+        console.log('Received real-time DELETE workflow step:', payload);
+        const deletedStep = payload.old;
+        
+        setWorkflowSteps(prevSteps => 
+          prevSteps.filter(step => step.id !== deletedStep.id)
+        );
       })
       .subscribe((status) => {
         console.log(`Realtime subscription status for workflow steps: ${status}`);
