@@ -41,8 +41,14 @@ export const ChatInterface = forwardRef(({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
 
-  // Load and monitor the active run for this chat
+  // Reset activeRun when conversation changes
   useEffect(() => {
+    // Reset the activeRun state whenever conversationId changes
+    if (prevConversationIdRef.current !== conversationId) {
+      setActiveRun(null);
+      setRunMessages([]);
+    }
+    
     if (!conversationId) return;
     
     // Initial fetch of any active run
@@ -77,6 +83,9 @@ export const ChatInterface = forwardRef(({
     };
     
     fetchActiveRun();
+    
+    // Update the previous conversation ID ref
+    prevConversationIdRef.current = conversationId;
     
     // Subscribe to changes in the runs table for this chat
     const runsChannel = supabase
