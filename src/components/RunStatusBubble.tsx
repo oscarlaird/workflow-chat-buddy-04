@@ -39,7 +39,7 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
   };
 
   return (
-    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50">
+    <div className="flex justify-center my-4">
       <Badge 
         className={cn(
           "px-3 py-1.5 text-sm font-medium shadow-md flex items-center gap-2", 

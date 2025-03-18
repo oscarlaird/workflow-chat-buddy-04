@@ -1,8 +1,10 @@
+
 import { useRef, useEffect } from "react";
 import { Film, Download, Loader2, PenLine, Trash2, Plus } from "lucide-react";
-import { Message } from "@/types";
+import { Message, Run } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
+import RunStatusBubble from "@/components/RunStatusBubble";
 import CodeBlock from "./CodeBlock";
 
 interface MessageListProps {
@@ -12,6 +14,7 @@ interface MessageListProps {
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
   streamingMessageIds?: Set<string>;
+  activeRun?: Run | null;
 }
 
 export const MessageList = ({ 
@@ -20,7 +23,8 @@ export const MessageList = ({
   screenRecordings,
   isExtensionInstalled,
   pendingMessageIds = new Set(),
-  streamingMessageIds = new Set()
+  streamingMessageIds = new Set(),
+  activeRun = null
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -213,6 +217,10 @@ export const MessageList = ({
           )}
         </div>
       ))}
+      
+      {/* Display run status at the end of messages */}
+      {activeRun && <RunStatusBubble run={activeRun} />}
+      
       <div ref={messagesEndRef} />
     </div>
   );

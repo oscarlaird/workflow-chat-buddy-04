@@ -4,7 +4,7 @@ import ChatInput from "@/components/ChatInput";
 import RunStatusBubble from "@/components/RunStatusBubble";
 import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message, Run } from "@/types";
+import { Message, Run, RunMessage } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 
 interface ChatInterfaceProps {
@@ -32,6 +32,7 @@ export const ChatInterface = forwardRef(({
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
   const [streamingMessages, setStreamingMessages] = useState<Set<string>>(new Set());
   const [activeRun, setActiveRun] = useState<Run | null>(null);
+  const [runMessages, setRunMessages] = useState<RunMessage[]>([]);
   
   const prevConversationIdRef = useRef<string | null>(null);
 
@@ -69,13 +70,16 @@ export const ChatInterface = forwardRef(({
           created_at: runData.created_at,
           updated_at: runData.updated_at
         });
+        
+        // Fetch run messages for this run
+        fetchRunMessages(runData.id);
       }
     };
     
     fetchActiveRun();
     
     // Subscribe to changes in the runs table for this chat
-    const channel = supabase
+    const runsChannel = supabase
       .channel(`runs:${conversationId}`)
       .on('postgres_changes', {
         event: '*',
@@ -105,9 +109,85 @@ export const ChatInterface = forwardRef(({
       .subscribe();
       
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(runsChannel);
     };
   }, [conversationId]);
+  
+  // Fetch run messages for a specific run
+  const fetchRunMessages = async (runId: string) => {
+    const { data, error } = await supabase
+      .from('run_messages')
+      .select('*')
+      .eq('run_id', runId)
+      .order('created_at', { ascending: true });
+      
+    if (!error && data) {
+      setRunMessages(data as RunMessage[]);
+      
+      // Process any existing run messages
+      data.forEach(message => {
+        handleRunMessage(message);
+      });
+    }
+  };
+  
+  // Subscribe to run_messages for the active run
+  useEffect(() => {
+    if (!activeRun?.id) return;
+    
+    console.log(`Setting up subscription for run_messages:${activeRun.id}`);
+    
+    const runMessagesChannel = supabase
+      .channel(`run_messages:${activeRun.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'run_messages',
+        filter: `run_id=eq.${activeRun.id}`
+      }, (payload) => {
+        console.log('Run message received:', payload);
+        if (payload.new) {
+          const newMessage = payload.new as RunMessage;
+          setRunMessages(prev => [...prev, newMessage]);
+          
+          // Handle the run message
+          handleRunMessage(newMessage);
+        }
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(runMessagesChannel);
+    };
+  }, [activeRun?.id]);
+  
+  // Handle different types of run messages
+  const handleRunMessage = (message: RunMessage) => {
+    if (!message || !message.type) return;
+    
+    switch (message.type) {
+      case 'spawn_window':
+        console.log('Received spawn_window message:', message);
+        window.postMessage({ type: "CREATE_AGENT_RUN_WINDOW" }, "*");
+        break;
+        
+      case 'download_extension':
+        console.log('Received download_extension message:', message);
+        // Add a virtual assistant message suggesting to download the extension
+        const extensionMessage: Message = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: "To continue, you'll need to install the Macro Agents browser extension. This allows the agent to help you in other tabs.",
+          username: 'system'
+        };
+        
+        setMessages(prev => [...prev, extensionMessage]);
+        break;
+        
+      default:
+        console.log('Unhandled run message type:', message.type);
+    }
+  };
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -321,6 +401,7 @@ export const ChatInterface = forwardRef(({
             isExtensionInstalled={isExtensionInstalled}
             pendingMessageIds={pendingMessageIds}
             streamingMessageIds={streamingMessages}
+            activeRun={activeRun}
           />
         )}
       </div>
@@ -330,9 +411,6 @@ export const ChatInterface = forwardRef(({
         isLoading={isLoading} 
         disabled={!conversationId}
       />
-      
-      {/* Display the run status bubble if there's an active run */}
-      <RunStatusBubble run={activeRun} />
     </div>
   );
 });
