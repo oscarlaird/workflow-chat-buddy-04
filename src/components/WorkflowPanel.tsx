@@ -33,6 +33,7 @@ export const WorkflowPanel = ({
     if (isRunning) return;
     
     setIsRunning(true);
+    console.log("Running workflow for chat ID:", chatId);
     
     // Only send the message once with a small delay to prevent duplicate calls
     setTimeout(() => {

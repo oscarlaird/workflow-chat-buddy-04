@@ -1,7 +1,8 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
@@ -11,10 +12,10 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
 }
 
-export const ChatInterface = ({
+export const ChatInterface = forwardRef(({
   conversationId,
   onSendMessage
-}: ChatInterfaceProps) => {
+}: ChatInterfaceProps, ref) => {
   const { 
     messages,
     screenRecordings,
@@ -30,6 +31,11 @@ export const ChatInterface = ({
   const [streamingMessages, setStreamingMessages] = useState<Set<string>>(new Set());
   
   const prevConversationIdRef = useRef<string | null>(null);
+
+  // Expose the handleSubmit method to the parent component
+  useImperativeHandle(ref, () => ({
+    handleSubmit: (inputValue: string) => handleSubmit(inputValue)
+  }));
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -233,6 +239,6 @@ export const ChatInterface = ({
       />
     </div>
   );
-};
+});
 
 export default ChatInterface;
