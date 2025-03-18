@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,7 +27,9 @@ import {
   Globe,
   Home,
   Check,
-  X
+  X,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 const states = [
@@ -41,7 +42,6 @@ const states = [
   "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
 ];
 
-// Common countries list
 const countries = [
   "United States", "Canada", "United Kingdom", "Australia", "Germany", "France", "Japan", 
   "China", "India", "Brazil", "Mexico", "Spain", "Italy", "Netherlands", "Sweden",
@@ -198,18 +198,77 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
       );
 
     case 'year':
+      const currentYear = new Date().getFullYear();
+      const [yearValue, setYearValue] = useState<number | ''>(value ? parseInt(value) : '');
+      
+      const incrementYear = () => {
+        const newYear = (yearValue === '' ? currentYear : yearValue) + 1;
+        if (newYear <= currentYear + 100) {
+          setYearValue(newYear);
+          handleChange(newYear);
+        }
+      };
+      
+      const decrementYear = () => {
+        const newYear = (yearValue === '' ? currentYear : yearValue) - 1;
+        if (newYear >= 1900) {
+          setYearValue(newYear);
+          handleChange(newYear);
+        }
+      };
+      
+      const handleYearInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const inputValue = e.target.value === '' ? '' : parseInt(e.target.value);
+        setYearValue(inputValue);
+        if (inputValue !== '') {
+          handleChange(inputValue);
+        }
+      };
+      
+      const handleYearBlur = () => {
+        if (yearValue === '') {
+          setYearValue(currentYear);
+          handleChange(currentYear);
+        }
+        handleValidation(yearValue);
+      };
+      
       return (
-        <Input
-          id={field.field_name}
-          type="number"
-          placeholder={`Enter ${field.field_name}`}
-          value={value || ''}
-          min={1900}
-          max={new Date().getFullYear() + 100}
-          onChange={(e) => handleChange(e.target.value)}
-          onBlur={() => handleValidation(value)}
-          className={cn(showError && "border-red-500")}
-        />
+        <div className="w-full relative">
+          <div className="relative flex">
+            <Input
+              id={field.field_name}
+              type="number"
+              min={1900}
+              max={currentYear + 100}
+              placeholder={`Enter ${field.field_name}`}
+              value={yearValue}
+              onChange={handleYearInputChange}
+              onBlur={handleYearBlur}
+              className={cn("pr-16", showError && "border-red-500")}
+            />
+            <div className="absolute right-0 inset-y-0 flex flex-col border-l">
+              <button
+                type="button"
+                className="flex-1 px-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={incrementYear}
+              >
+                <ChevronUp className="h-3 w-3" />
+              </button>
+              <div className="h-[1px] w-full bg-border" />
+              <button
+                type="button"
+                className="flex-1 px-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800"
+                onClick={decrementYear}
+              >
+                <ChevronDown className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+          {showError && (
+            <p className="text-xs text-red-500 mt-1">{validation.message}</p>
+          )}
+        </div>
       );
 
     case 'number':
@@ -280,7 +339,6 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
         </div>
       );
 
-    // Handle all string-based inputs with validation
     case 'email':
     case 'phone':
     case 'zip_code':

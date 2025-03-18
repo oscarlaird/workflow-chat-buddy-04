@@ -1,4 +1,3 @@
-
 export type ValidationResult = {
   isValid: boolean;
   message?: string;
@@ -91,12 +90,31 @@ const validateZipCode = (value: string): ValidationResult => {
 };
 
 const validateYear = (value: any): ValidationResult => {
-  const year = parseInt(String(value));
+  const yearValue = parseInt(String(value));
   const currentYear = new Date().getFullYear();
-  return {
-    isValid: !isNaN(year) && year > 1900 && year <= currentYear + 100,
-    message: `Please enter a valid year between 1900 and ${currentYear + 100}`
-  };
+  
+  if (isNaN(yearValue)) {
+    return {
+      isValid: false,
+      message: 'Please enter a valid year'
+    };
+  }
+  
+  if (yearValue < 1900) {
+    return {
+      isValid: false,
+      message: 'Year cannot be earlier than 1900'
+    };
+  }
+  
+  if (yearValue > currentYear + 100) {
+    return {
+      isValid: false,
+      message: `Year cannot be later than ${currentYear + 100}`
+    };
+  }
+  
+  return { isValid: true };
 };
 
 const validateInteger = (value: any): ValidationResult => {
