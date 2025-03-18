@@ -218,8 +218,8 @@ export const MessageList = ({
         </div>
       ))}
       
-      {/* Display run status at the end of messages */}
-      {activeRun && <RunStatusBubble run={activeRun} />}
+      {/* Display run status at the end of messages only if there's an active run in "running" state */}
+      {activeRun && activeRun.status === "running" && <RunStatusBubble run={activeRun} />}
       
       <div ref={messagesEndRef} />
     </div>

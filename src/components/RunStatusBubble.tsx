@@ -39,18 +39,20 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
   };
 
   return (
-    <div className="flex justify-center my-4">
-      <Badge 
-        className={cn(
-          "px-3 py-1.5 text-sm font-medium shadow-md flex items-center gap-2", 
-          getStatusColor(run.status)
-        )}
-      >
-        {run.status === 'running' && (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        )}
-        {getStatusText(run.status)}
-      </Badge>
+    <div className="flex justify-center py-4">
+      <div className="bg-muted px-4 py-3 rounded-lg max-w-[80%] flex justify-center">
+        <Badge 
+          className={cn(
+            "px-3 py-1.5 text-sm font-medium shadow-md flex items-center gap-2", 
+            getStatusColor(run.status)
+          )}
+        >
+          {run.status === 'running' && (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          )}
+          {getStatusText(run.status)}
+        </Badge>
+      </div>
     </div>
   );
 };
