@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
@@ -54,10 +53,8 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
 
     fetchWorkflowSteps();
 
-    // Enhanced debugging for realtime subscriptions
     console.log(`Setting up realtime subscription for workflow_steps on chat ${chatId}`);
     
-    // Set up realtime subscription with comprehensive debugging
     const channel = supabase
       .channel(`workflow_steps_${chatId}`)
       .on('postgres_changes', {
@@ -73,7 +70,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
           console.log("INSERT event - New step:", payload.new);
           const newStep = parseWorkflowStep(payload.new);
           setWorkflowSteps(prevSteps => {
-            // Only add if not already present
             if (prevSteps.some(step => step.id === newStep.id)) {
               console.log("Step already exists, not adding:", newStep.id);
               return prevSteps;
@@ -101,10 +97,8 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
             const deletedStepId = payload.old.id;
             console.log("Step deleted with ID:", deletedStepId);
             
-            // Set this step as currently being deleted (for animation)
             setDeletingStepIds(prev => [...prev, deletedStepId]);
             
-            // After animation completes, actually remove it from state
             setTimeout(() => {
               setWorkflowSteps(prevSteps => {
                 console.log("Current steps before deletion:", prevSteps.map(s => s.id));
@@ -113,13 +107,13 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
                 return filteredSteps;
               });
               
-              // Remove from the deleting array
               setDeletingStepIds(prev => prev.filter(id => id !== deletedStepId));
-            }, 500); // Match this with the CSS animation duration
+            }, 2000);
             
             toast({
               title: "Step Deleted",
               description: `Workflow step has been removed`,
+              variant: "destructive",
             });
           } else {
             console.error("DELETE event received but payload.old.id is missing!", payload);
@@ -146,13 +140,11 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
     };
   }, [chatId]);
 
-  // Helper function to parse individual step
   const parseWorkflowStep = (step: any): WorkflowStep => {
     let parsedScreenshots;
     let parsedExampleData;
     
     try {
-      // Handle screenshots parsing safely
       if (step.screenshots) {
         if (typeof step.screenshots === 'string') {
           parsedScreenshots = JSON.parse(step.screenshots);
@@ -161,7 +153,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         }
       }
       
-      // Handle example data parsing safely
       if (step.example_data) {
         if (typeof step.example_data === 'string') {
           parsedExampleData = JSON.parse(step.example_data);
@@ -187,7 +178,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
     };
   };
 
-  // Helper function to parse workflow steps array
   const parseWorkflowSteps = (data: any[]): WorkflowStep[] => {
     return data.map(step => parseWorkflowStep(step));
   };
