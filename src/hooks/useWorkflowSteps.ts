@@ -52,7 +52,30 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
 
     fetchWorkflowSteps();
 
-    // Set up realtime subscription to workflow_steps for this chat
+    // Enhanced debugging for realtime subscriptions
+    console.log(`Setting up realtime subscription for workflow_steps on chat ${chatId}`);
+    
+    // Test query to check if the workflow_steps table exists and is accessible
+    supabase.from('workflow_steps').select('id').limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error accessing workflow_steps table:", error);
+        } else {
+          console.log("Successfully accessed workflow_steps table, row count:", data?.length);
+        }
+      });
+
+    // Ensure the table has REPLICA IDENTITY FULL
+    supabase.rpc('get_table_replica_identity', { table_name: 'workflow_steps' })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error checking REPLICA IDENTITY:", error);
+        } else {
+          console.log("workflow_steps REPLICA IDENTITY status:", data);
+        }
+      });
+
+    // Set up realtime subscription with comprehensive debugging
     const channel = supabase
       .channel(`workflow_steps_${chatId}`)
       .on('postgres_changes', {
@@ -61,42 +84,68 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log(`Realtime update for workflow steps (${payload.eventType}):`, payload);
+        console.log(`Realtime event received for workflow_steps:`, payload);
+        console.log(`Event type: ${payload.eventType}`);
+        console.log(`Event payload:`, JSON.stringify(payload, null, 2));
         
         if (payload.eventType === 'INSERT') {
+          console.log("INSERT event - New step:", payload.new);
           const newStep = parseWorkflowStep(payload.new);
           setWorkflowSteps(prevSteps => {
             // Only add if not already present
             if (prevSteps.some(step => step.id === newStep.id)) {
+              console.log("Step already exists, not adding:", newStep.id);
               return prevSteps;
             }
+            console.log("Adding new step:", newStep.id);
             const updatedSteps = [...prevSteps, newStep];
             return updatedSteps.sort((a, b) => a.step_order - b.step_order);
           });
         } 
         else if (payload.eventType === 'UPDATE') {
+          console.log("UPDATE event - Updated step:", payload.new);
           const updatedStep = parseWorkflowStep(payload.new);
-          setWorkflowSteps(prevSteps => 
-            prevSteps.map(step => 
+          setWorkflowSteps(prevSteps => {
+            console.log("Updating step:", updatedStep.id);
+            return prevSteps.map(step => 
               step.id === updatedStep.id ? updatedStep : step
-            )
-          );
+            );
+          });
         } 
         else if (payload.eventType === 'DELETE') {
-          const deletedStepId = payload.old.id;
-          console.log("Step deleted with ID:", deletedStepId);
-          
-          // Force a re-render by creating a new array without the deleted step
-          setWorkflowSteps(prevSteps => {
-            const filteredSteps = prevSteps.filter(step => step.id !== deletedStepId);
-            console.log("Steps after deletion:", filteredSteps.length);
-            return filteredSteps;
-          });
+          console.log("DELETE event received!");
+          console.log("DELETE payload:", JSON.stringify(payload, null, 2));
+          if (payload.old && payload.old.id) {
+            const deletedStepId = payload.old.id;
+            console.log("Step deleted with ID:", deletedStepId);
+            
+            setWorkflowSteps(prevSteps => {
+              console.log("Current steps before deletion:", prevSteps.map(s => s.id));
+              const filteredSteps = prevSteps.filter(step => {
+                const keep = step.id !== deletedStepId;
+                console.log(`Step ${step.id}: keep=${keep}`);
+                return keep;
+              });
+              console.log("Steps after deletion:", filteredSteps.map(s => s.id));
+              return filteredSteps;
+            });
+          } else {
+            console.error("DELETE event received but payload.old.id is missing!", payload);
+          }
         }
       })
       .subscribe((status) => {
         console.log(`Realtime subscription status for chat ${chatId}: ${status}`);
       });
+
+    // Test the channel connection
+    channel.send({
+      type: 'broadcast',
+      event: 'test',
+      payload: { message: 'Testing channel connection' },
+    })
+    .then(() => console.log('Test message sent successfully'))
+    .catch(err => console.error('Error sending test message:', err));
 
     return () => {
       console.log(`Cleaning up realtime subscription for chat ${chatId}`);

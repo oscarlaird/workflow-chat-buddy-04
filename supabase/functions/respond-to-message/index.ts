@@ -32,7 +32,12 @@ serve(async (req) => {
       ALTER TABLE messages REPLICA IDENTITY FULL;
     `);
     
-    // Add the messages table to the realtime publication if it's not already there
+    // Also enable REPLICA IDENTITY FULL for workflow_steps table
+    await supabaseAdmin.query(`
+      ALTER TABLE workflow_steps REPLICA IDENTITY FULL;
+    `);
+    
+    // Add the tables to the realtime publication if they're not already there
     await supabaseAdmin.query(`
       BEGIN;
       -- Check if the publication exists
@@ -46,7 +51,7 @@ serve(async (req) => {
       END
       $$;
       
-      -- Add the table to the publication if it's not already there
+      -- Add the messages table to the publication if it's not already there
       DO $$
       BEGIN
         IF NOT EXISTS (
@@ -56,6 +61,20 @@ serve(async (req) => {
           AND tablename = 'messages'
         ) THEN
           ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+        END IF;
+      END
+      $$;
+      
+      -- Add the workflow_steps table to the publication if it's not already there
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_publication_tables
+          WHERE pubname = 'supabase_realtime'
+          AND schemaname = 'public'
+          AND tablename = 'workflow_steps'
+        ) THEN
+          ALTER PUBLICATION supabase_realtime ADD TABLE public.workflow_steps;
         END IF;
       END
       $$;
