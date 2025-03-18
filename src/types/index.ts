@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -76,10 +77,11 @@ export interface InputField {
         'currency' | 'percentage' | 'zip_code';
 }
 
-// Add Run and RunMessage interfaces
+// Updated Run interface with both dashboard_id and chat_id
 export interface Run {
   id: string;
   dashboard_id: string;
+  chat_id: string;
   status: "pending" | "running" | "completed" | "failed";
   created_at: string;
   updated_at: string;

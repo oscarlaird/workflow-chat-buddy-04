@@ -2,9 +2,10 @@
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
+import RunStatusBubble from "@/components/RunStatusBubble";
 import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "@/types";
+import { Message, Run } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 
 interface ChatInterfaceProps {
@@ -31,6 +32,7 @@ export const ChatInterface = forwardRef(({
   const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(new Set());
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
   const [streamingMessages, setStreamingMessages] = useState<Set<string>>(new Set());
+  const [activeRun, setActiveRun] = useState<Run | null>(null);
   
   const prevConversationIdRef = useRef<string | null>(null);
 
@@ -38,6 +40,47 @@ export const ChatInterface = forwardRef(({
   useImperativeHandle(ref, () => ({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
+
+  // Load and monitor the active run for this chat
+  useEffect(() => {
+    if (!conversationId) return;
+    
+    // Initial fetch of any active run
+    const fetchActiveRun = async () => {
+      const { data, error } = await supabase
+        .from('runs')
+        .select('*')
+        .eq('chat_id', conversationId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      if (!error && data && data.length > 0) {
+        setActiveRun(data[0]);
+      }
+    };
+    
+    fetchActiveRun();
+    
+    // Subscribe to changes in the runs table for this chat
+    const channel = supabase
+      .channel(`runs:${conversationId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'runs',
+        filter: `chat_id=eq.${conversationId}`
+      }, (payload) => {
+        console.log('Run update received:', payload);
+        if (payload.new) {
+          setActiveRun(payload.new as Run);
+        }
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -260,6 +303,9 @@ export const ChatInterface = forwardRef(({
         isLoading={isLoading} 
         disabled={!conversationId}
       />
+      
+      {/* Display the run status bubble if there's an active run */}
+      <RunStatusBubble run={activeRun} />
     </div>
   );
 });

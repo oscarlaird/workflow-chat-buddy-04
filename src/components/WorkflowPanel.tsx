@@ -24,6 +24,7 @@ export const WorkflowPanel = ({
   const { workflowSteps, isLoading, error, deletingStepIds } = useWorkflowSteps(chatId);
   const [isRunning, setIsRunning] = useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [dashboardId] = useState(() => uuidv4()); // Generate a random UUID for dashboard_id
 
   const workflow = workflowSteps.length > 0 ? {
     id: "workflow-1",
@@ -45,7 +46,8 @@ export const WorkflowPanel = ({
         .from('runs')
         .insert({
           id: runId,
-          dashboard_id: chatId,
+          dashboard_id: dashboardId, // Use the randomly generated UUID
+          chat_id: chatId, // Use the chat ID provided in props
           status: 'running'
         });
 

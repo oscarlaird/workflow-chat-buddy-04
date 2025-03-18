@@ -182,6 +182,7 @@ export type Database = {
       }
       runs: {
         Row: {
+          chat_id: string
           created_at: string
           dashboard_id: string
           id: string
@@ -189,6 +190,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          chat_id?: string
           created_at?: string
           dashboard_id: string
           id?: string
@@ -196,6 +198,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          chat_id?: string
           created_at?: string
           dashboard_id?: string
           id?: string
