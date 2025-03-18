@@ -51,6 +51,18 @@ export interface TableData {
   [key: string]: any;
 }
 
+// Add Chat interface to be consistent across the app
+export interface Chat {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  is_example?: boolean;
+  username?: string;
+  multi_input?: boolean;
+  input_schema?: InputField[];
+}
+
 // Add InputValues interface to be more consistent across the app
 export interface InputValues {
   [key: string]: string | number | boolean;

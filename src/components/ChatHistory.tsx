@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles, Hash } from "lucide-react";
-import { Chat } from "@/hooks/useChats";
+import { Chat } from "@/types";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewChatDialog from "./NewChatDialog";

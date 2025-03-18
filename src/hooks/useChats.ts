@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from "@/integrations/supabase/types";
-import { InputField } from "@/types";
+import { InputField, Chat } from "@/types";
 
 // Helper function to safely parse input_schema JSON from Supabase
 const parseInputSchema = (inputSchema: Json | null): InputField[] => {
@@ -11,7 +11,7 @@ const parseInputSchema = (inputSchema: Json | null): InputField[] => {
   
   // If it's already an array, we need to ensure each item matches InputField shape
   if (Array.isArray(inputSchema)) {
-    return inputSchema.filter((item): item is InputField => {
+    return inputSchema.filter((item): item is any => {
       if (typeof item !== 'object' || item === null) return false;
       
       // Check if it has the required properties
@@ -21,7 +21,7 @@ const parseInputSchema = (inputSchema: Json | null): InputField[] => {
         'type' in item && 
         (item.type === 'string' || item.type === 'number' || item.type === 'bool')
       );
-    });
+    }) as InputField[];
   }
   
   return [];
