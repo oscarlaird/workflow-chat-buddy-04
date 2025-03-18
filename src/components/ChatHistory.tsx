@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles, Hash } from "lucide-react";
+import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles, Hash, Copy } from "lucide-react";
 import { Chat } from "@/types";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +16,7 @@ interface ChatHistoryProps {
   isLoading: boolean;
   onCreateChat: (title: string) => Promise<void>;
   onDeleteChat: (chatId: string) => Promise<void>;
+  onDuplicateChat?: (chatId: string) => Promise<void>;
 }
 
 export const ChatHistory = ({
@@ -28,11 +28,13 @@ export const ChatHistory = ({
   systemExampleChats,
   isLoading,
   onCreateChat,
-  onDeleteChat
+  onDeleteChat,
+  onDuplicateChat
 }: ChatHistoryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
+  const [duplicatingChatId, setDuplicatingChatId] = useState<string | null>(null);
 
   const allChats = [...chats, ...exampleChats];
   const filteredChats = allChats.filter(
@@ -77,6 +79,18 @@ export const ChatHistory = ({
         if (otherChat) {
           onSelectConversation(otherChat.id);
         }
+      }
+    }
+  };
+
+  const handleDuplicateChat = async (chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDuplicateChat) {
+      setDuplicatingChatId(chatId);
+      try {
+        await onDuplicateChat(chatId);
+      } finally {
+        setDuplicatingChatId(null);
       }
     }
   };
@@ -154,13 +168,29 @@ export const ChatHistory = ({
                         {format(new Date(chat.created_at), 'h:mm a')}
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => handleDeleteChat(chat.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
-                      aria-label="Delete chat"
-                    >
-                      <Trash2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    </button>
+                    <div className="flex gap-1">
+                      {onDuplicateChat && (
+                        <button
+                          onClick={(e) => handleDuplicateChat(chat.id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
+                          aria-label="Duplicate chat"
+                          disabled={duplicatingChatId === chat.id}
+                        >
+                          {duplicatingChatId === chat.id ? (
+                            <Loader2 className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => handleDeleteChat(chat.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
+                        aria-label="Delete chat"
+                      >
+                        <Trash2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

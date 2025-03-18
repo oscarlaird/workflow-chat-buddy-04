@@ -1,43 +1,74 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-import { bumpPatchVersion } from "@/lib/version";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import ConversationPage from "./pages/ConversationPage";
-import WorkflowPage from "./pages/WorkflowPage";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
+import ChatInterface from "./components/ChatInterface";
+import { Index } from "./pages/Index";
+import { NotFound } from "./pages/NotFound";
+import { ConversationPage } from "./pages/ConversationPage";
+import { WorkflowPage } from "./pages/WorkflowPage";
+import { useChats } from "./hooks/useChats";
 
-const queryClient = new QueryClient();
+function App() {
+  const { chats, exampleChats, systemExampleChats, isLoading, createChat, deleteChat, duplicateChat } = useChats();
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
-const App = () => {
-  // Bump the version when the app loads (this would typically be done on deployment)
+  // Use the first chat as the selected conversation when chats are loaded
   useEffect(() => {
-    // In a real app, this would be handled differently
-    // This is just for demonstration purposes
-    bumpPatchVersion();
-  }, []);
+    if (!selectedConversationId && chats.length > 0 && !isLoading) {
+      setSelectedConversationId(chats[0].id);
+    }
+  }, [chats, isLoading, selectedConversationId]);
+
+  const handleCreateChat = async (title: string) => {
+    const chatId = await createChat(title);
+    setSelectedConversationId(chatId);
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    await deleteChat(chatId);
+    // If the deleted chat was selected, select another one
+    if (selectedConversationId === chatId) {
+      const remainingChats = [...chats, ...exampleChats].filter(chat => chat.id !== chatId);
+      if (remainingChats.length > 0) {
+        setSelectedConversationId(remainingChats[0].id);
+      } else {
+        setSelectedConversationId(null);
+      }
+    }
+  };
+
+  const handleDuplicateChat = async (chatId: string) => {
+    const newChatId = await duplicateChat(chatId);
+    if (newChatId) {
+      setSelectedConversationId(newChatId);
+    }
+  };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/conversation" element={<ConversationPage />} />
-            <Route path="/conversation/:conversationId" element={<ConversationPage />} />
-            <Route path="/workflow" element={<WorkflowPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Index
+              selectedConversationId={selectedConversationId || ""}
+              onSelectConversation={setSelectedConversationId}
+              onNewConversation={() => setSelectedConversationId(null)}
+              chats={chats}
+              exampleChats={exampleChats}
+              systemExampleChats={systemExampleChats}
+              isLoading={isLoading}
+              onCreateChat={handleCreateChat}
+              onDeleteChat={handleDeleteChat}
+              onDuplicateChat={handleDuplicateChat}
+            />
+          }
+        />
+        <Route path="/chat/:id" element={<ConversationPage />} />
+        <Route path="/workflow/:id" element={<WorkflowPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

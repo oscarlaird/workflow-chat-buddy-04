@@ -9,12 +9,10 @@ import { InputField, Chat } from "@/types";
 const parseInputSchema = (inputSchema: Json | null): InputField[] => {
   if (!inputSchema) return [];
   
-  // If it's already an array, we need to ensure each item matches InputField shape
   if (Array.isArray(inputSchema)) {
     return inputSchema.filter((item): item is any => {
       if (typeof item !== 'object' || item === null) return false;
       
-      // Check if it has the required properties
       return (
         'field_name' in item && 
         typeof item.field_name === 'string' &&
@@ -41,12 +39,11 @@ export const useChats = () => {
       try {
         setIsLoading(true);
         
-        // Fetch regular user chats - only for the current user
         const { data: userChats, error: userChatsError } = await supabase
           .from('chats')
           .select('*')
           .eq('is_example', false)
-          .eq('username', currentUsername) // Only get current user's chats
+          .eq('username', currentUsername)
           .order('created_at', { ascending: false });
           
         if (userChatsError) {
@@ -57,7 +54,6 @@ export const useChats = () => {
             variant: "destructive"
           });
         } else {
-          // Parse the input_schema JSON safely
           const parsedUserChats = userChats?.map(chat => ({
             ...chat,
             input_schema: parseInputSchema(chat.input_schema)
@@ -65,18 +61,16 @@ export const useChats = () => {
           setChats(parsedUserChats || []);
         }
         
-        // Fetch user-created example chats
         const { data: userExamples, error: userExamplesError } = await supabase
           .from('chats')
           .select('*')
           .eq('is_example', true)
-          .eq('username', currentUsername) // Only get the current user's example chats
+          .eq('username', currentUsername)
           .order('created_at', { ascending: false });
           
         if (userExamplesError) {
           console.error('Error fetching user example chats:', userExamplesError);
         } else {
-          // Parse the input_schema JSON safely
           const parsedUserExamples = userExamples?.map(chat => ({
             ...chat,
             input_schema: parseInputSchema(chat.input_schema)
@@ -84,18 +78,16 @@ export const useChats = () => {
           setExampleChats(parsedUserExamples || []);
         }
 
-        // Fetch system example chats
         const { data: systemExamples, error: systemExamplesError } = await supabase
           .from('chats')
           .select('*')
           .eq('is_example', true)
-          .eq('username', systemUsername) // Get system example chats
+          .eq('username', systemUsername)
           .order('created_at', { ascending: false });
           
         if (systemExamplesError) {
           console.error('Error fetching system example chats:', systemExamplesError);
         } else {
-          // Parse the input_schema JSON safely
           const parsedSystemExamples = systemExamples?.map(chat => ({
             ...chat,
             input_schema: parseInputSchema(chat.input_schema)
@@ -111,7 +103,6 @@ export const useChats = () => {
 
     fetchChats();
 
-    // Set up real-time subscription for chats
     const channel = supabase
       .channel('chats-channel')
       .on('postgres_changes', {
@@ -138,21 +129,16 @@ export const useChats = () => {
         table: 'chats',
         filter: `username=eq.${currentUsername}`,
       }, (payload) => {
-        // Exclude updates that only change multi_input or input_schema
         const oldData = payload.old as Record<string, any>;
         const newData = payload.new as Record<string, any>;
         
-        // Check what fields changed
         const changedFields = Object.keys(oldData).filter(key => {
-          // Use deep comparison for input_schema since it's an array or object
           if (key === 'input_schema') {
             return JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]);
           }
-          // Use simple comparison for other fields
           return oldData[key] !== newData[key];
         });
         
-        // Only refresh if fields other than multi_input and input_schema changed
         const relevantFields = changedFields.filter(field => 
           !['multi_input', 'input_schema'].includes(field)
         );
@@ -183,7 +169,6 @@ export const useChats = () => {
           is_example: false,
           username: 'current_user',
           multi_input: false
-          // input_schema will use the default value from the database
         });
 
       if (error) {
@@ -233,12 +218,158 @@ export const useChats = () => {
     }
   };
 
+  const duplicateChat = async (chatId: string): Promise<string | null> => {
+    try {
+      const newChatId = uuidv4();
+      
+      const { data: chatDetails, error: chatDetailsError } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('id', chatId)
+        .single();
+        
+      if (chatDetailsError) {
+        console.error('Error fetching chat details:', chatDetailsError);
+        throw chatDetailsError;
+      }
+      
+      const { data: chatMessages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true });
+        
+      if (messagesError) {
+        console.error('Error fetching chat messages:', messagesError);
+        throw messagesError;
+      }
+      
+      const { data: workflowSteps, error: workflowStepsError } = await supabase
+        .from('workflow_steps')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('step_number', { ascending: true });
+        
+      if (workflowStepsError) {
+        console.error('Error fetching workflow steps:', workflowStepsError);
+        throw workflowStepsError;
+      }
+      
+      const duplicatedChatTitle = `${chatDetails.title} (Copy)`;
+      const chatInsert = {
+        id: newChatId,
+        title: duplicatedChatTitle,
+        created_at: new Date().toISOString(),
+        is_example: false,
+        username: currentUsername,
+        input_schema: chatDetails.input_schema,
+        multi_input: chatDetails.multi_input || false
+      };
+      
+      let newMessages = [];
+      if (chatMessages && chatMessages.length > 0) {
+        newMessages = chatMessages.map(message => ({
+          id: uuidv4(),
+          chat_id: newChatId,
+          role: message.role,
+          content: message.content,
+          username: currentUsername,
+          created_at: new Date().toISOString(),
+          from_template: true,
+          function_name: message.function_name,
+          workflow_step_id: null
+        }));
+      }
+      
+      let newWorkflowSteps = [];
+      const workflowStepIdMap: Record<string, string> = {};
+      
+      if (workflowSteps && workflowSteps.length > 0) {
+        newWorkflowSteps = workflowSteps.map(step => {
+          const newStepId = uuidv4();
+          workflowStepIdMap[step.id] = newStepId;
+          
+          return {
+            id: newStepId,
+            chat_id: newChatId,
+            title: step.title,
+            description: step.description,
+            status: step.status,
+            code: step.code,
+            example_data: step.example_data,
+            screenshots: step.screenshots,
+            step_number: step.step_number,
+            username: currentUsername,
+            created_at: new Date().toISOString()
+          };
+        });
+      }
+      
+      const { error: chatError } = await supabase
+        .from('chats')
+        .insert(chatInsert);
+        
+      if (chatError) {
+        console.error('Error creating duplicated chat:', chatError);
+        throw chatError;
+      }
+      
+      if (newWorkflowSteps.length > 0) {
+        const { error: workflowInsertError } = await supabase
+          .from('workflow_steps')
+          .insert(newWorkflowSteps);
+          
+        if (workflowInsertError) {
+          console.error('Error inserting workflow steps:', workflowInsertError);
+          throw workflowInsertError;
+        }
+      }
+      
+      if (newMessages.length > 0) {
+        newMessages = newMessages.map(message => {
+          if (message.workflow_step_id && workflowStepIdMap[message.workflow_step_id]) {
+            return {
+              ...message,
+              workflow_step_id: workflowStepIdMap[message.workflow_step_id]
+            };
+          }
+          return message;
+        });
+        
+        const { error: insertError } = await supabase
+          .from('messages')
+          .insert(newMessages);
+          
+        if (insertError) {
+          console.error('Error inserting messages:', insertError);
+          throw insertError;
+        }
+      }
+      
+      toast({
+        title: "Workflow duplicated",
+        description: `"${duplicatedChatTitle}" has been created successfully.`
+      });
+      
+      return newChatId;
+    } catch (error: any) {
+      console.error('Error in duplicateChat:', error);
+      toast({
+        title: "Error duplicating workflow",
+        description: error?.message || "An error occurred while duplicating the workflow",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
   return {
     chats,
     exampleChats,
     systemExampleChats,
     isLoading,
     createChat,
-    deleteChat
+    deleteChat,
+    duplicateChat
   };
 };
