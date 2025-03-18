@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
+import { toast } from "@/components/ui/use-toast";
 
 export const useWorkflowSteps = (chatId: string | undefined) => {
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
@@ -16,11 +17,38 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       return;
     }
 
+    const ensureReplicaIdentity = async () => {
+      try {
+        console.log("Ensuring REPLICA IDENTITY for workflow_steps table");
+        const response = await fetch('/functions/v1/check-replica-identity', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY || ''}`
+          },
+          body: JSON.stringify({ tableName: 'workflow_steps' })
+        });
+        
+        const result = await response.json();
+        console.log("REPLICA IDENTITY check result:", result);
+        
+        if (!result.success) {
+          console.warn("Failed to ensure REPLICA IDENTITY:", result.error);
+        }
+      } catch (error) {
+        console.error("Error ensuring REPLICA IDENTITY:", error);
+        // Non-critical error, continue anyway
+      }
+    };
+
     const fetchWorkflowSteps = async () => {
       try {
         setIsLoading(true);
         setError(null);
         console.log("Fetching workflow steps for chat ID:", chatId);
+        
+        // Ensure REPLICA IDENTITY is set
+        await ensureReplicaIdentity();
         
         const { data, error } = await supabase
           .from('workflow_steps')
@@ -66,12 +94,15 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       });
 
     // Ensure the table has REPLICA IDENTITY FULL
-    supabase.rpc('get_table_replica_identity', { table_name: 'workflow_steps' })
+    supabase.rpc('admin_get_replica_identity', { table_name: 'workflow_steps' })
       .then(({ data, error }) => {
         if (error) {
           console.error("Error checking REPLICA IDENTITY:", error);
         } else {
           console.log("workflow_steps REPLICA IDENTITY status:", data);
+          if (data !== 'FULL') {
+            console.warn("workflow_steps table does not have REPLICA IDENTITY FULL!");
+          }
         }
       });
 
@@ -115,6 +146,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         else if (payload.eventType === 'DELETE') {
           console.log("DELETE event received!");
           console.log("DELETE payload:", JSON.stringify(payload, null, 2));
+          
           if (payload.old && payload.old.id) {
             const deletedStepId = payload.old.id;
             console.log("Step deleted with ID:", deletedStepId);
@@ -127,6 +159,17 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
                 return keep;
               });
               console.log("Steps after deletion:", filteredSteps.map(s => s.id));
+              
+              if (filteredSteps.length === prevSteps.length) {
+                console.warn("No step was removed during deletion, IDs might not match");
+                // Show toast for debugging
+                toast({
+                  title: "Delete debugging",
+                  description: `Attempted to delete step ${deletedStepId} but no matching step was found`,
+                  variant: "destructive",
+                });
+              }
+              
               return filteredSteps;
             });
           } else {
@@ -136,6 +179,16 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       })
       .subscribe((status) => {
         console.log(`Realtime subscription status for chat ${chatId}: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          console.log(`Successfully subscribed to realtime events for workflow_steps with chat_id=${chatId}`);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`Error subscribing to realtime events for workflow_steps`);
+          toast({
+            title: "Realtime Subscription Error",
+            description: "Failed to subscribe to workflow updates. Try refreshing the page.",
+            variant: "destructive",
+          });
+        }
       });
 
     // Test the channel connection

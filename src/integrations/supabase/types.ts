@@ -145,7 +145,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_get_replica_identity: {
+        Args: {
+          table_name: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

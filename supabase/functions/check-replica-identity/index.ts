@@ -22,28 +22,66 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
     
-    // Query to check REPLICA IDENTITY status
-    const { data, error } = await supabaseAdmin.rpc('admin_get_replica_identity', { 
+    console.log(`Checking REPLICA IDENTITY for table: ${tableName}`);
+    
+    // Query to check REPLICA IDENTITY status using our new function
+    const { data: prevStatus, error: checkError } = await supabaseAdmin.rpc('admin_get_replica_identity', { 
       table_name: tableName 
     });
     
-    if (error) {
-      throw error;
+    if (checkError) {
+      console.error("Error checking REPLICA IDENTITY:", checkError);
+      throw checkError;
     }
     
-    // Ensure REPLICA IDENTITY is set to FULL for the specified table
-    const setReplicaIdentityQuery = `ALTER TABLE ${tableName} REPLICA IDENTITY FULL;`;
-    const { error: alterError } = await supabaseAdmin.query(setReplicaIdentityQuery);
+    console.log(`Current REPLICA IDENTITY for ${tableName}: ${prevStatus}`);
     
-    if (alterError) {
-      throw alterError;
+    // Only set to FULL if not already FULL
+    if (prevStatus !== 'FULL') {
+      console.log(`Setting REPLICA IDENTITY FULL for ${tableName}`);
+      // Ensure REPLICA IDENTITY is set to FULL for the specified table
+      const setReplicaIdentityQuery = `ALTER TABLE ${tableName} REPLICA IDENTITY FULL;`;
+      const { error: alterError } = await supabaseAdmin.query(setReplicaIdentityQuery);
+      
+      if (alterError) {
+        console.error("Error setting REPLICA IDENTITY:", alterError);
+        throw alterError;
+      }
+      
+      console.log(`Successfully set REPLICA IDENTITY FULL for ${tableName}`);
+    } else {
+      console.log(`Table ${tableName} already has REPLICA IDENTITY FULL`);
+    }
+    
+    // Ensure the table is in the realtime publication
+    const ensurePublicationQuery = `
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_publication_tables 
+          WHERE pubname = 'supabase_realtime' 
+          AND schemaname = 'public' 
+          AND tablename = '${tableName}'
+        ) THEN
+          ALTER PUBLICATION supabase_realtime ADD TABLE public.${tableName};
+        END IF;
+      END
+      $$;
+    `;
+    
+    const { error: pubError } = await supabaseAdmin.query(ensurePublicationQuery);
+    
+    if (pubError) {
+      console.error("Error ensuring publication:", pubError);
+      throw pubError;
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `REPLICA IDENTITY set to FULL for ${tableName}`,
-        previousStatus: data
+        message: `REPLICA IDENTITY status for ${tableName}: ${prevStatus === 'FULL' ? 'already FULL' : 'set to FULL'}`,
+        previousStatus: prevStatus,
+        tableAddedToPublication: true
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
