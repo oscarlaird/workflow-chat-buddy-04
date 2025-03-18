@@ -7,9 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { InputField, InputValues } from "@/types";
+import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
 import { 
   Table as UITable,
   TableBody,
@@ -36,25 +35,6 @@ const states = [
   "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
 ];
 
-const parseInputSchema = (inputSchema: any): InputField[] => {
-  if (!inputSchema) return [];
-  
-  if (Array.isArray(inputSchema)) {
-    return inputSchema.filter((item): item is any => {
-      if (typeof item !== 'object' || item === null) return false;
-      
-      return (
-        'field_name' in item && 
-        typeof item.field_name === 'string' &&
-        'type' in item && 
-        (item.type === 'string' || item.type === 'number' || item.type === 'bool')
-      );
-    }) as InputField[];
-  }
-  
-  return [];
-};
-
 export const WorkflowInputs = ({ 
   chatId,
   onInputValuesChange,
@@ -63,59 +43,29 @@ export const WorkflowInputs = ({
 }: WorkflowInputsProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>({});
-  const [multiInput, setMultiInput] = useState(false);
-  const [inputSchema, setInputSchema] = useState<InputField[]>([]);
-  const [isLoadingChat, setIsLoadingChat] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
+  
+  // Use our new hook instead of the direct Supabase queries
+  const { 
+    multiInput, 
+    inputSchema, 
+    isLoading, 
+    isSaving, 
+    updateMultiInput 
+  } = useSelectedChatSettings(chatId);
 
   useEffect(() => {
-    const fetchChatSettings = async () => {
-      if (!chatId) {
-        setIsLoadingChat(false);
-        return;
-      }
-
-      try {
-        setIsLoadingChat(true);
-        const { data, error } = await supabase
-          .from('chats')
-          .select('multi_input, input_schema')
-          .eq('id', chatId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching chat settings:', error);
-          toast({
-            title: "Error loading chat settings",
-            description: error.message,
-            variant: "destructive"
-          });
-        } else if (data) {
-          setMultiInput(data.multi_input || false);
-          
-          const parsedSchema = parseInputSchema(data.input_schema);
-          setInputSchema(parsedSchema);
-          
-          const initialValues: InputValues = {};
-          parsedSchema.forEach((field: InputField) => {
-            if (field.type === 'string') initialValues[field.field_name] = '';
-            else if (field.type === 'number') initialValues[field.field_name] = 0;
-            else if (field.type === 'bool') initialValues[field.field_name] = false;
-          });
-          setInputValues(initialValues);
-          
-          setTabularData([{...initialValues}]);
-        }
-      } catch (error) {
-        console.error('Error in fetchChatSettings:', error);
-      } finally {
-        setIsLoadingChat(false);
-      }
-    };
-
-    fetchChatSettings();
-  }, [chatId]);
+    // Initialize inputValues and tabularData when inputSchema changes
+    const initialValues: InputValues = {};
+    inputSchema.forEach((field: InputField) => {
+      if (field.type === 'string') initialValues[field.field_name] = '';
+      else if (field.type === 'number') initialValues[field.field_name] = 0;
+      else if (field.type === 'bool') initialValues[field.field_name] = false;
+    });
+    
+    setInputValues(initialValues);
+    setTabularData([{...initialValues}]);
+  }, [inputSchema]);
 
   useEffect(() => {
     // Notify parent component of input values changes
@@ -125,38 +75,7 @@ export const WorkflowInputs = ({
   }, [inputValues, tabularData, multiInput, onInputValuesChange]);
 
   const toggleInputMode = async () => {
-    if (!chatId) return;
-    
-    try {
-      setIsSaving(true);
-      
-      const newMultiInput = !multiInput;
-      setMultiInput(newMultiInput);
-      
-      const { error } = await supabase
-        .from('chats')
-        .update({ multi_input: newMultiInput })
-        .eq('id', chatId);
-        
-      if (error) {
-        console.error('Error updating input mode:', error);
-        toast({
-          title: "Error updating input mode",
-          description: error.message,
-          variant: "destructive"
-        });
-        setMultiInput(multiInput);
-      } else {
-        toast({
-          title: `${newMultiInput ? 'Tabular' : 'Single'} input mode enabled`,
-          description: `You can now use ${newMultiInput ? 'multiple rows of' : 'a single set of'} inputs.`
-        });
-      }
-    } catch (error) {
-      console.error('Error in toggleInputMode:', error);
-    } finally {
-      setIsSaving(false);
-    }
+    await updateMultiInput(!multiInput);
   };
 
   const handleRunWorkflow = () => {
@@ -320,7 +239,7 @@ export const WorkflowInputs = ({
     );
   };
 
-  if (isLoadingChat) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center p-4">
         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>

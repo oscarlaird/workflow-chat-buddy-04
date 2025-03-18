@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import WorkflowInputs from "./WorkflowInputs";
-import { Workflow, InputValues } from "@/types";
+import { InputValues } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 
 interface WorkflowPanelProps {

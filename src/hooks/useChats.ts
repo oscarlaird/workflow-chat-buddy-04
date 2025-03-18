@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -138,16 +137,20 @@ export const useChats = () => {
         schema: 'public',
         table: 'chats',
         filter: `username=eq.${currentUsername}`,
-        // Important: We don't want to listen for multi_input changes
       }, (payload) => {
         // Exclude updates that only change multi_input or input_schema
         const oldData = payload.old as Record<string, any>;
         const newData = payload.new as Record<string, any>;
         
         // Check what fields changed
-        const changedFields = Object.keys(oldData).filter(key => 
-          JSON.stringify(oldData[key]) !== JSON.stringify(newData[key])
-        );
+        const changedFields = Object.keys(oldData).filter(key => {
+          // Use deep comparison for input_schema since it's an array or object
+          if (key === 'input_schema') {
+            return JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]);
+          }
+          // Use simple comparison for other fields
+          return oldData[key] !== newData[key];
+        });
         
         // Only refresh if fields other than multi_input and input_schema changed
         const relevantFields = changedFields.filter(field => 
@@ -158,7 +161,7 @@ export const useChats = () => {
           console.log('Relevant chat fields updated:', relevantFields);
           fetchChats();
         } else {
-          console.log('Ignoring non-relevant update:', changedFields);
+          console.log('Ignoring non-relevant update for sidebar:', changedFields);
         }
       })
       .subscribe();
