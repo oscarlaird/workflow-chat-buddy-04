@@ -83,9 +83,10 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
           );
         } 
         else if (payload.eventType === 'DELETE') {
-          const deletedStep = payload.old;
+          // Properly handle step deletion
+          console.log("Step deleted:", payload.old.id);
           setWorkflowSteps(prevSteps => 
-            prevSteps.filter(step => step.id !== deletedStep.id)
+            prevSteps.filter(step => step.id !== payload.old.id)
           );
         }
       })
