@@ -53,7 +53,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
     fetchWorkflowSteps();
 
     // Set up real-time subscription for workflow steps
-    // Using the exact same pattern as in ChatInterface.tsx
     console.log(`Setting up realtime subscription for workflow steps of chat ${chatId}`);
     
     const channel = supabase
@@ -84,16 +83,18 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Received real-time UPDATE workflow step:', payload);
+        console.log('Received real-time UPDATE workflow step:', payload.new);
         const updatedStep = payload.new;
         
-        setWorkflowSteps(prevSteps => 
-          prevSteps.map(step => 
+        setWorkflowSteps(prevSteps => {
+          const newSteps = prevSteps.map(step => 
             step.id === updatedStep.id 
               ? parseWorkflowStep(updatedStep)
               : step
-          )
-        );
+          );
+          console.log('Updated workflow steps after change:', newSteps);
+          return newSteps;
+        });
       })
       .on('postgres_changes', {
         event: 'DELETE',
@@ -162,7 +163,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       screenshots: parsedScreenshots,
       code: step.code || undefined,
       exampleData: parsedExampleData,
-      step_order: step.step_order, // Include step_order in the returned object
+      step_order: step.step_order,
     };
   };
 
