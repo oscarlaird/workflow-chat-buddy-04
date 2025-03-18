@@ -55,8 +55,12 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
     // Set up real-time subscription for workflow steps
     console.log(`Setting up realtime subscription for workflow steps of chat ${chatId}`);
     
+    // Create a channel specifically for this chat's workflow steps
+    const channelName = `workflow_steps_${chatId}`;
+    console.log(`Creating channel: ${channelName}`);
+    
     const channel = supabase
-      .channel(`workflow_steps:${chatId}`)
+      .channel(channelName)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -83,7 +87,9 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Received real-time UPDATE workflow step:', payload.new);
+        console.log('Received real-time UPDATE workflow step:', payload);
+        console.log('Update details - new value:', payload.new);
+        console.log('Update details - old value:', payload.old);
         const updatedStep = payload.new;
         
         setWorkflowSteps(prevSteps => {

@@ -19,6 +19,8 @@ export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
   // Update the key when the step description changes
   useEffect(() => {
     setStepKey(`${step.id}-${step.description}`);
+    // When description changes, log it to verify we're detecting changes
+    console.log(`Step description changed for step ${step.id}:`, step.description);
   }, [step.id, step.description]);
 
   const getStatusClass = () => {
