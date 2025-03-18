@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -55,7 +54,21 @@ export const ChatInterface = forwardRef(({
         .limit(1);
         
       if (!error && data && data.length > 0) {
-        setActiveRun(data[0]);
+        // Validate status is one of the expected values in Run type
+        const validStatuses: Array<Run['status']> = ['pending', 'running', 'completed', 'failed'];
+        const runData = data[0];
+        const status = validStatuses.includes(runData.status as Run['status']) 
+          ? runData.status as Run['status'] 
+          : 'pending';
+          
+        setActiveRun({
+          id: runData.id,
+          dashboard_id: runData.dashboard_id,
+          chat_id: runData.chat_id,
+          status: status,
+          created_at: runData.created_at,
+          updated_at: runData.updated_at
+        });
       }
     };
     
@@ -72,7 +85,21 @@ export const ChatInterface = forwardRef(({
       }, (payload) => {
         console.log('Run update received:', payload);
         if (payload.new) {
-          setActiveRun(payload.new as Run);
+          const runData = payload.new as any;
+          // Validate status is one of the expected values in Run type
+          const validStatuses: Array<Run['status']> = ['pending', 'running', 'completed', 'failed'];
+          const status = validStatuses.includes(runData.status as Run['status']) 
+            ? runData.status as Run['status'] 
+            : 'pending';
+            
+          setActiveRun({
+            id: runData.id,
+            dashboard_id: runData.dashboard_id,
+            chat_id: runData.chat_id,
+            status: status,
+            created_at: runData.created_at,
+            updated_at: runData.updated_at
+          });
         }
       })
       .subscribe();
