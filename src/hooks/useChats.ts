@@ -116,29 +116,50 @@ export const useChats = () => {
     const channel = supabase
       .channel('chats-channel')
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
         table: 'chats',
-        filter: `username=eq.${currentUsername}` // Only listen for changes to current user's chats
+        filter: `username=eq.${currentUsername}`
       }, (payload) => {
-        console.log('Real-time update on chats:', payload);
-        
-        // Only refresh the chats list when relevant fields change, not when multi_input changes
-        if (payload.eventType === 'UPDATE') {
-          // Check if the only field changed was multi_input
-          const newRecord = payload.new as Record<string, any>;
-          const oldRecord = payload.old as Record<string, any>;
-          
-          // If the only field that changed is multi_input, don't refresh the chat list
-          if (Object.keys(oldRecord).length === 1 && 'multi_input' in oldRecord && 
-              Object.keys(newRecord).length === 1 && 'multi_input' in newRecord) {
-            console.log('Ignoring update to multi_input field only');
-            return;
-          }
-        }
-        
-        // For all other changes, refresh the chats list
+        console.log('New chat inserted:', payload);
         fetchChats();
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'chats',
+        filter: `username=eq.${currentUsername}`
+      }, (payload) => {
+        console.log('Chat deleted:', payload);
+        fetchChats();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'chats',
+        filter: `username=eq.${currentUsername}`,
+        // Important: We don't want to listen for multi_input changes
+      }, (payload) => {
+        // Exclude updates that only change multi_input or input_schema
+        const oldData = payload.old as Record<string, any>;
+        const newData = payload.new as Record<string, any>;
+        
+        // Check what fields changed
+        const changedFields = Object.keys(oldData).filter(key => 
+          JSON.stringify(oldData[key]) !== JSON.stringify(newData[key])
+        );
+        
+        // Only refresh if fields other than multi_input and input_schema changed
+        const relevantFields = changedFields.filter(field => 
+          !['multi_input', 'input_schema'].includes(field)
+        );
+        
+        if (relevantFields.length > 0) {
+          console.log('Relevant chat fields updated:', relevantFields);
+          fetchChats();
+        } else {
+          console.log('Ignoring non-relevant update:', changedFields);
+        }
       })
       .subscribe();
 
