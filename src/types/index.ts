@@ -5,6 +5,8 @@ export interface Message {
   content: string;
   username?: string;
   is_currently_streaming?: boolean;
+  function_name?: string;
+  workflow_step_id?: string;
 }
 
 export interface Conversation {
@@ -28,7 +30,7 @@ export interface WorkflowStep {
   screenshots?: WorkflowStepScreenshot[];
   code?: string;
   exampleData?: any[];
-  step_order: number; // Added missing property
+  step_order: number;
 }
 
 export interface Workflow {

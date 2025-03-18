@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -105,7 +104,9 @@ export const ChatInterface = ({
               id: newMessage.id,
               role: newMessage.role,
               content: newMessage.content,
-              username: newMessage.username
+              username: newMessage.username,
+              function_name: newMessage.function_name,
+              workflow_step_id: newMessage.workflow_step_id
             }
           ];
         });

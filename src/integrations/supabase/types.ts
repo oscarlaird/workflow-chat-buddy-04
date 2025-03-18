@@ -42,32 +42,45 @@ export type Database = {
           content: string
           created_at: string | null
           from_template: boolean | null
+          function_name: string | null
           id: string
           is_currently_streaming: boolean | null
           role: string
           username: string
+          workflow_step_id: string | null
         }
         Insert: {
           chat_id: string
           content: string
           created_at?: string | null
           from_template?: boolean | null
+          function_name?: string | null
           id?: string
           is_currently_streaming?: boolean | null
           role: string
           username: string
+          workflow_step_id?: string | null
         }
         Update: {
           chat_id?: string
           content?: string
           created_at?: string | null
           from_template?: boolean | null
+          function_name?: string | null
           id?: string
           is_currently_streaming?: boolean | null
           role?: string
           username?: string
+          workflow_step_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_messages_workflow_step"
+            columns: ["workflow_step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_steps"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_chat_id_fkey"
             columns: ["chat_id"]
