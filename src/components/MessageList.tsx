@@ -41,6 +41,16 @@ export const MessageList = ({
     return content.toLowerCase().includes("ready");
   };
 
+  const formatFunctionName = (name: string): string => {
+    // Remove underscores and capitalize each word
+    if (!name) return "";
+    
+    return name
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   const formatMessageContent = (content: string, isStreaming: boolean) => {
     if (!content) return null;
     
@@ -65,10 +75,18 @@ export const MessageList = ({
   };
 
   const renderFunctionMessage = (message: Message) => {
+    const isStreaming = streamingMessageIds.has(message.id);
+    const formattedName = formatFunctionName(message.function_name || "");
+    
     return (
       <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-800 dark:text-blue-300">
         <Code className="h-4 w-4" />
-        <span className="font-medium">{message.function_name}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium">{formattedName}</span>
+          {isStreaming && (
+            <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+          )}
+        </div>
         {message.content && (
           <div className="ml-2 text-sm opacity-80">
             {message.content}
