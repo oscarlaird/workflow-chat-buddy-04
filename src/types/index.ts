@@ -50,3 +50,8 @@ export interface TableColumn {
 export interface TableData {
   [key: string]: any;
 }
+
+// Add InputValues interface to be more consistent across the app
+export interface InputValues {
+  [key: string]: string | number | boolean;
+}

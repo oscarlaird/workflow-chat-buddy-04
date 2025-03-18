@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
+import { Json } from "@/integrations/supabase/types";
 
 export interface InputField {
   field_name: string;
@@ -19,6 +20,28 @@ export interface Chat {
   multi_input?: boolean;
   input_schema?: InputField[];
 }
+
+// Helper function to safely parse input_schema JSON from Supabase
+const parseInputSchema = (inputSchema: Json | null): InputField[] => {
+  if (!inputSchema) return [];
+  
+  // If it's already an array, we need to ensure each item matches InputField shape
+  if (Array.isArray(inputSchema)) {
+    return inputSchema.filter((item): item is InputField => {
+      if (typeof item !== 'object' || item === null) return false;
+      
+      // Check if it has the required properties
+      return (
+        'field_name' in item && 
+        typeof item.field_name === 'string' &&
+        'type' in item && 
+        (item.type === 'string' || item.type === 'number' || item.type === 'bool')
+      );
+    });
+  }
+  
+  return [];
+};
 
 export const useChats = () => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -50,10 +73,10 @@ export const useChats = () => {
             variant: "destructive"
           });
         } else {
-          // Parse the input_schema JSON if it exists
+          // Parse the input_schema JSON safely
           const parsedUserChats = userChats?.map(chat => ({
             ...chat,
-            input_schema: chat.input_schema ? chat.input_schema as InputField[] : undefined
+            input_schema: parseInputSchema(chat.input_schema)
           }));
           setChats(parsedUserChats || []);
         }
@@ -69,10 +92,10 @@ export const useChats = () => {
         if (userExamplesError) {
           console.error('Error fetching user example chats:', userExamplesError);
         } else {
-          // Parse the input_schema JSON if it exists
+          // Parse the input_schema JSON safely
           const parsedUserExamples = userExamples?.map(chat => ({
             ...chat,
-            input_schema: chat.input_schema ? chat.input_schema as InputField[] : undefined
+            input_schema: parseInputSchema(chat.input_schema)
           }));
           setExampleChats(parsedUserExamples || []);
         }
@@ -88,10 +111,10 @@ export const useChats = () => {
         if (systemExamplesError) {
           console.error('Error fetching system example chats:', systemExamplesError);
         } else {
-          // Parse the input_schema JSON if it exists
+          // Parse the input_schema JSON safely
           const parsedSystemExamples = systemExamples?.map(chat => ({
             ...chat,
-            input_schema: chat.input_schema ? chat.input_schema as InputField[] : undefined
+            input_schema: parseInputSchema(chat.input_schema)
           }));
           setSystemExampleChats(parsedSystemExamples || []);
         }
@@ -136,12 +159,8 @@ export const useChats = () => {
           title,
           is_example: false,
           username: 'current_user',
-          multi_input: false,
-          input_schema: [
-            { field_name: "state", type: "string" },
-            { field_name: "bill", type: "string" },
-            { field_name: "passed", type: "bool" }
-          ]
+          multi_input: false
+          // input_schema will use the default value from the database
         });
 
       if (error) {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Play, Loader2, Check, X } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -7,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
-import { Workflow, WorkflowStep as WorkflowStepType } from "@/types";
+import { Workflow } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
 import { InputField } from "@/hooks/useChats";
+import { Json } from "@/integrations/supabase/types";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
@@ -21,6 +21,25 @@ interface WorkflowPanelProps {
 interface InputValues {
   [key: string]: string | number | boolean;
 }
+
+const parseInputSchema = (inputSchema: Json | null): InputField[] => {
+  if (!inputSchema) return [];
+  
+  if (Array.isArray(inputSchema)) {
+    return inputSchema.filter((item): item is InputField => {
+      if (typeof item !== 'object' || item === null) return false;
+      
+      return (
+        'field_name' in item && 
+        typeof item.field_name === 'string' &&
+        'type' in item && 
+        (item.type === 'string' || item.type === 'number' || item.type === 'bool')
+      );
+    });
+  }
+  
+  return [];
+};
 
 export const WorkflowPanel = ({ 
   onRunWorkflow, 
@@ -59,17 +78,16 @@ export const WorkflowPanel = ({
           });
         } else if (data) {
           setMultiInput(data.multi_input || false);
-          setInputSchema(data.input_schema || []);
           
-          // Initialize input values based on schema
+          const parsedSchema = parseInputSchema(data.input_schema);
+          setInputSchema(parsedSchema);
+          
           const initialValues: InputValues = {};
-          if (data.input_schema && Array.isArray(data.input_schema)) {
-            data.input_schema.forEach((field: InputField) => {
-              if (field.type === 'string') initialValues[field.field_name] = '';
-              else if (field.type === 'number') initialValues[field.field_name] = 0;
-              else if (field.type === 'bool') initialValues[field.field_name] = false;
-            });
-          }
+          parsedSchema.forEach((field: InputField) => {
+            if (field.type === 'string') initialValues[field.field_name] = '';
+            else if (field.type === 'number') initialValues[field.field_name] = 0;
+            else if (field.type === 'bool') initialValues[field.field_name] = false;
+          });
           setInputValues(initialValues);
         }
       } catch (error) {
@@ -117,7 +135,6 @@ export const WorkflowPanel = ({
     }));
   };
 
-  // Get states for dropdown if there's a state field
   const states = [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
     "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
