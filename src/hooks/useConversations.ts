@@ -21,6 +21,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   const [screenRecordings, setScreenRecordings] = useState<Record<string, ScreenRecording>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [chatId] = useState(() => conversationId || uuidv4());
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
 
   useEffect(() => {
     if (conversationId) {
@@ -29,6 +30,19 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
       setMessages([]);
       setScreenRecordings({});
     }
+  }, [conversationId]);
+
+  useEffect(() => {
+    // Listen for workflow run created events
+    const handleWorkflowRunCreated = (event: MessageEvent) => {
+      if (event.data && event.data.type === "WORKFLOW_RUN_CREATED" && event.data.chatId === conversationId) {
+        console.log("Setting current run ID to:", event.data.runId);
+        setCurrentRunId(event.data.runId);
+      }
+    };
+
+    window.addEventListener("message", handleWorkflowRunCreated);
+    return () => window.removeEventListener("message", handleWorkflowRunCreated);
   }, [conversationId]);
 
   // Load messages from Supabase
@@ -59,7 +73,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           content: msg.content,
           username: msg.username,
           function_name: msg.function_name,
-          workflow_step_id: msg.workflow_step_id
+          workflow_step_id: msg.workflow_step_id,
+          run_id: msg.run_id
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
@@ -115,6 +130,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     setIsLoading,
     chatId,
     hasScreenRecording: (message: Message) => message.id in screenRecordings,
-    setMessages
+    setMessages,
+    currentRunId,
+    setCurrentRunId
   };
 };

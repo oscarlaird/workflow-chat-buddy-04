@@ -22,7 +22,9 @@ export const ChatInterface = forwardRef(({
     isLoading, 
     setIsLoading,
     hasScreenRecording,
-    setMessages 
+    setMessages,
+    currentRunId,
+    setCurrentRunId
   } = useConversations({ conversationId });
   
   const [localMessageIds, setLocalMessageIds] = useState<Set<string>>(new Set());
@@ -126,7 +128,8 @@ export const ChatInterface = forwardRef(({
               content: newMessage.content,
               username: newMessage.username,
               function_name: newMessage.function_name,
-              workflow_step_id: newMessage.workflow_step_id
+              workflow_step_id: newMessage.workflow_step_id,
+              run_id: newMessage.run_id
             }
           ];
         });
@@ -180,25 +183,45 @@ export const ChatInterface = forwardRef(({
       
       setMessages(prev => [...prev, optimisticMessage]);
       
+      const messageData: any = {
+        id: messageId,
+        chat_id: conversationId,
+        role: 'user',
+        content: inputValue,
+        username: 'current_user',
+        is_currently_streaming: false
+      };
+      
+      // Add run_id if available
+      if (currentRunId && inputValue === "run") {
+        console.log("Adding run_id to message:", currentRunId);
+        messageData.run_id = currentRunId;
+      }
+      
       await supabase
         .from('messages')
-        .insert({
-          id: messageId,
-          chat_id: conversationId,
-          role: 'user',
-          content: inputValue,
-          username: 'current_user',
-          is_currently_streaming: false
-        });
+        .insert(messageData);
+      
+      // If message is "run", include run_id in the function invocation
+      const functionParams: any = { 
+        conversationId,
+        username: 'current_user'
+      };
+      
+      if (currentRunId && inputValue === "run") {
+        functionParams.runId = currentRunId;
+      }
       
       await supabase.functions.invoke('respond-to-message', {
-        body: { 
-          conversationId,
-          username: 'current_user'
-        }
+        body: functionParams
       });
       
       onSendMessage(inputValue);
+      
+      // If this was a "run" message, reset the current run ID after sending
+      if (inputValue === "run") {
+        setCurrentRunId(null);
+      }
     } catch (err) {
       console.error('Exception when processing message:', err);
     } finally {

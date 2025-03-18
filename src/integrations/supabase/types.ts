@@ -94,6 +94,7 @@ export type Database = {
           id: string
           is_currently_streaming: boolean | null
           role: string
+          run_id: string | null
           username: string
           workflow_step_id: string | null
         }
@@ -106,6 +107,7 @@ export type Database = {
           id?: string
           is_currently_streaming?: boolean | null
           role: string
+          run_id?: string | null
           username: string
           workflow_step_id?: string | null
         }
@@ -118,6 +120,7 @@ export type Database = {
           id?: string
           is_currently_streaming?: boolean | null
           role?: string
+          run_id?: string | null
           username?: string
           workflow_step_id?: string | null
         }
@@ -136,7 +139,70 @@ export type Database = {
             referencedRelation: "chats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "messages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      run_messages: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json | null
+          run_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          run_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          run_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_messages_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      runs: {
+        Row: {
+          created_at: string
+          dashboard_id: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       workflow_steps: {
         Row: {
