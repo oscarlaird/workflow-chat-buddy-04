@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Play, Loader2, MapPin, FileText } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -23,7 +24,7 @@ export const WorkflowPanel = ({
   const [state, setState] = useState("");
   const [billInput, setBillInput] = useState("");
   
-  const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
+  const { workflowSteps, isLoading, error, deletingStepIds } = useWorkflowSteps(chatId);
 
   const workflow = workflowSteps.length > 0 ? {
     id: "workflow-1",
@@ -164,12 +165,17 @@ export const WorkflowPanel = ({
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-2">
           {workflow.steps.map((step, index) => (
-            <WorkflowStep key={step.id} step={step} index={index} />
+            <WorkflowStep 
+              key={step.id} 
+              step={step} 
+              index={index}
+              isDeleting={deletingStepIds.includes(step.id)} 
+            />
           ))}
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default WorkflowPanel;

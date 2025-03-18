@@ -5,13 +5,15 @@ import { WorkflowStep as WorkflowStepType } from "@/types";
 import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
 import { useState } from "react";
+import { MotionDiv } from "@/lib/transitions";
 
 interface WorkflowStepProps {
   step: WorkflowStepType;
   index: number;
+  isDeleting?: boolean;
 }
 
-export const WorkflowStep = memo(({ step, index }: WorkflowStepProps) => {
+export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowStepProps) => {
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
   const [isDataExpanded, setIsDataExpanded] = useState(false);
   
@@ -52,7 +54,19 @@ export const WorkflowStep = memo(({ step, index }: WorkflowStepProps) => {
   };
 
   return (
-    <div className={`workflow-step ${getStatusClass()}`} key={stepKey}>
+    <MotionDiv 
+      className={`workflow-step ${getStatusClass()} ${isDeleting ? 'workflow-step-deleting' : ''}`} 
+      key={stepKey}
+      initial={{ opacity: 1, height: "auto" }}
+      animate={{ 
+        opacity: isDeleting ? 0 : 1,
+        height: isDeleting ? 0 : "auto",
+        marginBottom: isDeleting ? 0 : undefined,
+        paddingBottom: isDeleting ? 0 : undefined,
+      }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      exit={{ opacity: 0, height: 0 }}
+    >
       <div className="mb-2">
         <h3 className="text-lg font-medium">
           Step {index + 1}: {step.title}
@@ -118,7 +132,7 @@ export const WorkflowStep = memo(({ step, index }: WorkflowStepProps) => {
           )}
         </div>
       )}
-    </div>
+    </MotionDiv>
   );
 });
 

@@ -173,4 +173,14 @@
   .workflow-step:last-child:after {
     @apply hidden;
   }
+  
+  .workflow-step-deleting {
+    @apply relative overflow-hidden;
+    background: linear-gradient(90deg, rgba(239,68,68,0.1), rgba(239,68,68,0.05));
+    border-left: 2px solid rgba(239,68,68,0.5);
+  }
+  
+  .workflow-step-deleting:before {
+    @apply bg-red-500/30 border-red-500;
+  }
 }

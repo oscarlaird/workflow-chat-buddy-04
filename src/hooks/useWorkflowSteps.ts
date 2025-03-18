@@ -8,6 +8,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingStepIds, setDeletingStepIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (!chatId) {
@@ -17,38 +18,11 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       return;
     }
 
-    const ensureReplicaIdentity = async () => {
-      try {
-        console.log("Ensuring REPLICA IDENTITY for workflow_steps table");
-        const response = await fetch('/functions/v1/check-replica-identity', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY || ''}`
-          },
-          body: JSON.stringify({ tableName: 'workflow_steps' })
-        });
-        
-        const result = await response.json();
-        console.log("REPLICA IDENTITY check result:", result);
-        
-        if (!result.success) {
-          console.warn("Failed to ensure REPLICA IDENTITY:", result.error);
-        }
-      } catch (error) {
-        console.error("Error ensuring REPLICA IDENTITY:", error);
-        // Non-critical error, continue anyway
-      }
-    };
-
     const fetchWorkflowSteps = async () => {
       try {
         setIsLoading(true);
         setError(null);
         console.log("Fetching workflow steps for chat ID:", chatId);
-        
-        // Ensure REPLICA IDENTITY is set
-        await ensureReplicaIdentity();
         
         const { data, error } = await supabase
           .from('workflow_steps')
@@ -83,29 +57,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
     // Enhanced debugging for realtime subscriptions
     console.log(`Setting up realtime subscription for workflow_steps on chat ${chatId}`);
     
-    // Test query to check if the workflow_steps table exists and is accessible
-    supabase.from('workflow_steps').select('id').limit(1)
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error accessing workflow_steps table:", error);
-        } else {
-          console.log("Successfully accessed workflow_steps table, row count:", data?.length);
-        }
-      });
-
-    // Ensure the table has REPLICA IDENTITY FULL
-    supabase.rpc('admin_get_replica_identity', { table_name: 'workflow_steps' })
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Error checking REPLICA IDENTITY:", error);
-        } else {
-          console.log("workflow_steps REPLICA IDENTITY status:", data);
-          if (data !== 'FULL') {
-            console.warn("workflow_steps table does not have REPLICA IDENTITY FULL!");
-          }
-        }
-      });
-
     // Set up realtime subscription with comprehensive debugging
     const channel = supabase
       .channel(`workflow_steps_${chatId}`)
@@ -117,7 +68,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       }, (payload) => {
         console.log(`Realtime event received for workflow_steps:`, payload);
         console.log(`Event type: ${payload.eventType}`);
-        console.log(`Event payload:`, JSON.stringify(payload, null, 2));
         
         if (payload.eventType === 'INSERT') {
           console.log("INSERT event - New step:", payload.new);
@@ -151,26 +101,25 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
             const deletedStepId = payload.old.id;
             console.log("Step deleted with ID:", deletedStepId);
             
-            setWorkflowSteps(prevSteps => {
-              console.log("Current steps before deletion:", prevSteps.map(s => s.id));
-              const filteredSteps = prevSteps.filter(step => {
-                const keep = step.id !== deletedStepId;
-                console.log(`Step ${step.id}: keep=${keep}`);
-                return keep;
+            // Set this step as currently being deleted (for animation)
+            setDeletingStepIds(prev => [...prev, deletedStepId]);
+            
+            // After animation completes, actually remove it from state
+            setTimeout(() => {
+              setWorkflowSteps(prevSteps => {
+                console.log("Current steps before deletion:", prevSteps.map(s => s.id));
+                const filteredSteps = prevSteps.filter(step => step.id !== deletedStepId);
+                console.log("Steps after deletion:", filteredSteps.map(s => s.id));
+                return filteredSteps;
               });
-              console.log("Steps after deletion:", filteredSteps.map(s => s.id));
               
-              if (filteredSteps.length === prevSteps.length) {
-                console.warn("No step was removed during deletion, IDs might not match");
-                // Show toast for debugging
-                toast({
-                  title: "Delete debugging",
-                  description: `Attempted to delete step ${deletedStepId} but no matching step was found`,
-                  variant: "destructive",
-                });
-              }
-              
-              return filteredSteps;
+              // Remove from the deleting array
+              setDeletingStepIds(prev => prev.filter(id => id !== deletedStepId));
+            }, 500); // Match this with the CSS animation duration
+            
+            toast({
+              title: "Step Deleted",
+              description: `Workflow step has been removed`,
             });
           } else {
             console.error("DELETE event received but payload.old.id is missing!", payload);
@@ -190,15 +139,6 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
           });
         }
       });
-
-    // Test the channel connection
-    channel.send({
-      type: 'broadcast',
-      event: 'test',
-      payload: { message: 'Testing channel connection' },
-    })
-    .then(() => console.log('Test message sent successfully'))
-    .catch(err => console.error('Error sending test message:', err));
 
     return () => {
       console.log(`Cleaning up realtime subscription for chat ${chatId}`);
@@ -255,6 +195,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
   return {
     workflowSteps,
     isLoading,
-    error
+    error,
+    deletingStepIds
   };
 };
