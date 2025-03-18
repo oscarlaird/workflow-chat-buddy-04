@@ -1,9 +1,10 @@
 
 import { useRef, useEffect } from "react";
-import { Film, Download, Loader2 } from "lucide-react";
+import { Film, Download, Loader2, Code } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
+import CodeBlock from "./CodeBlock";
 
 interface MessageListProps {
   messages: Message[];
@@ -63,6 +64,35 @@ export const MessageList = ({
     );
   };
 
+  const renderFunctionMessage = (message: Message) => {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-800 dark:text-blue-300">
+        <Code className="h-4 w-4" />
+        <span className="font-medium">{message.function_name}</span>
+        {message.content && (
+          <div className="ml-2 text-sm opacity-80">
+            {message.content}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderWorkflowStepMessage = (message: Message) => {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg text-purple-800 dark:text-purple-300">
+        <div className="flex flex-col">
+          <span className="font-medium">Workflow Step</span>
+          {message.content && (
+            <div className="text-sm opacity-80 mt-1">
+              {message.content}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -79,30 +109,40 @@ export const MessageList = ({
       {messages.map((message, index) => (
         <div key={message.id} className="space-y-4">
           <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div 
-              className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
-                message.role === "user" 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-muted"
-              }`}
-            >
-              {message.content ? (
-                formatMessageContent(
-                  message.content, 
-                  message.role === "assistant" && streamingMessageIds.has(message.id)
-                )
-              ) : (
-                // Empty message - waiting for content
-                <p> </p>
-              )}
-              
-              {pendingMessageIds.has(message.id) && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Sending...</span>
-                </div>
-              )}
-            </div>
+            {message.function_name ? (
+              <div className="max-w-[80%]">
+                {renderFunctionMessage(message)}
+              </div>
+            ) : message.workflow_step_id ? (
+              <div className="max-w-[80%]">
+                {renderWorkflowStepMessage(message)}
+              </div>
+            ) : (
+              <div 
+                className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
+                  message.role === "user" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-muted"
+                }`}
+              >
+                {message.content ? (
+                  formatMessageContent(
+                    message.content, 
+                    message.role === "assistant" && streamingMessageIds.has(message.id)
+                  )
+                ) : (
+                  // Empty message - waiting for content
+                  <p> </p>
+                )}
+                
+                {pendingMessageIds.has(message.id) && (
+                  <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Sending...</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
