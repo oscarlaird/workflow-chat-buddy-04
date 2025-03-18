@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,7 +9,7 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatFieldName } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputField as InputFieldType } from "@/types";
 import { validateInput, ValidationResult } from "@/utils/inputValidation";
@@ -202,22 +201,6 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
       const currentYear = new Date().getFullYear();
       const [yearValue, setYearValue] = useState<number | ''>(value ? parseInt(value) : '');
       
-      const incrementYear = () => {
-        const newYear = (yearValue === '' ? currentYear : yearValue) + 1;
-        if (newYear <= currentYear + 100) {
-          setYearValue(newYear);
-          handleChange(newYear);
-        }
-      };
-      
-      const decrementYear = () => {
-        const newYear = (yearValue === '' ? currentYear : yearValue) - 1;
-        if (newYear >= 1900) {
-          setYearValue(newYear);
-          handleChange(newYear);
-        }
-      };
-      
       const handleYearInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const inputValue = e.target.value === '' ? '' : parseInt(e.target.value);
         setYearValue(inputValue);
@@ -236,36 +219,17 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
       
       return (
         <div className="w-full relative">
-          <div className="relative flex">
-            <Input
-              id={field.field_name}
-              type="number"
-              min={1900}
-              max={currentYear + 100}
-              placeholder={`Enter ${field.field_name}`}
-              value={yearValue}
-              onChange={handleYearInputChange}
-              onBlur={handleYearBlur}
-              className={cn("pr-16", showError && "border-red-500")}
-            />
-            <div className="absolute right-0 inset-y-0 flex flex-col border-l">
-              <button
-                type="button"
-                className="flex-1 px-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={incrementYear}
-              >
-                <ChevronUp className="h-3 w-3" />
-              </button>
-              <div className="h-[1px] w-full bg-border" />
-              <button
-                type="button"
-                className="flex-1 px-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={decrementYear}
-              >
-                <ChevronDown className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
+          <Input
+            id={field.field_name}
+            type="number"
+            min={1900}
+            max={currentYear + 100}
+            placeholder={`Enter ${formatFieldName(field.field_name)}`}
+            value={yearValue}
+            onChange={handleYearInputChange}
+            onBlur={handleYearBlur}
+            className={cn(showError && "border-red-500")}
+          />
           {showError && (
             <p className="text-xs text-red-500 mt-1">{validation.message}</p>
           )}
@@ -279,7 +243,7 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
           <Input
             id={field.field_name}
             type="number"
-            placeholder={`Enter ${field.field_name}`}
+            placeholder={`Enter ${formatFieldName(field.field_name)}`}
             value={value || ''}
             onChange={(e) => handleChange(field.type === 'integer' ? parseInt(e.target.value) || '' : parseFloat(e.target.value) || '')}
             onBlur={() => handleValidation(value)}
@@ -353,7 +317,7 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
           <Input
             id={field.field_name}
             type="text"
-            placeholder={`Enter ${field.field_name}`}
+            placeholder={`Enter ${formatFieldName(field.field_name)}`}
             value={value || ''}
             onChange={(e) => handleChange(e.target.value)}
             onBlur={() => handleValidation(value)}

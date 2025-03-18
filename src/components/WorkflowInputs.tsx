@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Plus, Trash, Table, List } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -6,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { InputField, InputValues } from "@/types";
 import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
 import { TypedInputField, InputFieldIcon } from "@/components/InputField";
+import { formatFieldName } from "@/lib/utils";
 import { 
   Table as UITable,
   TableBody,
@@ -32,7 +32,6 @@ export const WorkflowInputs = ({
   const [inputValues, setInputValues] = useState<InputValues>({});
   const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
   
-  // Use our hook instead of the direct Supabase queries
   const { 
     multiInput, 
     inputSchema, 
@@ -42,7 +41,6 @@ export const WorkflowInputs = ({
   } = useSelectedChatSettings(chatId);
 
   useEffect(() => {
-    // Initialize inputValues and tabularData when inputSchema changes
     const initialValues: InputValues = {};
     inputSchema.forEach((field: InputField) => {
       if (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
@@ -67,7 +65,6 @@ export const WorkflowInputs = ({
   }, [inputSchema]);
 
   useEffect(() => {
-    // Notify parent component of input values changes
     if (onInputValuesChange) {
       onInputValuesChange(multiInput ? tabularData : inputValues);
     }
@@ -133,7 +130,7 @@ export const WorkflowInputs = ({
                 <TableHead key={field.field_name} className="capitalize">
                   <div className="flex items-center gap-1.5">
                     <InputFieldIcon type={field.type} className="text-muted-foreground" />
-                    <span>{field.field_name}</span>
+                    <span>{formatFieldName(field.field_name)}</span>
                   </div>
                 </TableHead>
               ))}
@@ -221,7 +218,7 @@ export const WorkflowInputs = ({
             <div key={field.field_name} className="space-y-2">
               <Label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
                 <InputFieldIcon type={field.type} className="text-muted-foreground" />
-                <span>{field.field_name}</span>
+                <span>{formatFieldName(field.field_name)}</span>
               </Label>
               <TypedInputField
                 field={field}
