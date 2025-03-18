@@ -10,14 +10,20 @@ const parseInputSchema = (inputSchema: Json | null): InputField[] => {
   if (!inputSchema) return [];
   
   if (Array.isArray(inputSchema)) {
+    // Use type assertion to inform TypeScript about the structure
     return inputSchema.filter((item): item is InputField => {
       if (typeof item !== 'object' || item === null) return false;
       
+      // Check if the item has the required properties of InputField
       return (
         'field_name' in item && 
         typeof item.field_name === 'string' &&
         'type' in item && 
-        (item.type === 'string' || item.type === 'number' || item.type === 'bool')
+        (
+          item.type === 'string' || 
+          item.type === 'number' || 
+          item.type === 'bool'
+        )
       );
     });
   }
@@ -31,6 +37,7 @@ export interface ChatSettings {
   isLoading: boolean;
   isSaving: boolean;
   updateMultiInput: (value: boolean) => Promise<void>;
+  updateInputSchema: (schema: InputField[]) => Promise<void>;
 }
 
 export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
@@ -138,11 +145,46 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
     }
   };
 
+  const updateInputSchema = async (schema: InputField[]) => {
+    if (!chatId) return;
+    
+    try {
+      setIsSaving(true);
+      
+      const { error } = await supabase
+        .from('chats')
+        .update({ input_schema: schema })
+        .eq('id', chatId);
+        
+      if (error) {
+        console.error('Error updating input schema:', error);
+        toast({
+          title: "Error updating input schema",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Input schema updated",
+          description: "The input fields have been updated successfully."
+        });
+        
+        // Update local state immediately for a responsive UI
+        setInputSchema(schema);
+      }
+    } catch (error) {
+      console.error('Error in updateInputSchema:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return {
     multiInput,
     inputSchema,
     isLoading,
     isSaving,
-    updateMultiInput
+    updateMultiInput,
+    updateInputSchema
   };
 };
