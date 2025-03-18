@@ -80,7 +80,7 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
       
       <div className="mb-2">
         <h3 className="text-lg font-medium">
-          Step {index + 1}: {step.title}
+          Step {step.step_number}: {step.title}
         </h3>
         <p className="text-gray-600 dark:text-gray-400">{step.description}</p>
       </div>
