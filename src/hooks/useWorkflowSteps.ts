@@ -52,96 +52,48 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
 
     fetchWorkflowSteps();
 
-    // Create a general realtime subscription to ALL workflow_steps changes
-    console.log("Setting up universal realtime subscription for workflow_steps table");
-    
-    // First channel for ALL changes (debugging purpose)
-    const allChangesChannel = supabase
-      .channel('workflow_steps_all_changes')
+    // Set up realtime subscription to workflow_steps for this chat
+    const channel = supabase
+      .channel(`workflow_steps_${chatId}`)
       .on('postgres_changes', {
         event: '*',  // Listen to all events (INSERT, UPDATE, DELETE)
         schema: 'public',
-        table: 'workflow_steps'
-      }, (payload) => {
-        console.log('GLOBAL LISTENER - Received ANY workflow_steps change:', payload);
-        console.log('Change details:', {
-          event: payload.eventType,
-          new: payload.new,
-          old: payload.old
-        });
-      })
-      .subscribe((status) => {
-        console.log(`ALL changes subscription status: ${status}`);
-      });
-
-    // Second channel specifically for this chat's workflow steps
-    const chatSpecificChannel = supabase
-      .channel(`workflow_steps_${chatId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
         table: 'workflow_steps',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log(`CHAT ${chatId} - Received INSERT workflow step:`, payload);
-        const newStep = payload.new;
+        console.log(`Realtime update for workflow steps (${payload.eventType}):`, payload);
         
-        setWorkflowSteps(prevSteps => {
-          // If step already exists, don't add it again
-          if (prevSteps.some(step => step.id === newStep.id)) {
-            return prevSteps;
-          }
-          
-          // Add the new step and sort by step_order
-          const updatedSteps = [...prevSteps, parseWorkflowStep(newStep)];
-          return updatedSteps.sort((a, b) => a.step_order - b.step_order);
-        });
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'workflow_steps',
-        filter: `chat_id=eq.${chatId}`
-      }, (payload) => {
-        console.log(`CHAT ${chatId} - Received UPDATE workflow step:`, payload);
-        console.log('Update details - new value:', payload.new);
-        console.log('Update details - old value:', payload.old);
-        const updatedStep = payload.new;
-        
-        setWorkflowSteps(prevSteps => {
-          const newSteps = prevSteps.map(step => 
-            step.id === updatedStep.id 
-              ? parseWorkflowStep(updatedStep)
-              : step
+        if (payload.eventType === 'INSERT') {
+          const newStep = parseWorkflowStep(payload.new);
+          setWorkflowSteps(prevSteps => {
+            if (prevSteps.some(step => step.id === newStep.id)) {
+              return prevSteps;
+            }
+            const updatedSteps = [...prevSteps, newStep];
+            return updatedSteps.sort((a, b) => a.step_order - b.step_order);
+          });
+        } 
+        else if (payload.eventType === 'UPDATE') {
+          const updatedStep = parseWorkflowStep(payload.new);
+          setWorkflowSteps(prevSteps => 
+            prevSteps.map(step => 
+              step.id === updatedStep.id ? updatedStep : step
+            )
           );
-          console.log('Updated workflow steps after change:', newSteps);
-          return newSteps;
-        });
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'workflow_steps',
-        filter: `chat_id=eq.${chatId}`
-      }, (payload) => {
-        console.log(`CHAT ${chatId} - Received DELETE workflow step:`, payload);
-        const deletedStep = payload.old;
-        
-        setWorkflowSteps(prevSteps => 
-          prevSteps.filter(step => step.id !== deletedStep.id)
-        );
+        } 
+        else if (payload.eventType === 'DELETE') {
+          const deletedStep = payload.old;
+          setWorkflowSteps(prevSteps => 
+            prevSteps.filter(step => step.id !== deletedStep.id)
+          );
+        }
       })
       .subscribe((status) => {
-        console.log(`Chat-specific subscription status for chat ${chatId}: ${status}`);
-        if (status !== 'SUBSCRIBED') {
-          console.error(`Failed to subscribe to workflow steps changes for chat ${chatId}: ${status}`);
-        }
+        console.log(`Realtime subscription status for chat ${chatId}: ${status}`);
       });
 
     return () => {
-      console.log('Removing channel subscriptions for workflow steps');
-      supabase.removeChannel(allChangesChannel);
-      supabase.removeChannel(chatSpecificChannel);
+      supabase.removeChannel(channel);
     };
   }, [chatId]);
 
@@ -169,11 +121,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         }
       }
     } catch (parseError) {
-      console.error("JSON parsing error:", parseError, 
-        "Screenshots:", step.screenshots, 
-        "Example Data:", step.example_data);
-      
-      // Continue without the problematic data
+      console.error("JSON parsing error:", parseError);
       parsedScreenshots = undefined;
       parsedExampleData = undefined;
     }
