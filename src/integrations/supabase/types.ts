@@ -100,7 +100,7 @@ export type Database = {
           id: string
           screenshots: Json | null
           status: string
-          step_order: number
+          step_number: number
           title: string
           username: string
         }
@@ -113,7 +113,7 @@ export type Database = {
           id?: string
           screenshots?: Json | null
           status: string
-          step_order: number
+          step_number: number
           title: string
           username?: string
         }
@@ -126,7 +126,7 @@ export type Database = {
           id?: string
           screenshots?: Json | null
           status?: string
-          step_order?: number
+          step_number?: number
           title?: string
           username?: string
         }

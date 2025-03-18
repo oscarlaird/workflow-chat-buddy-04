@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
@@ -27,7 +28,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
           .from('workflow_steps')
           .select('*')
           .eq('chat_id', chatId)
-          .order('step_order', { ascending: true });
+          .order('step_number', { ascending: true });
 
         if (error) {
           console.error("Supabase error:", error);
@@ -76,7 +77,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
             }
             console.log("Adding new step:", newStep.id);
             const updatedSteps = [...prevSteps, newStep];
-            return updatedSteps.sort((a, b) => a.step_order - b.step_order);
+            return updatedSteps.sort((a, b) => a.step_number - b.step_number);
           });
         } 
         else if (payload.eventType === 'UPDATE') {
@@ -174,7 +175,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       screenshots: parsedScreenshots,
       code: step.code || undefined,
       exampleData: parsedExampleData,
-      step_order: step.step_order,
+      step_number: step.step_number,
     };
   };
 

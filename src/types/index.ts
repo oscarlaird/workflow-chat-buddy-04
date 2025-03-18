@@ -30,7 +30,7 @@ export interface WorkflowStep {
   screenshots?: WorkflowStepScreenshot[];
   code?: string;
   exampleData?: any[];
-  step_order: number;
+  step_number: number;
 }
 
 export interface Workflow {
