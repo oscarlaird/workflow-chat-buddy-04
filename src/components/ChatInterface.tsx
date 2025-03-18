@@ -1,3 +1,4 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -41,44 +42,60 @@ export const ChatInterface = forwardRef(({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
 
-  // Reset activeRun when conversation changes
+  // Reset state and fetch active run when conversation changes
   useEffect(() => {
-    // Reset the activeRun state whenever conversationId changes
-    if (prevConversationIdRef.current !== conversationId) {
-      setActiveRun(null);
-      setRunMessages([]);
-    }
+    // Clear the activeRun and runMessages state whenever conversationId changes
+    setActiveRun(null);
+    setRunMessages([]);
     
     if (!conversationId) return;
     
+    console.log(`Setting up for conversation: ${conversationId}, previous was: ${prevConversationIdRef.current}`);
+    
     // Initial fetch of any active run
     const fetchActiveRun = async () => {
-      const { data, error } = await supabase
-        .from('runs')
-        .select('*')
-        .eq('chat_id', conversationId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-        
-      if (!error && data && data.length > 0) {
-        // Validate status is one of the expected values in Run type
-        const validStatuses: Array<Run['status']> = ['pending', 'running', 'completed', 'failed'];
-        const runData = data[0];
-        const status = validStatuses.includes(runData.status as Run['status']) 
-          ? runData.status as Run['status'] 
-          : 'pending';
+      try {
+        const { data, error } = await supabase
+          .from('runs')
+          .select('*')
+          .eq('chat_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(1);
           
-        setActiveRun({
-          id: runData.id,
-          dashboard_id: runData.dashboard_id,
-          chat_id: runData.chat_id,
-          status: status,
-          created_at: runData.created_at,
-          updated_at: runData.updated_at
-        });
+        if (error) {
+          console.error('Error fetching active run:', error);
+          return;
+        }
         
-        // Fetch run messages for this run
-        fetchRunMessages(runData.id);
+        if (data && data.length > 0) {
+          // Validate status is one of the expected values in Run type
+          const validStatuses: Array<Run['status']> = ['pending', 'running', 'completed', 'failed'];
+          const runData = data[0];
+          const status = validStatuses.includes(runData.status as Run['status']) 
+            ? runData.status as Run['status'] 
+            : 'pending';
+          
+          console.log(`Found run for chat ${conversationId} with status: ${status}`);
+            
+          // Only set activeRun if the status is "running"
+          if (status === 'running') {
+            setActiveRun({
+              id: runData.id,
+              dashboard_id: runData.dashboard_id,
+              chat_id: runData.chat_id,
+              status: status,
+              created_at: runData.created_at,
+              updated_at: runData.updated_at
+            });
+            
+            // Fetch run messages for this run
+            fetchRunMessages(runData.id);
+          }
+        } else {
+          console.log(`No active run found for chat ${conversationId}`);
+        }
+      } catch (err) {
+        console.error('Exception when fetching active run:', err);
       }
     };
     
@@ -104,20 +121,29 @@ export const ChatInterface = forwardRef(({
           const status = validStatuses.includes(runData.status as Run['status']) 
             ? runData.status as Run['status'] 
             : 'pending';
-            
-          setActiveRun({
-            id: runData.id,
-            dashboard_id: runData.dashboard_id,
-            chat_id: runData.chat_id,
-            status: status,
-            created_at: runData.created_at,
-            updated_at: runData.updated_at
-          });
+          
+          // Only set activeRun if the status is "running" and it matches the current conversation
+          if (status === 'running' && runData.chat_id === conversationId) {
+            console.log(`Setting active run for chat ${conversationId} with status: ${status}`);
+            setActiveRun({
+              id: runData.id,
+              dashboard_id: runData.dashboard_id,
+              chat_id: runData.chat_id,
+              status: status,
+              created_at: runData.created_at,
+              updated_at: runData.updated_at
+            });
+          } else if (status !== 'running' && runData.chat_id === conversationId) {
+            // Clear the activeRun if the status is no longer "running"
+            console.log(`Clearing active run for chat ${conversationId} as status is now: ${status}`);
+            setActiveRun(null);
+          }
         }
       })
       .subscribe();
       
     return () => {
+      console.log(`Removing channel subscription for chat ${conversationId}`);
       supabase.removeChannel(runsChannel);
     };
   }, [conversationId]);
