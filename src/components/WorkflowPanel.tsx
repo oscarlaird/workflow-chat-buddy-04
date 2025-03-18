@@ -6,10 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
-import { Workflow } from "@/types";
+import { Workflow, InputValues, InputField } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
-import { InputField } from "@/hooks/useChats";
 import { Json } from "@/integrations/supabase/types";
 
 interface WorkflowPanelProps {
@@ -18,15 +17,11 @@ interface WorkflowPanelProps {
   chatId?: string;
 }
 
-interface InputValues {
-  [key: string]: string | number | boolean;
-}
-
 const parseInputSchema = (inputSchema: Json | null): InputField[] => {
   if (!inputSchema) return [];
   
   if (Array.isArray(inputSchema)) {
-    return inputSchema.filter((item): item is InputField => {
+    return inputSchema.filter((item): item is any => {
       if (typeof item !== 'object' || item === null) return false;
       
       return (
@@ -35,7 +30,7 @@ const parseInputSchema = (inputSchema: Json | null): InputField[] => {
         'type' in item && 
         (item.type === 'string' || item.type === 'number' || item.type === 'bool')
       );
-    });
+    }) as InputField[];
   }
   
   return [];

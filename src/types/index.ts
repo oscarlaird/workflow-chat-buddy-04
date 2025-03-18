@@ -55,3 +55,9 @@ export interface TableData {
 export interface InputValues {
   [key: string]: string | number | boolean;
 }
+
+// Add InputField interface that matches what we store in Supabase
+export interface InputField {
+  field_name: string;
+  type: 'string' | 'number' | 'bool';
+}

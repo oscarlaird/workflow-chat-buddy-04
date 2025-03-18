@@ -1,25 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { Json } from "@/integrations/supabase/types";
-
-export interface InputField {
-  field_name: string;
-  type: 'string' | 'number' | 'bool';
-}
-
-export interface Chat {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  is_example?: boolean;
-  username?: string;
-  multi_input?: boolean;
-  input_schema?: InputField[];
-}
+import { InputField } from "@/types";
 
 // Helper function to safely parse input_schema JSON from Supabase
 const parseInputSchema = (inputSchema: Json | null): InputField[] => {
