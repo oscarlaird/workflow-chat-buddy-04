@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Code, Table, Image } from "lucide-react";
+import { ChevronDown, ChevronRight, Code, Table } from "lucide-react";
 import { WorkflowStep as WorkflowStepType } from "@/types";
 import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
@@ -8,9 +8,10 @@ import DataTable from "./DataTable";
 interface WorkflowStepProps {
   step: WorkflowStepType;
   index: number;
+  isUpdating?: boolean;
 }
 
-export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
+export const WorkflowStep = ({ step, index, isUpdating = false }: WorkflowStepProps) => {
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
   const [isDataExpanded, setIsDataExpanded] = useState(false);
 
@@ -48,7 +49,7 @@ export const WorkflowStep = ({ step, index }: WorkflowStepProps) => {
   };
 
   return (
-    <div className={`workflow-step ${getStatusClass()}`}>
+    <div className={`workflow-step ${getStatusClass()} ${isUpdating ? 'animate-highlight-fade' : ''}`}>
       <div className="mb-2">
         <h3 className="text-lg font-medium">
           Step {index + 1}: {step.title}

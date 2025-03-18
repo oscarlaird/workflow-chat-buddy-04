@@ -1,13 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Play, Loader2, MapPin, FileText } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Workflow, WorkflowStep as WorkflowStepType } from "@/types";
+import { useWorkflow } from "@/hooks/useWorkflow";
 
 interface WorkflowPanelProps {
   onRunWorkflow: () => void;
@@ -21,114 +20,16 @@ export const WorkflowPanel = ({
   chatId
 }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [state, setState] = useState("");
   const [billInput, setBillInput] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!chatId) {
-      setIsLoading(false);
-      setWorkflow(null);
-      setError(null);
-      return;
-    }
-
-    async function fetchWorkflowSteps() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        console.log("Fetching workflow steps for chat ID:", chatId);
-        
-        const { data, error } = await supabase
-          .from('workflow_steps')
-          .select('*')
-          .eq('chat_id', chatId)
-          .order('step_order', { ascending: true });
-
-        if (error) {
-          console.error("Supabase error:", error);
-          setError(`Database error: ${error.message}`);
-          throw error;
-        }
-
-        if (data && data.length > 0) {
-          console.log("Workflow steps found:", data.length);
-          const workflowSteps: WorkflowStepType[] = data.map(step => {
-            let parsedScreenshots;
-            let parsedExampleData;
-            
-            try {
-              // Handle screenshots parsing safely
-              if (step.screenshots) {
-                if (typeof step.screenshots === 'string') {
-                  parsedScreenshots = JSON.parse(step.screenshots);
-                } else {
-                  // If it's already an object, use it directly
-                  parsedScreenshots = step.screenshots;
-                }
-              }
-              
-              // Handle example data parsing safely
-              if (step.example_data) {
-                if (typeof step.example_data === 'string') {
-                  parsedExampleData = JSON.parse(step.example_data);
-                } else {
-                  // If it's already an object, use it directly
-                  parsedExampleData = step.example_data;
-                }
-              }
-            } catch (parseError) {
-              console.error("JSON parsing error:", parseError, 
-                "Screenshots:", step.screenshots, 
-                "Example Data:", step.example_data);
-              
-              // Continue without the problematic data
-              parsedScreenshots = undefined;
-              parsedExampleData = undefined;
-            }
-
-            return {
-              id: step.id,
-              title: step.title,
-              description: step.description,
-              status: step.status as "complete" | "active" | "waiting",
-              screenshots: parsedScreenshots,
-              code: step.code || undefined,
-              exampleData: parsedExampleData,
-            };
-          });
-
-          const completeSteps = workflowSteps.filter(step => step.status === "complete").length;
-          
-          setWorkflow({
-            id: "workflow-1",
-            title: "Website Vote Data Scraper",
-            currentStep: completeSteps + 1,
-            totalSteps: workflowSteps.length,
-            steps: workflowSteps
-          });
-        } else {
-          console.log("No workflow steps found for chat ID:", chatId);
-          setWorkflow(null);
-        }
-      } catch (error: any) {
-        console.error("Error fetching workflow steps:", error);
-        setError(error?.message || "Unknown error occurred");
-        toast({
-          title: "Error",
-          description: "Failed to load workflow steps",
-          variant: "destructive"
-        });
-        setWorkflow(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchWorkflowSteps();
-  }, [chatId]);
+  
+  const { 
+    workflow, 
+    isLoading, 
+    error, 
+    updatingStepIds,
+    getProgressPercentage 
+  } = useWorkflow({ chatId });
 
   const handleRunWorkflow = () => {
     setIsRunning(true);
@@ -139,12 +40,6 @@ export const WorkflowPanel = ({
       onRunWorkflow();
       setIsRunning(false);
     }, 2000);
-  };
-
-  const getProgressPercentage = () => {
-    if (!workflow) return 0;
-    const completeSteps = workflow.steps.filter(step => step.status === "complete").length;
-    return (completeSteps / workflow.totalSteps) * 100;
   };
 
   const states = [
@@ -261,7 +156,12 @@ export const WorkflowPanel = ({
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-2">
           {workflow.steps.map((step, index) => (
-            <WorkflowStep key={step.id} step={step} index={index} />
+            <WorkflowStep 
+              key={step.id} 
+              step={step} 
+              index={index} 
+              isUpdating={updatingStepIds.has(step.id)}
+            />
           ))}
         </div>
       </div>

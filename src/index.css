@@ -5,83 +5,75 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222.2 47.4% 11.2%;
 
-    --primary: 221.2 83% 53.3%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83% 53.3%;
+    --ring: 215 20.2% 65.1%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    --sidebar-background: 220 14% 96%;
-    --sidebar-foreground: 220 10% 23%;
-    --sidebar-primary: 221.2 83% 53.3%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 10% 23%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221.2 83% 53.3%;
+    --workflow-progress-bg: 210 40% 90%;
+    --workflow-progress-fill: 222.2 47.4% 40%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 216 34% 17%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 216 34% 17%;
 
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 48%;
+    --radius: 0.5rem;
+
+    --workflow-progress-bg: 223 47% 15%;
+    --workflow-progress-fill: 213 31% 60%;
   }
 }
 
@@ -89,88 +81,75 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-  }
-
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-600;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer components {
+@layer utilities {
   .glass-panel {
-    @apply bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg border border-gray-200 dark:border-gray-800 rounded-lg shadow-glass;
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm overflow-hidden;
   }
   
   .glass-panel-strong {
-    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-lg shadow-glass-strong;
+    @apply bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm overflow-hidden;
   }
 
-  .chat-bubble {
-    @apply relative p-4 max-w-[85%] animate-slide-in-bottom;
-  }
-
-  .chat-bubble-user {
-    @apply chat-bubble bg-primary text-primary-foreground rounded-tl-lg rounded-tr-lg rounded-br-lg;
-  }
-
-  .chat-bubble-assistant {
-    @apply chat-bubble bg-secondary text-secondary-foreground rounded-tl-lg rounded-tr-lg rounded-bl-lg;
-  }
-  
   .workflow-step {
-    @apply relative pl-10 pb-8 transition-all duration-300;
+    @apply p-4 border border-gray-200 dark:border-gray-800 rounded-lg mb-4;
   }
-  
-  .workflow-step:before {
-    @apply content-[''] absolute left-0 top-1 w-6 h-6 rounded-full border-2 z-10;
+
+  .workflow-step-complete {
+    @apply bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900;
   }
-  
-  .workflow-step:after {
-    @apply content-[''] absolute left-3 top-7 w-[2px] h-[calc(100%-24px)] z-0;
+
+  .workflow-step-active {
+    @apply bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900;
   }
-  
-  .workflow-step-complete:before {
-    @apply bg-workflow-step-complete border-workflow-step-complete;
+
+  .workflow-step-waiting {
+    @apply bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800;
   }
-  
-  .workflow-step-complete:after {
-    @apply bg-workflow-step-complete;
+
+  .animate-slide-in-bottom {
+    animation: slideInBottom 0.2s ease-out forwards;
   }
-  
-  .workflow-step-active:before {
-    @apply bg-workflow-step-active border-workflow-step-active animate-pulse-soft;
+
+  .animate-pulse-soft {
+    animation: pulseSoft 2s ease-in-out infinite;
   }
-  
-  .workflow-step-active:after {
-    @apply bg-workflow-step-waiting;
+
+  .animate-highlight-fade {
+    animation: highlightFade 2s ease-out forwards;
   }
-  
-  .workflow-step-waiting:before {
-    @apply bg-white dark:bg-gray-800 border-workflow-step-waiting;
+}
+
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .workflow-step-waiting:after {
-    @apply bg-workflow-step-waiting;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  .workflow-step:last-child:after {
-    @apply hidden;
+}
+
+@keyframes pulseSoft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes highlightFade {
+  0% {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+  100% {
+    background-color: transparent;
   }
 }
