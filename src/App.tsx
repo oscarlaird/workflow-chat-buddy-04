@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "./components/ChatInterface";
@@ -9,10 +8,9 @@ import WorkflowPage from "./pages/WorkflowPage";
 import { useChats } from "./hooks/useChats";
 
 function App() {
-  const { chats, exampleChats, systemExampleChats, isLoading, createChat, deleteChat, duplicateChat } = useChats();
+  const { chats, exampleChats, systemExampleChats, isLoading, createChat, deleteChat, renameChat, duplicateChat } = useChats();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
-  // Use the first chat as the selected conversation when chats are loaded
   useEffect(() => {
     if (!selectedConversationId && chats.length > 0 && !isLoading) {
       setSelectedConversationId(chats[0].id);
@@ -26,7 +24,6 @@ function App() {
 
   const handleDeleteChat = async (chatId: string) => {
     await deleteChat(chatId);
-    // If the deleted chat was selected, select another one
     if (selectedConversationId === chatId) {
       const remainingChats = [...chats, ...exampleChats].filter(chat => chat.id !== chatId);
       if (remainingChats.length > 0) {
@@ -42,6 +39,10 @@ function App() {
     if (newChatId) {
       setSelectedConversationId(newChatId);
     }
+  };
+
+  const handleRenameChat = async (chatId: string, newTitle: string): Promise<boolean> => {
+    return await renameChat(chatId, newTitle);
   };
 
   return (
@@ -61,6 +62,7 @@ function App() {
               onCreateChat={handleCreateChat}
               onDeleteChat={handleDeleteChat}
               onDuplicateChat={handleDuplicateChat}
+              onRenameChat={handleRenameChat}
             />
           }
         />

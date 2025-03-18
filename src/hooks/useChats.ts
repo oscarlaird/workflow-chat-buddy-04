@@ -218,6 +218,34 @@ export const useChats = () => {
     }
   };
 
+  const renameChat = async (chatId: string, newTitle: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ title: newTitle, updated_at: new Date().toISOString() })
+        .eq('id', chatId);
+
+      if (error) {
+        console.error('Error renaming chat:', error);
+        toast({
+          title: "Error renaming chat",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      } else {
+        toast({
+          title: "Chat renamed",
+          description: `The chat has been renamed to "${newTitle}".`
+        });
+        return true;
+      }
+    } catch (error) {
+      console.error('Error in renameChat:', error);
+      return false;
+    }
+  };
+
   const duplicateChat = async (chatId: string): Promise<string | null> => {
     try {
       const newChatId = uuidv4();
@@ -370,6 +398,7 @@ export const useChats = () => {
     isLoading,
     createChat,
     deleteChat,
+    renameChat,
     duplicateChat
   };
 };

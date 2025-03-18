@@ -17,6 +17,7 @@ interface IndexProps {
   onCreateChat: (title: string) => Promise<void>;
   onDeleteChat: (chatId: string) => Promise<void>;
   onDuplicateChat: (chatId: string) => Promise<void>;
+  onRenameChat?: (chatId: string, newTitle: string) => Promise<boolean>;
 }
 
 export const Index: React.FC<IndexProps> = ({
@@ -29,7 +30,8 @@ export const Index: React.FC<IndexProps> = ({
   isLoading,
   onCreateChat,
   onDeleteChat,
-  onDuplicateChat
+  onDuplicateChat,
+  onRenameChat
 }) => {
   const navigate = useNavigate();
 
@@ -55,6 +57,7 @@ export const Index: React.FC<IndexProps> = ({
           onCreateChat={onCreateChat}
           onDeleteChat={onDeleteChat}
           onDuplicateChat={onDuplicateChat}
+          onRenameChat={onRenameChat}
         />
       </div>
       

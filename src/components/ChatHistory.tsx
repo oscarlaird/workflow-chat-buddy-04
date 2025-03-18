@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles, Hash, Copy } from "lucide-react";
+import { Plus, Trash2, MessageSquare, Clock, Search, Loader2, Sparkles, Hash, Copy, Pen, Check, X } from "lucide-react";
 import { Chat } from "@/types";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import NewChatDialog from "./NewChatDialog";
 
 interface ChatHistoryProps {
@@ -17,6 +18,7 @@ interface ChatHistoryProps {
   onCreateChat: (title: string) => Promise<void>;
   onDeleteChat: (chatId: string) => Promise<void>;
   onDuplicateChat?: (chatId: string) => Promise<void>;
+  onRenameChat?: (chatId: string, newTitle: string) => Promise<boolean>;
 }
 
 export const ChatHistory = ({
@@ -29,12 +31,17 @@ export const ChatHistory = ({
   isLoading,
   onCreateChat,
   onDeleteChat,
-  onDuplicateChat
+  onDuplicateChat,
+  onRenameChat
 }: ChatHistoryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
   const [duplicatingChatId, setDuplicatingChatId] = useState<string | null>(null);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingChatTitle, setEditingChatTitle] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const allChats = [...chats, ...exampleChats];
   const filteredChats = allChats.filter(
@@ -95,6 +102,44 @@ export const ChatHistory = ({
     }
   };
 
+  const handleEditChat = (chat: Chat, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingChatId(chat.id);
+    setEditingChatTitle(chat.title);
+    setTimeout(() => {
+      editInputRef.current?.focus();
+      editInputRef.current?.select();
+    }, 10);
+  };
+
+  const handleSaveEdit = async (e: React.MouseEvent | React.FormEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!editingChatId || !onRenameChat || editingChatTitle.trim() === '') return;
+    
+    setIsRenaming(true);
+    try {
+      const success = await onRenameChat(editingChatId, editingChatTitle.trim());
+      if (success) {
+        setEditingChatId(null);
+      }
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingChatId(null);
+  };
+
+  const handleEditInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setEditingChatId(null);
+    }
+  };
+
   return (
     <div className="w-full h-full flex flex-col bg-sidebar rounded-l-lg">
       <div className="flex flex-col p-4 space-y-4">
@@ -151,7 +196,11 @@ export const ChatHistory = ({
                       "group flex items-start gap-3 w-full p-3 text-left hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer",
                       selectedConversationId === chat.id && "bg-white dark:bg-gray-800"
                     )}
-                    onClick={() => onSelectConversation(chat.id)}
+                    onClick={() => {
+                      if (editingChatId !== chat.id) {
+                        onSelectConversation(chat.id);
+                      }
+                    }}
                   >
                     {chat.is_example ? (
                       <Sparkles className="w-5 h-5 mt-0.5 text-yellow-500 flex-shrink-0" />
@@ -159,38 +208,88 @@ export const ChatHistory = ({
                       <MessageSquare className="w-5 h-5 mt-0.5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{chat.title}</div>
-                      <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                        <Hash className="w-3 h-3 mr-1" />
-                        <span className="truncate">{chat.id}</span>
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {format(new Date(chat.created_at), 'h:mm a')}
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      {onDuplicateChat && (
-                        <button
-                          onClick={(e) => handleDuplicateChat(chat.id, e)}
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
-                          aria-label="Duplicate chat"
-                          disabled={duplicatingChatId === chat.id}
-                        >
-                          {duplicatingChatId === chat.id ? (
-                            <Loader2 className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
-                          ) : (
-                            <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                          )}
-                        </button>
+                      {editingChatId === chat.id ? (
+                        <form onSubmit={handleSaveEdit} className="flex items-center gap-1">
+                          <Input
+                            ref={editInputRef}
+                            value={editingChatTitle}
+                            onChange={(e) => setEditingChatTitle(e.target.value)}
+                            onKeyDown={handleEditInputKeyDown}
+                            className="h-8 py-1"
+                            disabled={isRenaming}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <div className="flex gap-1">
+                            <button
+                              type="submit"
+                              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                              disabled={isRenaming}
+                              aria-label="Save"
+                            >
+                              {isRenaming ? (
+                                <Loader2 className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
+                              ) : (
+                                <Check className="w-4 h-4 text-green-500" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEdit}
+                              className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                              disabled={isRenaming}
+                              aria-label="Cancel"
+                            >
+                              <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                          <div className="font-medium truncate">{chat.title}</div>
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                            <Hash className="w-3 h-3 mr-1" />
+                            <span className="truncate">{chat.id}</span>
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {format(new Date(chat.created_at), 'h:mm a')}
+                          </div>
+                        </>
                       )}
-                      <button
-                        onClick={(e) => handleDeleteChat(chat.id, e)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
-                        aria-label="Delete chat"
-                      >
-                        <Trash2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                      </button>
                     </div>
+                    {editingChatId !== chat.id && (
+                      <div className="flex gap-1">
+                        {onRenameChat && !chat.is_example && (
+                          <button
+                            onClick={(e) => handleEditChat(chat, e)}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
+                            aria-label="Rename chat"
+                          >
+                            <Pen className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                          </button>
+                        )}
+                        {onDuplicateChat && (
+                          <button
+                            onClick={(e) => handleDuplicateChat(chat.id, e)}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
+                            aria-label="Duplicate chat"
+                            disabled={duplicatingChatId === chat.id}
+                          >
+                            {duplicatingChatId === chat.id ? (
+                              <Loader2 className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => handleDeleteChat(chat.id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-opacity"
+                          aria-label="Delete chat"
+                        >
+                          <Trash2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
