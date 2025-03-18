@@ -45,7 +45,7 @@ export const WorkflowInputs = ({
     // Initialize inputValues and tabularData when inputSchema changes
     const initialValues: InputValues = {};
     inputSchema.forEach((field: InputField) => {
-      if (field.type === 'string' || field.type === 'name' || field.type === 'email' || 
+      if (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
           field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
           field.type === 'zip_code' || field.type === 'state' || field.type === 'country') {
         initialValues[field.field_name] = '';
@@ -148,7 +148,7 @@ export const WorkflowInputs = ({
                     <TypedInputField
                       field={field}
                       value={row[field.field_name] !== undefined ? row[field.field_name] : 
-                        (field.type === 'string' || field.type === 'name' || field.type === 'email' || 
+                        (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
                          field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
                          field.type === 'zip_code' || field.type === 'state' || field.type === 'country' ||
                          field.type === 'date') ? '' : 

@@ -26,9 +26,20 @@ export const validateInput = (value: any, type: string): ValidationResult => {
       return validateInteger(value);
     case 'number':
       return validateNumber(value);
+    case 'person':
+      return validatePerson(value);
     default:
       return defaultResult;
   }
+};
+
+const validatePerson = (value: string): ValidationResult => {
+  // Simple person name validation - at least 2 characters, only letters, spaces, hyphens, and apostrophes
+  const nameRegex = /^[a-zA-Z\s\-']{2,}$/;
+  return {
+    isValid: value ? nameRegex.test(String(value)) : true, // Empty is valid initially
+    message: 'Please enter a valid name (letters, spaces, hyphens, apostrophes)'
+  };
 };
 
 const validateEmail = (value: string): ValidationResult => {

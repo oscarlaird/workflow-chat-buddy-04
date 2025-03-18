@@ -71,7 +71,7 @@ export interface InputValues {
 // Updated InputField interface with expanded type options
 export interface InputField {
   field_name: string;
-  type: 'string' | 'number' | 'integer' | 'bool' | 'name' | 'email' | 'date' | 
+  type: 'string' | 'number' | 'integer' | 'bool' | 'person' | 'email' | 'date' | 
         'year' | 'state' | 'country' | 'phone' | 'address' | 'url' | 
         'currency' | 'percentage' | 'zip_code';
 }

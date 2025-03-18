@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -60,7 +61,7 @@ export const InputFieldIcon: React.FC<{ type: InputFieldType['type'], className?
   const iconProps = { className: cn("h-4 w-4", className) };
   
   switch (type) {
-    case 'name':
+    case 'person':
       return <User {...iconProps} />;
     case 'email':
       return <Mail {...iconProps} />;
@@ -343,7 +344,7 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
     case 'phone':
     case 'zip_code':
     case 'url':
-    case 'name':
+    case 'person':
     case 'address':
     case 'string':
     default:
