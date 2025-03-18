@@ -1,6 +1,6 @@
 
 import { useRef, useEffect } from "react";
-import { Film, Download, Loader2, Code } from "lucide-react";
+import { Film, Download, Loader2, PenLine } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
@@ -80,11 +80,11 @@ export const MessageList = ({
     
     return (
       <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-800 dark:text-blue-300">
-        <Code className="h-4 w-4" />
+        <PenLine className="h-4 w-4" />
         <div className="flex items-center gap-1.5">
           <span className="font-medium">{formattedName}</span>
           {isStreaming && (
-            <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span className="h-2 w-2 rounded-full bg-amber-400 animate-[pulse_1s_ease-in-out_infinite]"></span>
           )}
         </div>
         {message.content && (
