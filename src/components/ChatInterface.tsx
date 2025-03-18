@@ -1,3 +1,4 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -55,14 +56,29 @@ export const ChatInterface = ({
     }
   }, [conversationId]);
 
-  const updateMessageContent = useCallback((messageId: string, newContent: string) => {
+  const updateMessageContent = useCallback((messageId: string, newContent: string, functionName: string | null = null, isStreaming: boolean = false) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => 
         msg.id === messageId 
-          ? { ...msg, content: newContent } 
+          ? { 
+              ...msg, 
+              content: newContent,
+              ...(functionName !== undefined ? { function_name: functionName } : {})
+            } 
           : msg
       )
     );
+    
+    // Update streaming state based on isStreaming parameter
+    if (isStreaming) {
+      setStreamingMessages(prev => new Set(prev).add(messageId));
+    } else {
+      setStreamingMessages(prev => {
+        const updated = new Set(prev);
+        updated.delete(messageId);
+        return updated;
+      });
+    }
   }, [setMessages]);
 
   useEffect(() => {
@@ -125,18 +141,13 @@ export const ChatInterface = ({
         console.log('Received real-time UPDATE message:', payload);
         const updatedMessage = payload.new;
         
-        updateMessageContent(updatedMessage.id, updatedMessage.content);
-        
-        // Check if the streaming status has changed
-        if (!updatedMessage.is_currently_streaming) {
-          setStreamingMessages(prev => {
-            const updated = new Set(prev);
-            updated.delete(updatedMessage.id);
-            return updated;
-          });
-        } else if (updatedMessage.is_currently_streaming) {
-          setStreamingMessages(prev => new Set(prev).add(updatedMessage.id));
-        }
+        // Update message content, function name, and streaming status
+        updateMessageContent(
+          updatedMessage.id, 
+          updatedMessage.content, 
+          updatedMessage.function_name, 
+          updatedMessage.is_currently_streaming
+        );
       })
       .subscribe();
 
