@@ -72,6 +72,7 @@ export default {
             complete: '#22c55e',
             active: '#3b82f6',
             waiting: '#6b7280',
+            deleting: '#94a3b8',
           },
           progress: {
             bg: '#f3f4f6',

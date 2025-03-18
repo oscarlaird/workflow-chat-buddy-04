@@ -59,19 +59,19 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
       key={stepKey}
       initial={{ opacity: 1, height: "auto" }}
       animate={{ 
-        opacity: isDeleting ? 1 : 1, // Keep opacity until animation finishes
-        height: isDeleting ? "auto" : "auto", // Keep height until animation finishes
+        opacity: isDeleting ? 1 : 1,
+        height: isDeleting ? "auto" : "auto", 
       }}
       transition={{ 
-        duration: 1.2, // Match shake-and-fade animation duration
+        duration: 1.2,
         ease: "easeInOut",
-        delay: isDeleting ? 1.2 : 0 // Only collapse after shake animation completes
+        delay: isDeleting ? 1.2 : 0
       }}
       exit={{ opacity: 0, height: 0 }}
     >
       {isDeleting && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 bg-red-500/20 backdrop-blur-sm rounded-md">
-          <div className="bg-red-100 dark:bg-red-900/60 text-red-600 dark:text-red-200 px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-md">
+          <div className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-4 py-2 rounded-full flex items-center gap-2 shadow-md">
             <Trash2 className="w-5 h-5" />
             <span className="text-sm font-medium">Deleting...</span>
           </div>

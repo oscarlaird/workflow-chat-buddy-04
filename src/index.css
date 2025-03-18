@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -175,25 +176,25 @@
   
   .workflow-step-deleting {
     @apply relative overflow-hidden;
-    background: linear-gradient(90deg, rgba(239,68,68,0.2), rgba(239,68,68,0.1));
-    border-left: 4px solid rgba(239,68,68,0.7);
+    background: linear-gradient(90deg, rgba(203,213,225,0.1), rgba(203,213,225,0.05));
+    border-left: 3px solid rgba(148,163,184,0.5);
     transform-origin: center;
-    animation: shake-and-fade 1.2s ease-in-out forwards;
+    animation: subtle-shake 1.2s ease-in-out forwards;
   }
   
   .workflow-step-deleting:before {
-    @apply bg-red-500/60 border-red-500;
+    @apply bg-slate-400/60 border-slate-400;
   }
 
-  @keyframes shake-and-fade {
+  @keyframes subtle-shake {
     0% { transform: translateX(0); opacity: 1; }
-    10% { transform: translateX(-4px); }
-    20% { transform: translateX(4px); }
-    30% { transform: translateX(-4px); }
-    40% { transform: translateX(4px); }
-    50% { transform: translateX(-4px); }
-    60% { transform: translateX(4px); }
-    70% { transform: translateX(-4px); opacity: 1; }
+    10% { transform: translateX(-2px); }
+    20% { transform: translateX(2px); }
+    30% { transform: translateX(-2px); }
+    40% { transform: translateX(2px); }
+    50% { transform: translateX(-2px); }
+    60% { transform: translateX(2px); }
+    70% { transform: translateX(-2px); opacity: 1; }
     100% { transform: translateX(0); opacity: 0.7; }
   }
 }
