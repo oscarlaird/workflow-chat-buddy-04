@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Table, List, Upload, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -30,18 +29,19 @@ interface WorkflowInputsProps {
   onInputValuesChange?: (values: InputValues | InputValues[]) => void;
   showRunButton?: boolean;
   onRunWorkflow?: () => void;
+  isRunning?: boolean;
 }
 
 export const WorkflowInputs = ({ 
   chatId,
   onInputValuesChange,
   showRunButton = true,
-  onRunWorkflow
+  onRunWorkflow,
+  isRunning = false
 }: WorkflowInputsProps) => {
-  const [isRunning, setIsRunning] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>({});
   const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,17 +92,13 @@ export const WorkflowInputs = ({
   const handleRunWorkflow = () => {
     if (!onRunWorkflow) return;
     
-    setIsRunning(true);
-    
+    // Let the parent handle the run workflow logic and state
     window.postMessage({ 
       type: "CREATE_AGENT_RUN_WINDOW",
       inputs: multiInput ? tabularData : inputValues 
     }, "*");
     
-    setTimeout(() => {
-      onRunWorkflow();
-      setIsRunning(false);
-    }, 2000);
+    onRunWorkflow();
   };
 
   const handleInputChange = (name: string, value: string | number | boolean) => {
@@ -400,4 +396,3 @@ export const WorkflowInputs = ({
 };
 
 export default WorkflowInputs;
-

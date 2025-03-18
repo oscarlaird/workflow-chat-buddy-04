@@ -19,6 +19,7 @@ export const WorkflowPanel = ({
 }: WorkflowPanelProps) => {
   const [currentInputs, setCurrentInputs] = useState<InputValues | InputValues[]>({});
   const { workflowSteps, isLoading, error, deletingStepIds } = useWorkflowSteps(chatId);
+  const [isRunning, setIsRunning] = useState(false);
 
   const workflow = workflowSteps.length > 0 ? {
     id: "workflow-1",
@@ -29,7 +30,15 @@ export const WorkflowPanel = ({
   } : null;
 
   const handleRunWorkflow = () => {
-    onRunWorkflow();
+    if (isRunning) return;
+    
+    setIsRunning(true);
+    
+    // Only send the message once with a small delay to prevent duplicate calls
+    setTimeout(() => {
+      onRunWorkflow();
+      setIsRunning(false);
+    }, 300);
   };
 
   const getProgressPercentage = () => {
@@ -78,6 +87,7 @@ export const WorkflowPanel = ({
         onInputValuesChange={handleInputValuesChange}
         showRunButton={showRunButton}
         onRunWorkflow={handleRunWorkflow}
+        isRunning={isRunning}
       />
       
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-secondary/50">

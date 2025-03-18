@@ -39,6 +39,7 @@ export const Index: React.FC<IndexProps> = ({
     console.log("Message sent from Index view:", message);
   };
 
+  // This function is called once by WorkflowPanel when the run button is clicked
   const handleRunWorkflow = () => {
     console.log("Running workflow for conversation:", selectedConversationId);
     // Create a new message with content "run" when the user clicks "Run Workflow"
