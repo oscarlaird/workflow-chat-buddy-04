@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -122,7 +123,21 @@ export const useChats = () => {
       }, (payload) => {
         console.log('Real-time update on chats:', payload);
         
-        // Refresh the chats list when changes occur
+        // Only refresh the chats list when relevant fields change, not when multi_input changes
+        if (payload.eventType === 'UPDATE') {
+          // Check if the only field changed was multi_input
+          const newRecord = payload.new as Record<string, any>;
+          const oldRecord = payload.old as Record<string, any>;
+          
+          // If the only field that changed is multi_input, don't refresh the chat list
+          if (Object.keys(oldRecord).length === 1 && 'multi_input' in oldRecord && 
+              Object.keys(newRecord).length === 1 && 'multi_input' in newRecord) {
+            console.log('Ignoring update to multi_input field only');
+            return;
+          }
+        }
+        
+        // For all other changes, refresh the chats list
         fetchChats();
       })
       .subscribe();
