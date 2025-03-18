@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -39,6 +38,7 @@ export const ChatInterface = forwardRef(({
 
   // Expose the handleSubmit method to the parent component
   useImperativeHandle(ref, () => ({
+    // Don't append "run" to handleSubmit
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
 
@@ -59,6 +59,7 @@ export const ChatInterface = forwardRef(({
           .from('runs')
           .select('*')
           .eq('chat_id', conversationId)
+          .eq('in_progress', true)
           .order('created_at', { ascending: false })
           .limit(1);
           
@@ -68,22 +69,18 @@ export const ChatInterface = forwardRef(({
         }
         
         if (data && data.length > 0) {
-          // Validate status is one of the expected values in Run type
-          const validStatuses: Array<Run['status']> = ['pending', 'running', 'completed', 'failed'];
           const runData = data[0];
-          const status = validStatuses.includes(runData.status as Run['status']) 
-            ? runData.status as Run['status'] 
-            : 'pending';
           
-          console.log(`Found run for chat ${conversationId} with status: ${status}`);
-            
-          // Only set activeRun if the status is "running"
-          if (status === 'running') {
+          console.log(`Found active run for chat ${conversationId} with status: ${runData.status}`);
+          
+          // Only set activeRun if in_progress is true and it matches the current conversation
+          if (runData.in_progress && runData.chat_id === conversationId) {
             setActiveRun({
               id: runData.id,
               dashboard_id: runData.dashboard_id,
               chat_id: runData.chat_id,
-              status: status,
+              status: runData.status,
+              in_progress: runData.in_progress,
               created_at: runData.created_at,
               updated_at: runData.updated_at
             });
@@ -116,26 +113,22 @@ export const ChatInterface = forwardRef(({
         console.log('Run update received:', payload);
         if (payload.new) {
           const runData = payload.new as any;
-          // Validate status is one of the expected values in Run type
-          const validStatuses: Array<Run['status']> = ['pending', 'running', 'completed', 'failed'];
-          const status = validStatuses.includes(runData.status as Run['status']) 
-            ? runData.status as Run['status'] 
-            : 'pending';
           
-          // Only set activeRun if the status is "running" and it matches the current conversation
-          if (status === 'running' && runData.chat_id === conversationId) {
-            console.log(`Setting active run for chat ${conversationId} with status: ${status}`);
+          // Only set activeRun if in_progress is true and it matches the current conversation
+          if (runData.in_progress && runData.chat_id === conversationId) {
+            console.log(`Setting active run for chat ${conversationId} with status: ${runData.status}`);
             setActiveRun({
               id: runData.id,
               dashboard_id: runData.dashboard_id,
               chat_id: runData.chat_id,
-              status: status,
+              status: runData.status,
+              in_progress: runData.in_progress,
               created_at: runData.created_at,
               updated_at: runData.updated_at
             });
-          } else if (status !== 'running' && runData.chat_id === conversationId) {
-            // Clear the activeRun if the status is no longer "running"
-            console.log(`Clearing active run for chat ${conversationId} as status is now: ${status}`);
+          } else if (!runData.in_progress && runData.chat_id === conversationId) {
+            // Clear the activeRun if in_progress is now false
+            console.log(`Clearing active run for chat ${conversationId} as in_progress is now false`);
             setActiveRun(null);
           }
         }
@@ -378,7 +371,7 @@ export const ChatInterface = forwardRef(({
       };
       
       // Add run_id if available
-      if (currentRunId && inputValue === "run") {
+      if (currentRunId) {
         console.log("Adding run_id to message:", currentRunId);
         messageData.run_id = currentRunId;
       }
@@ -387,13 +380,13 @@ export const ChatInterface = forwardRef(({
         .from('messages')
         .insert(messageData);
       
-      // If message is "run", include run_id in the function invocation
+      // Invoke the function with conversation ID
       const functionParams: any = { 
         conversationId,
         username: 'current_user'
       };
       
-      if (currentRunId && inputValue === "run") {
+      if (currentRunId) {
         functionParams.runId = currentRunId;
       }
       
@@ -403,10 +396,8 @@ export const ChatInterface = forwardRef(({
       
       onSendMessage(inputValue);
       
-      // If this was a "run" message, reset the current run ID after sending
-      if (inputValue === "run") {
-        setCurrentRunId(null);
-      }
+      // Reset the current run ID after sending
+      setCurrentRunId(null);
     } catch (err) {
       console.error('Exception when processing message:', err);
     } finally {

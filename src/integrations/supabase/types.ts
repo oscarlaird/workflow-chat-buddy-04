@@ -186,6 +186,7 @@ export type Database = {
           created_at: string
           dashboard_id: string
           id: string
+          in_progress: boolean
           status: string
           updated_at: string
         }
@@ -194,6 +195,7 @@ export type Database = {
           created_at?: string
           dashboard_id: string
           id?: string
+          in_progress?: boolean
           status?: string
           updated_at?: string
         }
@@ -202,6 +204,7 @@ export type Database = {
           created_at?: string
           dashboard_id?: string
           id?: string
+          in_progress?: boolean
           status?: string
           updated_at?: string
         }

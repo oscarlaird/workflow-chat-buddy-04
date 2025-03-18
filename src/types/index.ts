@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -82,7 +81,8 @@ export interface Run {
   id: string;
   dashboard_id: string;
   chat_id: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: string;
+  in_progress: boolean;
   created_at: string;
   updated_at: string;
 }

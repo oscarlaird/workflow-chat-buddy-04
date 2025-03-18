@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { Film, Download, Loader2, PenLine, Trash2, Plus } from "lucide-react";
 import { Message, Run } from "@/types";
@@ -218,8 +217,8 @@ export const MessageList = ({
         </div>
       ))}
       
-      {/* Display run status bubble only if there's an active run with "running" status */}
-      {activeRun && activeRun.status === "running" && <RunStatusBubble run={activeRun} />}
+      {/* Display run status bubble only if there's an active run with in_progress=true */}
+      {activeRun && activeRun.in_progress && <RunStatusBubble run={activeRun} />}
       
       <div ref={messagesEndRef} />
     </div>

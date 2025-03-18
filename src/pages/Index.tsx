@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
@@ -44,13 +43,8 @@ export const Index: React.FC<IndexProps> = ({
   const handleRunWorkflow = () => {
     console.log("Running workflow for conversation:", selectedConversationId);
     
-    // If we have a chat interface reference, use it to send the message
-    if (chatInterfaceRef.current && typeof chatInterfaceRef.current.handleSubmit === 'function') {
-      console.log("Sending 'run' message through chat interface reference");
-      chatInterfaceRef.current.handleSubmit("run");
-    } else {
-      console.error("Chat interface reference is not available or does not have handleSubmit method");
-    }
+    // No longer sending a "run" message - we'll just trigger the appropriate functions
+    // through the workflow run process
   };
 
   return (

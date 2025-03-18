@@ -48,7 +48,8 @@ export const WorkflowPanel = ({
           id: runId,
           dashboard_id: dashboardId, // Use the randomly generated UUID
           chat_id: chatId, // Use the chat ID provided in props
-          status: 'running'
+          status: 'Connecting to backend...',
+          in_progress: true
         });
 
       if (error) {
@@ -98,10 +99,11 @@ export const WorkflowPanel = ({
           chatId
         }, "*");
         
-        // Only send the message once with a small delay to prevent duplicate calls
+        // Call the onRunWorkflow function directly without sending a "run" message
+        onRunWorkflow();
+        
+        // Reset the running state after a short delay
         setTimeout(() => {
-          onRunWorkflow();
-          // Reset the running state after the operation
           setIsRunning(false);
         }, 300);
       } else {
