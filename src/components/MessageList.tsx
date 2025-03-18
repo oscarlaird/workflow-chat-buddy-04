@@ -1,6 +1,5 @@
-
 import { useRef, useEffect } from "react";
-import { Film, Download, Loader2, PenLine } from "lucide-react";
+import { Film, Download, Loader2, PenLine, Trash2, Plus } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,6 @@ export const MessageList = ({
   };
 
   const formatFunctionName = (name: string): string => {
-    // Remove underscores and capitalize each word
     if (!name) return "";
     
     return name
@@ -58,7 +56,6 @@ export const MessageList = ({
     return (
       <>
         {lines.map((line, index) => {
-          // Only add the cursor to the last line when streaming
           const isLastLine = index === lines.length - 1;
           
           return (
@@ -74,13 +71,30 @@ export const MessageList = ({
     );
   };
 
+  const getFunctionIcon = (functionName: string) => {
+    if (!functionName) return <PenLine className="h-4 w-4" />;
+    
+    const normalizedName = functionName.toLowerCase();
+    
+    if (normalizedName.includes('insert_workflow_step') || normalizedName.includes('add_workflow_step')) {
+      return <Plus className="h-4 w-4" />;
+    }
+    
+    if (normalizedName.includes('remove_workflow_step') || normalizedName.includes('delete_workflow_step')) {
+      return <Trash2 className="h-4 w-4" />;
+    }
+    
+    return <PenLine className="h-4 w-4" />;
+  };
+
   const renderFunctionMessage = (message: Message) => {
     const isStreaming = streamingMessageIds.has(message.id);
     const formattedName = formatFunctionName(message.function_name || "");
+    const functionIcon = getFunctionIcon(message.function_name || "");
     
     return (
       <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-800 dark:text-blue-300">
-        <PenLine className="h-4 w-4" />
+        {functionIcon}
         <div className="flex items-center gap-1.5">
           <span className="font-medium">{formattedName}</span>
           {isStreaming && (
@@ -149,7 +163,6 @@ export const MessageList = ({
                     message.role === "assistant" && streamingMessageIds.has(message.id)
                   )
                 ) : (
-                  // Empty message - waiting for content
                   <p> </p>
                 )}
                 

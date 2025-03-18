@@ -66,6 +66,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
         if (payload.eventType === 'INSERT') {
           const newStep = parseWorkflowStep(payload.new);
           setWorkflowSteps(prevSteps => {
+            // Only add if not already present
             if (prevSteps.some(step => step.id === newStep.id)) {
               return prevSteps;
             }
