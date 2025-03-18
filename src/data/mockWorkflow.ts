@@ -22,7 +22,7 @@ export const mockWorkflow: Workflow = {
       title: "Authenticate with the vote tracking website",
       description: "Connect securely to the website using provided credentials",
       status: "complete",
-      step_order: 1,
+      step_number: 1,
       screenshots: [
         {
           id: "screenshot-1",
@@ -51,7 +51,7 @@ export const mockWorkflow: Workflow = {
       title: "Validate bill IDs",
       description: "Check if all bill IDs exist and are accessible",
       status: "complete",
-      step_order: 2,
+      step_number: 2,
       screenshots: [
         {
           id: "screenshot-2",
@@ -89,7 +89,7 @@ export const mockWorkflow: Workflow = {
       title: "Extract representative data",
       description: "Gather information about each representative",
       status: "complete",
-      step_order: 3,
+      step_number: 3,
       screenshots: [
         {
           id: "screenshot-3",
@@ -129,7 +129,7 @@ export const mockWorkflow: Workflow = {
       title: "Scrape voting records",
       description: "Collect voting data for each bill ID provided",
       status: "active",
-      step_order: 4,
+      step_number: 4,
       screenshots: [
         {
           id: "screenshot-4",
@@ -163,7 +163,7 @@ export const mockWorkflow: Workflow = {
       title: "Parse and normalize data",
       description: "Clean and format the scraped data for consistency",
       status: "waiting",
-      step_order: 5,
+      step_number: 5,
       code: `function normalizeData(voteData, repData) {
   // Normalize representative names
   const normalizedRepData = repData.map(rep => ({
@@ -201,7 +201,7 @@ function normalizeNameFormat(name) {
       title: "Match representatives to votes",
       description: "Link each representative to their voting record",
       status: "waiting",
-      step_order: 6,
+      step_number: 6,
       exampleData: [
         { "name": "Rep. Adams, Alma S.", "party": "D", "state": "NC", "vote": "Nay", "rating": "5%" },
         { "name": "Rep. Aderholt, Robert B.", "party": "R", "state": "AL", "vote": "Yea", "rating": "92%" },
@@ -214,28 +214,28 @@ function normalizeNameFormat(name) {
       title: "Format data for spreadsheet",
       description: "Structure data in the required format for import",
       status: "waiting",
-      step_order: 7
+      step_number: 7
     },
     {
       id: "step-8",
       title: "Generate spreadsheet file",
       description: "Create an Excel or CSV file with the data",
       status: "waiting",
-      step_order: 8
+      step_number: 8
     },
     {
       id: "step-9",
       title: "Verify data accuracy",
       description: "Check for any discrepancies or missing information",
       status: "waiting",
-      step_order: 9
+      step_number: 9
     },
     {
       id: "step-10",
       title: "Provide download link",
       description: "Generate a link for downloading the completed spreadsheet",
       status: "waiting",
-      step_order: 10
+      step_number: 10
     }
   ]
 };

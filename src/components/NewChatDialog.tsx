@@ -79,7 +79,7 @@ export const NewChatDialog = ({
         .from('workflow_steps')
         .select('*')
         .eq('chat_id', exampleChat.id)
-        .order('step_order', { ascending: true });
+        .order('step_number', { ascending: true });
         
       if (workflowStepsError) throw workflowStepsError;
       
@@ -118,7 +118,7 @@ export const NewChatDialog = ({
           code: step.code,
           example_data: step.example_data,
           screenshots: step.screenshots,
-          step_order: step.step_order,
+          step_number: step.step_number,
           username: 'current_user',
           created_at: new Date().toISOString()
         }));
