@@ -68,8 +68,10 @@ export interface InputValues {
   [key: string]: string | number | boolean;
 }
 
-// Add InputField interface that matches what we store in Supabase
+// Updated InputField interface with expanded type options
 export interface InputField {
   field_name: string;
-  type: 'string' | 'number' | 'bool';
+  type: 'string' | 'number' | 'integer' | 'bool' | 'name' | 'email' | 'date' | 
+        'year' | 'state' | 'country' | 'phone' | 'address' | 'url' | 
+        'currency' | 'percentage' | 'zip_code';
 }

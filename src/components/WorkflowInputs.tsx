@@ -2,13 +2,10 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash, Table, List } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InputField, InputValues } from "@/types";
 import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
+import { TypedInputField, InputFieldIcon } from "@/components/InputField";
 import { 
   Table as UITable,
   TableBody,
@@ -25,16 +22,6 @@ interface WorkflowInputsProps {
   onRunWorkflow?: () => void;
 }
 
-const states = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
-  "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
-  "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", 
-  "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", 
-  "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", 
-  "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", 
-  "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-];
-
 export const WorkflowInputs = ({ 
   chatId,
   onInputValuesChange,
@@ -45,7 +32,7 @@ export const WorkflowInputs = ({
   const [inputValues, setInputValues] = useState<InputValues>({});
   const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
   
-  // Use our new hook instead of the direct Supabase queries
+  // Use our hook instead of the direct Supabase queries
   const { 
     multiInput, 
     inputSchema, 
@@ -58,9 +45,21 @@ export const WorkflowInputs = ({
     // Initialize inputValues and tabularData when inputSchema changes
     const initialValues: InputValues = {};
     inputSchema.forEach((field: InputField) => {
-      if (field.type === 'string') initialValues[field.field_name] = '';
-      else if (field.type === 'number') initialValues[field.field_name] = 0;
-      else if (field.type === 'bool') initialValues[field.field_name] = false;
+      if (field.type === 'string' || field.type === 'name' || field.type === 'email' || 
+          field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
+          field.type === 'zip_code' || field.type === 'state' || field.type === 'country') {
+        initialValues[field.field_name] = '';
+      }
+      else if (field.type === 'number' || field.type === 'integer' || 
+               field.type === 'currency' || field.type === 'percentage' || field.type === 'year') {
+        initialValues[field.field_name] = 0;
+      }
+      else if (field.type === 'date') {
+        initialValues[field.field_name] = '';
+      }
+      else if (field.type === 'bool') {
+        initialValues[field.field_name] = false;
+      }
     });
     
     setInputValues(initialValues);
@@ -124,68 +123,6 @@ export const WorkflowInputs = ({
     setTabularData(prev => prev.filter((_, i) => i !== index));
   };
 
-  const renderInputField = (field: InputField, value: any, onChange: (name: string, value: any) => void) => {
-    switch(field.type) {
-      case 'string':
-        if (field.field_name.toLowerCase() === 'state') {
-          return (
-            <Select 
-              key={field.field_name}
-              value={value as string} 
-              onValueChange={(val) => onChange(field.field_name, val)}
-            >
-              <SelectTrigger id={field.field_name} className="w-full">
-                <SelectValue placeholder={`Select ${field.field_name}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {states.map((stateName) => (
-                  <SelectItem key={stateName} value={stateName}>
-                    {stateName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          );
-        } else {
-          return (
-            <Input
-              key={field.field_name}
-              id={field.field_name}
-              placeholder={`Enter ${field.field_name}`}
-              value={value as string}
-              onChange={(e) => onChange(field.field_name, e.target.value)}
-            />
-          );
-        }
-      case 'number':
-        return (
-          <Input
-            key={field.field_name}
-            id={field.field_name}
-            type="number"
-            placeholder={`Enter ${field.field_name}`}
-            value={value as number}
-            onChange={(e) => onChange(field.field_name, parseInt(e.target.value) || 0)}
-          />
-        );
-      case 'bool':
-        return (
-          <div key={field.field_name} className="flex items-center space-x-2">
-            <Checkbox
-              id={field.field_name}
-              checked={value as boolean}
-              onCheckedChange={(checked) => onChange(field.field_name, !!checked)}
-            />
-            <span className="text-sm text-gray-500">
-              {value ? <Check className="h-4 w-4 text-green-500" /> : <X className="h-4 w-4 text-red-500" />}
-            </span>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   const renderTabularInputs = () => {
     return (
       <div className="overflow-x-auto">
@@ -194,7 +131,10 @@ export const WorkflowInputs = ({
             <TableRow>
               {inputSchema.map((field) => (
                 <TableHead key={field.field_name} className="capitalize">
-                  {field.field_name}
+                  <div className="flex items-center gap-1.5">
+                    <InputFieldIcon type={field.type} className="text-muted-foreground" />
+                    <span>{field.field_name}</span>
+                  </div>
                 </TableHead>
               ))}
               <TableHead className="w-[80px]"></TableHead>
@@ -205,14 +145,20 @@ export const WorkflowInputs = ({
               <TableRow key={rowIndex}>
                 {inputSchema.map((field) => (
                   <TableCell key={`${rowIndex}-${field.field_name}`}>
-                    {renderInputField(
-                      field, 
-                      row[field.field_name] !== undefined ? row[field.field_name] : 
-                        field.type === 'string' ? '' : 
-                        field.type === 'number' ? 0 : 
-                        field.type === 'bool' ? false : '',
-                      (name, value) => handleTabularInputChange(rowIndex, name, value)
-                    )}
+                    <TypedInputField
+                      field={field}
+                      value={row[field.field_name] !== undefined ? row[field.field_name] : 
+                        (field.type === 'string' || field.type === 'name' || field.type === 'email' || 
+                         field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
+                         field.type === 'zip_code' || field.type === 'state' || field.type === 'country' ||
+                         field.type === 'date') ? '' : 
+                        (field.type === 'number' || field.type === 'integer' || 
+                         field.type === 'currency' || field.type === 'percentage' || 
+                         field.type === 'year') ? 0 : false
+                      }
+                      onChange={(name, value) => handleTabularInputChange(rowIndex, name, value)}
+                      showValidation={false} // Disable validation messages in table view to save space
+                    />
                   </TableCell>
                 ))}
                 <TableCell>
@@ -274,9 +220,14 @@ export const WorkflowInputs = ({
           inputSchema.map((field) => (
             <div key={field.field_name} className="space-y-2">
               <Label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
+                <InputFieldIcon type={field.type} className="text-muted-foreground" />
                 <span>{field.field_name}</span>
               </Label>
-              {renderInputField(field, inputValues[field.field_name], handleInputChange)}
+              <TypedInputField
+                field={field}
+                value={inputValues[field.field_name]}
+                onChange={handleInputChange}
+              />
             </div>
           ))
         )}

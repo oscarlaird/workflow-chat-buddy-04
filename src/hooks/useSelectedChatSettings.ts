@@ -10,22 +10,19 @@ const parseInputSchema = (inputSchema: Json | null): InputField[] => {
   if (!inputSchema) return [];
   
   if (Array.isArray(inputSchema)) {
-    // Use type assertion to inform TypeScript about the structure
-    return inputSchema.filter((item): item is InputField => {
-      if (typeof item !== 'object' || item === null) return false;
-      
-      // Check if the item has the required properties of InputField
-      return (
+    // Cast each item to InputField if it has the correct structure
+    return inputSchema
+      .filter(item => 
+        typeof item === 'object' && 
+        item !== null && 
         'field_name' in item && 
         typeof item.field_name === 'string' &&
-        'type' in item && 
-        (
-          item.type === 'string' || 
-          item.type === 'number' || 
-          item.type === 'bool'
-        )
-      );
-    });
+        'type' in item
+      )
+      .map(item => ({
+        field_name: (item as any).field_name,
+        type: (item as any).type
+      }));
   }
   
   return [];
@@ -151,9 +148,12 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
     try {
       setIsSaving(true);
       
+      // Need to cast InputField[] to Json for the Supabase client
+      const schemaJson = schema as unknown as Json;
+      
       const { error } = await supabase
         .from('chats')
-        .update({ input_schema: schema })
+        .update({ input_schema: schemaJson })
         .eq('id', chatId);
         
       if (error) {
