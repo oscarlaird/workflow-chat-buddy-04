@@ -83,11 +83,15 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
           );
         } 
         else if (payload.eventType === 'DELETE') {
-          // Properly handle step deletion
-          console.log("Step deleted:", payload.old.id);
-          setWorkflowSteps(prevSteps => 
-            prevSteps.filter(step => step.id !== payload.old.id)
-          );
+          const deletedStepId = payload.old.id;
+          console.log("Step deleted with ID:", deletedStepId);
+          
+          // Force a re-render by creating a new array without the deleted step
+          setWorkflowSteps(prevSteps => {
+            const filteredSteps = prevSteps.filter(step => step.id !== deletedStepId);
+            console.log("Steps after deletion:", filteredSteps.length);
+            return filteredSteps;
+          });
         }
       })
       .subscribe((status) => {
@@ -95,6 +99,7 @@ export const useWorkflowSteps = (chatId: string | undefined) => {
       });
 
     return () => {
+      console.log(`Cleaning up realtime subscription for chat ${chatId}`);
       supabase.removeChannel(channel);
     };
   }, [chatId]);
