@@ -42,6 +42,48 @@ export type Database = {
         }
         Relationships: []
       }
+      keyframes: {
+        Row: {
+          clicked_element: string | null
+          created_at: string
+          html_snapshot: string | null
+          id: number
+          screenshot_base64: string | null
+          screenshot_url: string | null
+          tab_id: string | null
+          tab_title: string | null
+          timestamp: string | null
+          typing_events: string | null
+          url: string | null
+        }
+        Insert: {
+          clicked_element?: string | null
+          created_at?: string
+          html_snapshot?: string | null
+          id?: number
+          screenshot_base64?: string | null
+          screenshot_url?: string | null
+          tab_id?: string | null
+          tab_title?: string | null
+          timestamp?: string | null
+          typing_events?: string | null
+          url?: string | null
+        }
+        Update: {
+          clicked_element?: string | null
+          created_at?: string
+          html_snapshot?: string | null
+          id?: number
+          screenshot_base64?: string | null
+          screenshot_url?: string | null
+          tab_id?: string | null
+          tab_title?: string | null
+          timestamp?: string | null
+          typing_events?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           chat_id: string
