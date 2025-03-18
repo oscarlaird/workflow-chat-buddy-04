@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, XCircle } from 'lucide-react';
+import { Loader2, XCircle, Trash2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Run } from '@/types';
@@ -56,6 +56,31 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
     }
   };
 
+  const handleDeleteRun = async () => {
+    try {
+      const { error } = await supabase
+        .from('runs')
+        .delete()
+        .eq('id', run.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Run deleted",
+        description: "The run and its associated data have been deleted."
+      });
+    } catch (error) {
+      console.error('Error deleting run:', error);
+      toast({
+        title: "Failed to delete run",
+        description: "An error occurred while trying to delete the run.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="flex justify-center py-4">
       <div className="bg-muted px-4 py-3 rounded-lg max-w-[80%] flex justify-center">
@@ -72,7 +97,7 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
             {run.status}
           </Badge>
           
-          {run.in_progress && (
+          {run.in_progress ? (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -81,6 +106,16 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
             >
               <XCircle className="h-4 w-4" />
               <span>Stop</span>
+            </Button>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleDeleteRun}
+              className="flex items-center gap-1 text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete</span>
             </Button>
           )}
         </div>
