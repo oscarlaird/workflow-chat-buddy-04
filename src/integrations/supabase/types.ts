@@ -162,8 +162,8 @@ export type Database = {
           id: string
           payload: Json | null
           run_id: string
-          sender_type: string
-          type: string
+          sender_type: Database["public"]["Enums"]["run_message_sender_type"]
+          type: Database["public"]["Enums"]["run_message_type"]
           username: string | null
         }
         Insert: {
@@ -173,8 +173,8 @@ export type Database = {
           id?: string
           payload?: Json | null
           run_id: string
-          sender_type?: string
-          type: string
+          sender_type?: Database["public"]["Enums"]["run_message_sender_type"]
+          type: Database["public"]["Enums"]["run_message_type"]
           username?: string | null
         }
         Update: {
@@ -184,8 +184,8 @@ export type Database = {
           id?: string
           payload?: Json | null
           run_id?: string
-          sender_type?: string
-          type?: string
+          sender_type?: Database["public"]["Enums"]["run_message_sender_type"]
+          type?: Database["public"]["Enums"]["run_message_type"]
           username?: string | null
         }
         Relationships: [
@@ -294,7 +294,17 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      run_message_sender_type: "dashboard" | "backend" | "extension"
+      run_message_type:
+        | "inputs"
+        | "spawn_window"
+        | "launch_extension"
+        | "extension_loaded"
+        | "command"
+        | "result"
+        | "rationale"
+        | "close_extension"
+        | "abort"
     }
     CompositeTypes: {
       [_ in never]: never

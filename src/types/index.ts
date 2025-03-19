@@ -90,18 +90,23 @@ export interface Run {
 }
 
 // Define enum types to match our database enums
-export type RunMessageType = 
-  | 'inputs'
-  | 'spawn_window' 
-  | 'launch_extension'
-  | 'extension_loaded'
-  | 'command'
-  | 'result'
-  | 'rationale'
-  | 'close_extension'
-  | 'abort';
+export enum RunMessageType {
+  INPUTS = 'inputs',
+  SPAWN_WINDOW = 'spawn_window',
+  LAUNCH_EXTENSION = 'launch_extension',
+  EXTENSION_LOADED = 'extension_loaded',
+  COMMAND = 'command',
+  RESULT = 'result',
+  RATIONALE = 'rationale',
+  CLOSE_EXTENSION = 'close_extension',
+  ABORT = 'abort'
+}
 
-export type RunMessageSenderType = 'dashboard' | 'backend' | 'extension';
+export enum RunMessageSenderType {
+  DASHBOARD = 'dashboard',
+  BACKEND = 'backend',
+  EXTENSION = 'extension'
+}
 
 export interface RunMessage {
   id: string;

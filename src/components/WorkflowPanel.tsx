@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -7,219 +6,129 @@ import { InputValues, RunMessageType, RunMessageSenderType } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface WorkflowPanelProps {
-  onRunWorkflow: () => void;
-  showRunButton?: boolean;
-  chatId?: string;
+  chatId: string;
 }
 
-export const WorkflowPanel = ({ 
-  onRunWorkflow, 
-  showRunButton = true, 
-  chatId
-}: WorkflowPanelProps) => {
-  const [currentInputs, setCurrentInputs] = useState<InputValues | InputValues[]>({});
-  const { workflowSteps, isLoading, error, deletingStepIds } = useWorkflowSteps(chatId);
+const WorkflowPanel = ({ chatId }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
-  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
-  const [dashboardId] = useState(() => uuidv4()); // Generate a random UUID for dashboard_id
+  const [inputSchema, setInputSchema] = useState<any[]>([]);
+  const { steps, isLoading, error, refreshWorkflowSteps } = useWorkflowSteps(chatId);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  const workflow = workflowSteps.length > 0 ? {
-    id: "workflow-1",
-    title: "Website Vote Data Scraper",
-    currentStep: workflowSteps.filter(step => step.status === "complete").length + 1,
-    totalSteps: workflowSteps.length,
-    steps: workflowSteps
-  } : null;
+  useEffect(() => {
+    const fetchChatInputSchema = async () => {
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .select('input_schema')
+        .eq('id', chatId)
+        .single();
 
-  const createRunWithMessage = async () => {
-    if (!chatId) {
-      console.error("Cannot create run: No chat ID provided");
-      return null;
-    }
+      if (chatError) {
+        console.error("Error fetching chat input schema:", chatError);
+        return;
+      }
 
+      if (chatData && chatData.input_schema) {
+        setInputSchema(chatData.input_schema);
+      }
+    };
+
+    fetchChatInputSchema();
+  }, [chatId]);
+
+  const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
-      // Create a run ID
+      setIsRunning(true);
+      setCurrentStepIndex(0);
+      
       const runId = uuidv4();
       
-      // Create the run in the database
+      // Create a new run
       const { error: runError } = await supabase
         .from('runs')
         .insert({
           id: runId,
-          dashboard_id: dashboardId,
           chat_id: chatId,
-          status: 'Connecting to backend...',
+          dashboard_id: 'web-dashboard',
           in_progress: true,
-          username: 'current_user'
+          status: 'running'
         });
-
+      
       if (runError) {
-        console.error("Error creating run:", runError);
-        return null;
+        console.error('Error creating run:', runError);
+        toast.error('Failed to start workflow run');
+        setIsRunning(false);
+        return;
       }
 
-      // Log inputs as a run_message
-      const inputPayload = {
-        inputs: currentInputs
-      };
-
-      await supabase
+      // Store input values as a run message
+      const inputPayload = { values: inputValues };
+      const { error: messageError } = await supabase
         .from('run_messages')
         .insert({
           run_id: runId,
-          type: 'inputs' as RunMessageType,
+          type: RunMessageType.INPUTS,
           payload: inputPayload,
           chat_id: chatId,
           username: 'current_user',
-          sender_type: 'dashboard' as RunMessageSenderType,
+          sender_type: RunMessageSenderType.DASHBOARD,
           display_text: 'Workflow input values'
         });
         
-      // Create a system message with the run_id
-      const messageId = uuidv4();
-      await supabase
-        .from('messages')
-        .insert({
-          id: messageId,
-          chat_id: chatId,
-          role: 'assistant',
-          content: 'Processing workflow run...',
-          username: 'system',
-          run_id: runId
-        });
-
-      return runId;
-    } catch (err) {
-      console.error("Exception when creating run:", err);
-      return null;
-    }
-  };
-
-  const handleRunWorkflow = async () => {
-    if (isRunning) return;
-    
-    setIsRunning(true);
-    console.log("Running workflow for chat ID:", chatId);
-    
-    try {
-      // Create a new run in the database along with a message
-      const runId = await createRunWithMessage();
-      setCurrentRunId(runId);
-      
-      if (runId) {
-        // Log to the console for debugging
-        console.log("Created run with ID:", runId);
-        
-        // Send run ID to the parent to be used when sending the message
-        window.postMessage({ 
-          type: "WORKFLOW_RUN_CREATED",
-          runId,
-          chatId
-        }, "*");
-        
-        // Call the onRunWorkflow function
-        onRunWorkflow();
-        
-        // Reset the running state after a short delay
-        setTimeout(() => {
-          setIsRunning(false);
-        }, 300);
-      } else {
-        toast({
-          title: "Error creating run",
-          description: "Failed to create workflow run record.",
-          variant: "destructive"
-        });
-        setIsRunning(false);
+      if (messageError) {
+        console.error('Error storing input values:', messageError);
+        toast.error('Failed to store workflow inputs');
       }
+      
+      // Simulate running each step of the workflow
+      for (let i = 0; i < steps.length; i++) {
+        setCurrentStepIndex(i);
+        
+        // Simulate a delay between steps
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
     } catch (error) {
-      console.error("Error in handleRunWorkflow:", error);
-      toast({
-        title: "Error running workflow",
-        description: "An unexpected error occurred.",
-        variant: "destructive"
-      });
+      console.error('Error running workflow:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
       setIsRunning(false);
     }
   };
 
-  const getProgressPercentage = () => {
-    if (!workflow) return 0;
-    const completeSteps = workflow.steps.filter(step => step.status === "complete").length;
-    return (completeSteps / workflow.totalSteps) * 100;
-  };
-
-  const handleInputValuesChange = (values: InputValues | InputValues[]) => {
-    setCurrentInputs(values);
-  };
-
   if (isLoading) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="mt-2 text-sm text-gray-500">Loading workflow for chat ID: {chatId || "none"}</p>
-      </div>
-    );
+    return <div className="flex items-center justify-center p-4">
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Loading workflow steps...
+    </div>;
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center p-4">
-        <div className="text-red-500 mb-2">⚠️ Error loading workflow</div>
-        <p className="text-sm text-gray-500 text-center">
-          Failed to load workflow steps for chat ID: {chatId || "none"}
-        </p>
-        <p className="text-xs text-gray-400 mt-2 text-center">{error}</p>
-      </div>
-    );
-  }
-
-  if (!workflow) {
-    return (
-      <div className="flex flex-col h-full items-center justify-center">
-        <p className="text-sm text-gray-500">No workflow data available for chat ID: {chatId || "none"}</p>
-      </div>
-    );
+    return <div className="text-red-500 p-4">Error: {error.message}</div>;
   }
 
   return (
     <div className="flex flex-col h-full">
-      <WorkflowInputs 
-        chatId={chatId}
-        onInputValuesChange={handleInputValuesChange}
-        showRunButton={showRunButton}
-        onRunWorkflow={handleRunWorkflow}
-        isRunning={isRunning}
-      />
-      
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-secondary/50">
-        <div className="flex items-center gap-2">
-          <div className="flex-1 bg-workflow-progress-bg rounded-full h-2.5">
-            <div
-              className="bg-workflow-progress-fill h-2.5 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${getProgressPercentage()}%` }}
-            ></div>
-          </div>
-          <span className="text-sm font-medium">
-            {Math.round(getProgressPercentage())}%
-          </span>
-        </div>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="space-y-2">
-          {workflow.steps.map((step, index) => (
-            <WorkflowStep 
-              key={step.id} 
-              step={step} 
-              index={index}
-              isDeleting={deletingStepIds.includes(step.id)} 
-            />
-          ))}
-        </div>
+      {inputSchema && inputSchema.length > 0 && (
+        <WorkflowInputs 
+          inputSchema={inputSchema} 
+          onSubmit={handleRunWorkflow} 
+          disabled={isRunning} 
+        />
+      )}
+
+      <div className="flex-grow overflow-y-auto p-4">
+        {steps && steps.map((step, index) => (
+          <WorkflowStep
+            key={step.id}
+            step={step}
+            isCurrent={index === currentStepIndex}
+            isCompleted={index < currentStepIndex}
+          />
+        ))}
       </div>
     </div>
   );
