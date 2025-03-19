@@ -34,26 +34,30 @@ export const WorkflowPanel = ({
     steps: workflowSteps
   } : null;
 
-  const createRun = async () => {
+  const createRunWithMessage = async () => {
     if (!chatId) {
       console.error("Cannot create run: No chat ID provided");
       return null;
     }
 
     try {
+      // Create a run ID
       const runId = uuidv4();
-      const { error } = await supabase
+      
+      // Create the run in the database
+      const { error: runError } = await supabase
         .from('runs')
         .insert({
           id: runId,
-          dashboard_id: dashboardId, // Use the randomly generated UUID
-          chat_id: chatId, // Use the chat ID provided in props
+          dashboard_id: dashboardId,
+          chat_id: chatId,
           status: 'Connecting to backend...',
-          in_progress: true
+          in_progress: true,
+          username: 'current_user'
         });
 
-      if (error) {
-        console.error("Error creating run:", error);
+      if (runError) {
+        console.error("Error creating run:", runError);
         return null;
       }
 
@@ -67,7 +71,22 @@ export const WorkflowPanel = ({
         .insert({
           run_id: runId,
           type: 'inputs',
-          payload: inputPayload
+          payload: inputPayload,
+          chat_id: chatId,
+          username: 'current_user'
+        });
+        
+      // Create a system message with the run_id
+      const messageId = uuidv4();
+      await supabase
+        .from('messages')
+        .insert({
+          id: messageId,
+          chat_id: chatId,
+          role: 'assistant',
+          content: 'Processing workflow run...',
+          username: 'system',
+          run_id: runId
         });
 
       return runId;
@@ -84,8 +103,8 @@ export const WorkflowPanel = ({
     console.log("Running workflow for chat ID:", chatId);
     
     try {
-      // Create a new run in the database
-      const runId = await createRun();
+      // Create a new run in the database along with a message
+      const runId = await createRunWithMessage();
       setCurrentRunId(runId);
       
       if (runId) {
@@ -99,7 +118,7 @@ export const WorkflowPanel = ({
           chatId
         }, "*");
         
-        // Call the onRunWorkflow function directly without sending a "run" message
+        // Call the onRunWorkflow function
         onRunWorkflow();
         
         // Reset the running state after a short delay

@@ -1,10 +1,10 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
-import RunStatusBubble from "@/components/RunStatusBubble";
 import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message, Run, RunMessage } from "@/types";
+import { Message, RunMessage } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 
 interface ChatInterfaceProps {
@@ -31,191 +31,26 @@ export const ChatInterface = forwardRef(({
   const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(new Set());
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
   const [streamingMessages, setStreamingMessages] = useState<Set<string>>(new Set());
-  const [activeRun, setActiveRun] = useState<Run | null>(null);
   const [runMessages, setRunMessages] = useState<RunMessage[]>([]);
   
   const prevConversationIdRef = useRef<string | null>(null);
 
   // Expose the handleSubmit method to the parent component
   useImperativeHandle(ref, () => ({
-    // Don't append "run" to handleSubmit
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
 
-  // Reset state and fetch active run when conversation changes
+  // Reset state when conversation changes
   useEffect(() => {
-    // Clear the activeRun and runMessages state whenever conversationId changes
-    setActiveRun(null);
     setRunMessages([]);
     
     if (!conversationId) return;
     
     console.log(`Setting up for conversation: ${conversationId}, previous was: ${prevConversationIdRef.current}`);
     
-    // Initial fetch of any active run
-    const fetchActiveRun = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('runs')
-          .select('*')
-          .eq('chat_id', conversationId)
-          .eq('in_progress', true)
-          .order('created_at', { ascending: false })
-          .limit(1);
-          
-        if (error) {
-          console.error('Error fetching active run:', error);
-          return;
-        }
-        
-        if (data && data.length > 0) {
-          const runData = data[0];
-          
-          console.log(`Found active run for chat ${conversationId} with status: ${runData.status}`);
-          
-          // Only set activeRun if in_progress is true and it matches the current conversation
-          if (runData.in_progress && runData.chat_id === conversationId) {
-            setActiveRun({
-              id: runData.id,
-              dashboard_id: runData.dashboard_id,
-              chat_id: runData.chat_id,
-              status: runData.status,
-              in_progress: runData.in_progress,
-              created_at: runData.created_at,
-              updated_at: runData.updated_at
-            });
-            
-            // Fetch run messages for this run
-            fetchRunMessages(runData.id);
-          }
-        } else {
-          console.log(`No active run found for chat ${conversationId}`);
-        }
-      } catch (err) {
-        console.error('Exception when fetching active run:', err);
-      }
-    };
-    
-    fetchActiveRun();
-    
     // Update the previous conversation ID ref
     prevConversationIdRef.current = conversationId;
-    
-    // Subscribe to changes in the runs table for this chat
-    const runsChannel = supabase
-      .channel(`runs:${conversationId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'runs',
-        filter: `chat_id=eq.${conversationId}`
-      }, (payload) => {
-        console.log('Run update received:', payload);
-        if (payload.new) {
-          const runData = payload.new as any;
-          
-          // Only set activeRun if in_progress is true and it matches the current conversation
-          if (runData.in_progress && runData.chat_id === conversationId) {
-            console.log(`Setting active run for chat ${conversationId} with status: ${runData.status}`);
-            setActiveRun({
-              id: runData.id,
-              dashboard_id: runData.dashboard_id,
-              chat_id: runData.chat_id,
-              status: runData.status,
-              in_progress: runData.in_progress,
-              created_at: runData.created_at,
-              updated_at: runData.updated_at
-            });
-          } else if (!runData.in_progress && runData.chat_id === conversationId) {
-            // Clear the activeRun if in_progress is now false
-            console.log(`Clearing active run for chat ${conversationId} as in_progress is now false`);
-            setActiveRun(null);
-          }
-        }
-      })
-      .subscribe();
-      
-    return () => {
-      console.log(`Removing channel subscription for chat ${conversationId}`);
-      supabase.removeChannel(runsChannel);
-    };
   }, [conversationId]);
-  
-  // Fetch run messages for a specific run
-  const fetchRunMessages = async (runId: string) => {
-    const { data, error } = await supabase
-      .from('run_messages')
-      .select('*')
-      .eq('run_id', runId)
-      .order('created_at', { ascending: true });
-      
-    if (!error && data) {
-      setRunMessages(data as RunMessage[]);
-      
-      // Process any existing run messages
-      data.forEach(message => {
-        handleRunMessage(message);
-      });
-    }
-  };
-  
-  // Subscribe to run_messages for the active run
-  useEffect(() => {
-    if (!activeRun?.id) return;
-    
-    console.log(`Setting up subscription for run_messages:${activeRun.id}`);
-    
-    const runMessagesChannel = supabase
-      .channel(`run_messages:${activeRun.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'run_messages',
-        filter: `run_id=eq.${activeRun.id}`
-      }, (payload) => {
-        console.log('Run message received:', payload);
-        if (payload.new) {
-          const newMessage = payload.new as RunMessage;
-          setRunMessages(prev => [...prev, newMessage]);
-          
-          // Handle the run message
-          handleRunMessage(newMessage);
-        }
-      })
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(runMessagesChannel);
-    };
-  }, [activeRun?.id]);
-  
-  // Handle different types of run messages
-  const handleRunMessage = (message: RunMessage) => {
-    if (!message || !message.type) return;
-    
-    switch (message.type) {
-      case 'spawn_window':
-        console.log('Received spawn_window message:', message);
-        window.postMessage({ type: "CREATE_AGENT_RUN_WINDOW" }, "*");
-        break;
-        
-      case 'download_extension':
-        console.log('Received download_extension message:', message);
-        // Add a virtual assistant message suggesting to download the extension
-        const extensionMessage: Message = {
-          id: uuidv4(),
-          role: 'assistant',
-          content: "To continue, you'll need to install the Macro Agents browser extension. This allows the agent to help you in other tabs.",
-          username: 'system'
-        };
-        
-        setMessages(prev => [...prev, extensionMessage]);
-        break;
-        
-      default:
-        console.log('Unhandled run message type:', message.type);
-    }
-  };
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -427,7 +262,6 @@ export const ChatInterface = forwardRef(({
             isExtensionInstalled={isExtensionInstalled}
             pendingMessageIds={pendingMessageIds}
             streamingMessageIds={streamingMessages}
-            activeRun={activeRun}
           />
         )}
       </div>

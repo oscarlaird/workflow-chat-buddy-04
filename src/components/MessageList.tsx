@@ -1,10 +1,11 @@
+
 import { useRef, useEffect } from "react";
 import { Film, Download, Loader2, PenLine, Trash2, Plus } from "lucide-react";
-import { Message, Run } from "@/types";
+import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
-import RunStatusBubble from "@/components/RunStatusBubble";
 import CodeBlock from "./CodeBlock";
+import RunMessage from "./RunMessage";
 
 interface MessageListProps {
   messages: Message[];
@@ -13,7 +14,6 @@ interface MessageListProps {
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
   streamingMessageIds?: Set<string>;
-  activeRun?: Run | null;
 }
 
 export const MessageList = ({ 
@@ -22,8 +22,7 @@ export const MessageList = ({
   screenRecordings,
   isExtensionInstalled,
   pendingMessageIds = new Set(),
-  streamingMessageIds = new Set(),
-  activeRun = null
+  streamingMessageIds = new Set()
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -143,41 +142,46 @@ export const MessageList = ({
     <div className="space-y-6">
       {messages.map((message, index) => (
         <div key={message.id} className="space-y-4">
-          <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            {message.function_name ? (
-              <div className="max-w-[80%]">
-                {renderFunctionMessage(message)}
-              </div>
-            ) : message.workflow_step_id ? (
-              <div className="max-w-[80%]">
-                {renderWorkflowStepMessage(message)}
-              </div>
-            ) : (
-              <div 
-                className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
-                  message.role === "user" 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-muted"
-                }`}
-              >
-                {message.content ? (
-                  formatMessageContent(
-                    message.content, 
-                    message.role === "assistant" && streamingMessageIds.has(message.id)
-                  )
-                ) : (
-                  <p> </p>
-                )}
-                
-                {pendingMessageIds.has(message.id) && (
-                  <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    <span>Sending...</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Special Run Message */}
+          {message.run_id ? (
+            <RunMessage runId={message.run_id} />
+          ) : (
+            <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+              {message.function_name ? (
+                <div className="max-w-[80%]">
+                  {renderFunctionMessage(message)}
+                </div>
+              ) : message.workflow_step_id ? (
+                <div className="max-w-[80%]">
+                  {renderWorkflowStepMessage(message)}
+                </div>
+              ) : (
+                <div 
+                  className={`relative max-w-[80%] px-4 py-3 rounded-lg ${
+                    message.role === "user" 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted"
+                  }`}
+                >
+                  {message.content ? (
+                    formatMessageContent(
+                      message.content, 
+                      message.role === "assistant" && streamingMessageIds.has(message.id)
+                    )
+                  ) : (
+                    <p> </p>
+                  )}
+                  
+                  {pendingMessageIds.has(message.id) && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>Sending...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           
           {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
             <div className="flex justify-center mt-4">
@@ -216,9 +220,6 @@ export const MessageList = ({
           )}
         </div>
       ))}
-      
-      {/* Display run status bubble only if there's an active run with in_progress=true */}
-      {activeRun && activeRun.in_progress && <RunStatusBubble run={activeRun} />}
       
       <div ref={messagesEndRef} />
     </div>
