@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
@@ -5,6 +6,7 @@ import ChatHistory from "../components/ChatHistory";
 import WorkflowPanel from "../components/WorkflowPanel";
 import TopBar from "../components/TopBar";
 import { Chat } from "@/types";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface IndexProps {
   selectedConversationId: string;
@@ -68,42 +70,40 @@ export const Index: React.FC<IndexProps> = ({
           />
         </div>
         
-        <div className="flex-1 overflow-hidden flex">
-          <div className="flex-1 overflow-hidden">
-            {selectedConversationId ? (
+        {selectedConversationId ? (
+          <ResizablePanelGroup direction="horizontal" className="flex-1">
+            <ResizablePanel defaultSize={70} minSize={30}>
               <ChatInterface 
                 conversationId={selectedConversationId} 
                 onSendMessage={handleSendMessage}
                 ref={chatInterfaceRef}
               />
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <div className="max-w-md text-center p-8">
-                  <h1 className="text-2xl font-bold mb-4">Welcome to Workflow Chat</h1>
-                  <p className="text-muted-foreground mb-6">
-                    Create a new chat or select an existing one to start a conversation.
-                  </p>
-                  <button
-                    onClick={() => onCreateChat("New Workflow")}
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                  >
-                    Create New Chat
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {selectedConversationId && (
-            <div className="w-1/3 min-w-[300px] max-w-md border-l border-gray-200 dark:border-gray-800">
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={30} minSize={20}>
               <WorkflowPanel 
                 chatId={selectedConversationId}
                 onRunWorkflow={handleRunWorkflow}
                 showRunButton={true}
               />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <div className="max-w-md text-center p-8">
+              <h1 className="text-2xl font-bold mb-4">Welcome to Workflow Chat</h1>
+              <p className="text-muted-foreground mb-6">
+                Create a new chat or select an existing one to start a conversation.
+              </p>
+              <button
+                onClick={() => onCreateChat("New Workflow")}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              >
+                Create New Chat
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

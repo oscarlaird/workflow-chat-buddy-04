@@ -71,7 +71,7 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
         .from('messages')
         .insert({
           chat_id: chatId,
-          role: 'system',
+          role: 'assistant', // Changed from 'system' to 'assistant' to comply with constraint
           content: 'Running workflow',
           username: 'current_user',
           run_id: runId
