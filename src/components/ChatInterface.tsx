@@ -163,6 +163,7 @@ export const ChatInterface = forwardRef(({
             'payload' in payload.new && 
             'created_at' in payload.new) {
           
+          // Valid RunMessage - type-safe way to add to state
           const newMessage = payload.new as RunMessage;
           setRunMessages(prev => [...prev, newMessage]);
         } else {
