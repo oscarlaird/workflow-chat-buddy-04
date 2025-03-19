@@ -150,7 +150,7 @@ export const MessageList = ({
     <div className="space-y-6">
       {messages.map((message, index) => (
         <div key={message.id} className="space-y-4">
-          {/* Special Run Message */}
+          {/* Special Run Message - Fixed to properly display run bubbles */}
           {message.run_id && (
             <>
               <RunMessage runId={message.run_id} />

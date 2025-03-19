@@ -15,9 +15,9 @@ const WorkflowPage = () => {
     // First check if ID is in URL params (from route pattern /workflow/:id)
     const idFromParams = params.id;
     
-    // If not found in params, check query string (from route pattern /workflow?id=xxx)
+    // If not found in params, check query string (from route pattern /workflow?id=xxx or /workflow?chat_id=xxx)
     const searchParams = new URLSearchParams(location.search);
-    const idFromQuery = searchParams.get('id');
+    const idFromQuery = searchParams.get('id') || searchParams.get('chat_id');
     
     const finalId = idFromParams || idFromQuery;
 
@@ -41,7 +41,7 @@ const WorkflowPage = () => {
         action: (
           <div className="flex items-center">
             <AlertCircle className="h-4 w-4 mr-2" />
-            <span>Add ?id=your_chat_id to the URL or use /workflow/your_chat_id</span>
+            <span>Add ?id=your_chat_id or ?chat_id=your_chat_id to the URL or use /workflow/your_chat_id</span>
           </div>
         ),
       });
@@ -70,7 +70,7 @@ const WorkflowPage = () => {
               <Info className="w-12 h-12 text-gray-400 mb-4" />
               <h2 className="text-xl font-medium mb-2">No Workflow ID Provided</h2>
               <p className="text-gray-500 max-w-md">
-                Please specify a workflow ID by adding ?id=your_chat_id to the URL or using /workflow/your_chat_id to view workflow details.
+                Please specify a workflow ID by adding ?id=your_chat_id or ?chat_id=your_chat_id to the URL or using /workflow/your_chat_id to view workflow details.
               </p>
             </div>
           )}
