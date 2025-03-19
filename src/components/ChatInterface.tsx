@@ -112,9 +112,11 @@ export const ChatInterface = forwardRef(({
     }
   };
 
+  // Check if the extension is installed
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === "EXTENSION_INSTALLED") {
+        console.log("Extension installation detected via message:", event.data);
         setIsExtensionInstalled(true);
       }
     };
@@ -152,7 +154,7 @@ export const ChatInterface = forwardRef(({
       }, (payload) => {
         console.log('Received real-time INSERT run_message:', payload);
         
-        // Ensure the new message conforms to the RunMessage type
+        // Check if the message has all required properties of RunMessage
         if (payload.new && 
             typeof payload.new === 'object' && 
             'id' in payload.new && 
