@@ -72,7 +72,7 @@ export const ChatInterface = forwardRef(({
       }
       
       if (data) {
-        setRunMessages(data);
+        setRunMessages(data as RunMessage[]);
       }
     } catch (err) {
       console.error('Exception when fetching run messages:', err);
@@ -151,9 +151,21 @@ export const ChatInterface = forwardRef(({
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
         console.log('Received real-time INSERT run_message:', payload);
-        const newMessage = payload.new;
         
-        setRunMessages(prev => [...prev, newMessage]);
+        // Ensure the new message conforms to the RunMessage type
+        if (payload.new && 
+            typeof payload.new === 'object' && 
+            'id' in payload.new && 
+            'run_id' in payload.new && 
+            'type' in payload.new && 
+            'payload' in payload.new && 
+            'created_at' in payload.new) {
+          
+          const newMessage = payload.new as RunMessage;
+          setRunMessages(prev => [...prev, newMessage]);
+        } else {
+          console.error('Received incomplete run message:', payload.new);
+        }
       })
       .subscribe();
       
