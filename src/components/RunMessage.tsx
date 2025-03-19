@@ -14,7 +14,7 @@ interface RunMessageProps {
 export const RunMessage = ({ runId }: RunMessageProps) => {
   const [run, setRun] = useState<Run | null>(null);
   const [runMessages, setRunMessages] = useState<RunMessageType[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
 
   // Fetch run and run messages data
   useEffect(() => {
@@ -119,39 +119,42 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
     };
   }, [runId]);
 
-  const handleDeleteRun = async () => {
-    if (!runId || isDeleting) return;
+  const handleStopRun = async () => {
+    if (!runId || isStopping || !run?.in_progress) return;
     
-    setIsDeleting(true);
+    setIsStopping(true);
     
     try {
       const { error } = await supabase
         .from('runs')
-        .delete()
+        .update({ 
+          in_progress: false,
+          status: 'Stopped by user'
+        })
         .eq('id', runId);
         
       if (error) {
-        console.error('Error deleting run:', error);
+        console.error('Error stopping run:', error);
         toast({
           title: "Error",
-          description: "Failed to delete run: " + error.message,
+          description: "Failed to stop run: " + error.message,
           variant: "destructive"
         });
       } else {
         toast({
           title: "Success",
-          description: "Run deleted successfully"
+          description: "Run stopped successfully"
         });
       }
     } catch (err) {
-      console.error('Exception when deleting run:', err);
+      console.error('Exception when stopping run:', err);
       toast({
         title: "Error",
-        description: "An unexpected error occurred while deleting the run",
+        description: "An unexpected error occurred while stopping the run",
         variant: "destructive"
       });
     } finally {
-      setIsDeleting(false);
+      setIsStopping(false);
     }
   };
 
@@ -212,15 +215,17 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
             <span className="text-xs text-muted-foreground">
               Run #{run.id.slice(0, 8)}
             </span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6" 
-              onClick={handleDeleteRun}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-            </Button>
+            {run.in_progress && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6" 
+                onClick={handleStopRun}
+                disabled={isStopping}
+              >
+                {isStopping ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="py-3">
