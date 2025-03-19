@@ -19,7 +19,6 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
   const [isRunning, setIsRunning] = useState(false);
   const [inputSchema, setInputSchema] = useState<any[]>([]);
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
     const fetchChatInputSchema = async () => {
@@ -45,7 +44,6 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
       setIsRunning(true);
-      setCurrentStepIndex(0);
       
       const runId = uuidv4();
       
@@ -88,15 +86,7 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
         toast.error('Failed to store workflow inputs');
       }
       
-      // Simulate running each step of the workflow
-      for (let i = 0; i < workflowSteps.length; i++) {
-        setCurrentStepIndex(i);
-        
-        // Simulate a delay between steps
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-      
-      toast.success("Workflow completed");
+      toast.success("Workflow started");
       
       if (onRunWorkflow) {
         onRunWorkflow();

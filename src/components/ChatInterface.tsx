@@ -1,3 +1,4 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -70,7 +71,6 @@ export const ChatInterface = forwardRef(({
       }
       
       if (data) {
-        console.log('Fetched run messages:', data);
         setRunMessages(data as RunMessage[]);
       }
     } catch (err) {
@@ -140,8 +140,6 @@ export const ChatInterface = forwardRef(({
   // Process spawn_window messages when extension is installed
   const processSpawnWindowMessage = useCallback(async (runMessage: RunMessage) => {
     if (runMessage.type === RunMessageType.SPAWN_WINDOW && isExtensionInstalled) {
-      console.log('Extension is installed, processing spawn_window for run:', runMessage.run_id);
-      
       try {
         // First, create and send a launch_extension run_message
         const launchMessage = {
@@ -159,8 +157,6 @@ export const ChatInterface = forwardRef(({
           .from('run_messages')
           .insert(launchMessage);
           
-        console.log('Sent launch_extension message, now sending CREATE_AGENT_RUN_WINDOW');
-        
         // Send message to extension to create window with chat_id and run_id inside the payload
         window.postMessage({
           type: 'CREATE_AGENT_RUN_WINDOW',
@@ -178,8 +174,6 @@ export const ChatInterface = forwardRef(({
   useEffect(() => {
     if (!conversationId) return;
     
-    console.log(`Setting up realtime subscription for run_messages in chat ${conversationId}`);
-    
     const channel = supabase
       .channel(`run_messages:${conversationId}`)
       .on('postgres_changes', {
@@ -188,8 +182,6 @@ export const ChatInterface = forwardRef(({
         table: 'run_messages',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
-        console.log('Received real-time INSERT run_message:', payload);
-        
         // Check if the message has all required properties of RunMessage
         if (payload.new && 
             typeof payload.new === 'object' && 
@@ -202,11 +194,8 @@ export const ChatInterface = forwardRef(({
           // Valid RunMessage - type-safe way to add to state
           const newMessage = payload.new as RunMessage;
           
-          console.log(`New run message of type: ${newMessage.type}`, newMessage);
-          
           // Check specifically for spawn_window messages
           if (newMessage.type === 'spawn_window') {
-            console.log(`Received spawn_window message. Extension installed: ${isExtensionInstalled}`);
             processSpawnWindowMessage(newMessage);
           }
           
@@ -214,7 +203,6 @@ export const ChatInterface = forwardRef(({
           setRunMessages(prev => {
             // If message with this ID already exists, don't add it again
             if (prev.some(msg => msg.id === newMessage.id)) {
-              console.log(`Skipping duplicate run message with ID: ${newMessage.id}`);
               return prev;
             }
             return [...prev, newMessage];
@@ -226,7 +214,6 @@ export const ChatInterface = forwardRef(({
       .subscribe();
       
     return () => {
-      console.log('Removing run_messages channel subscription');
       supabase.removeChannel(channel);
     };
   }, [conversationId, processSpawnWindowMessage]);
@@ -258,8 +245,6 @@ export const ChatInterface = forwardRef(({
   useEffect(() => {
     if (!conversationId) return;
     
-    console.log(`Setting up realtime subscription for chat ${conversationId}`);
-    
     const channel = supabase
       .channel(`messages:${conversationId}`)
       .on('postgres_changes', {
@@ -268,12 +253,9 @@ export const ChatInterface = forwardRef(({
         table: 'messages',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
-        console.log('Received real-time INSERT message:', payload);
         const newMessage = payload.new;
         
         if (localMessageIds.has(newMessage.id)) {
-          console.log('Skipping already displayed local message:', newMessage.id);
-          
           setPendingMessageIds(prev => {
             const updated = new Set(prev);
             updated.delete(newMessage.id);
@@ -312,7 +294,6 @@ export const ChatInterface = forwardRef(({
         table: 'messages',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
-        console.log('Received real-time UPDATE message:', payload);
         const updatedMessage = payload.new;
         
         updateMessageContent(
@@ -325,7 +306,6 @@ export const ChatInterface = forwardRef(({
       .subscribe();
 
     return () => {
-      console.log('Removing channel subscription');
       supabase.removeChannel(channel);
     };
   }, [conversationId, setMessages, localMessageIds, updateMessageContent]);
@@ -362,7 +342,6 @@ export const ChatInterface = forwardRef(({
       
       // Add run_id if available
       if (currentRunId) {
-        console.log("Adding run_id to message:", currentRunId);
         messageData.run_id = currentRunId;
       }
       

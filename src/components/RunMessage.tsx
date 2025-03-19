@@ -77,7 +77,6 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
         table: 'runs',
         filter: `id=eq.${runId}`
       }, (payload) => {
-        console.log('Run update received:', payload);
         if (payload.new) {
           const runData = payload.new as any;
           setRun({
@@ -103,7 +102,6 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
         table: 'run_messages',
         filter: `run_id=eq.${runId}`
       }, (payload) => {
-        console.log('Run message received:', payload);
         if (payload.new) {
           const newMessage = payload.new as RunMessageType;
           
@@ -111,7 +109,6 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
           setRunMessages(prev => {
             // If message with this ID already exists, don't add it again
             if (prev.some(msg => msg.id === newMessage.id)) {
-              console.log(`Skipping duplicate run message with ID: ${newMessage.id}`);
               return prev;
             }
             return [...prev, newMessage];

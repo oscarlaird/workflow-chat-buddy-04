@@ -132,8 +132,6 @@ export const MessageList = ({
       msg.type === 'spawn_window'
     );
     
-    console.log(`Run ${runId} has spawn_window message: ${hasSpawnWindowMessage}, extension installed: ${isExtensionInstalled}`);
-    
     return hasSpawnWindowMessage;
   };
 
@@ -153,7 +151,7 @@ export const MessageList = ({
       {messages.map((message, index) => (
         <div key={message.id} className="space-y-4">
           {/* Special Run Message */}
-          {message.run_id ? (
+          {message.run_id && (
             <>
               <RunMessage runId={message.run_id} />
               
@@ -188,7 +186,10 @@ export const MessageList = ({
                 </div>
               )}
             </>
-          ) : (
+          )}
+          
+          {/* Regular Message */}
+          {!message.run_id && (
             <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.function_name ? (
                 <div className="max-w-[80%]">
