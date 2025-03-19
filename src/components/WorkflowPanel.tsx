@@ -35,7 +35,8 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
       }
 
       if (chatData && chatData.input_schema) {
-        setInputSchema(chatData.input_schema);
+        // Fix: Use a function to update the state since we're working with an array
+        setInputSchema(chatData.input_schema as any[]);
       }
     };
 
@@ -134,7 +135,8 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
           <WorkflowStep
             key={step.id}
             step={step}
-            status={index === currentStepIndex ? "active" : index < currentStepIndex ? "complete" : "waiting"}
+            index={index}
+            isDeleting={false}
           />
         ))}
       </div>

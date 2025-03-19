@@ -107,3 +107,5 @@ export const Index: React.FC<IndexProps> = ({
     </div>
   );
 };
+
+export default Index;
