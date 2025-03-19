@@ -138,6 +138,20 @@ export const ChatInterface = forwardRef(({
     }
   }, [conversationId]);
 
+  // Process spawn_window messages when extension is installed
+  const processSpawnWindowMessage = useCallback((runMessage: RunMessage) => {
+    if (runMessage.type === 'spawn_window' && isExtensionInstalled) {
+      console.log('Extension is installed, sending CREATE_AGENT_RUN_WINDOW message for run:', runMessage.run_id);
+      
+      // Send message to extension to create window
+      window.postMessage({
+        type: 'CREATE_AGENT_RUN_WINDOW',
+        runId: runMessage.run_id,
+        chatId: conversationId,
+      }, '*');
+    }
+  }, [isExtensionInstalled, conversationId]);
+
   // Set up real-time listener for run_messages
   useEffect(() => {
     if (!conversationId) return;
@@ -171,6 +185,7 @@ export const ChatInterface = forwardRef(({
           // Check specifically for spawn_window messages
           if (newMessage.type === 'spawn_window') {
             console.log(`Received spawn_window message. Extension installed: ${isExtensionInstalled}`);
+            processSpawnWindowMessage(newMessage);
           }
           
           setRunMessages(prev => [...prev, newMessage]);
@@ -184,7 +199,7 @@ export const ChatInterface = forwardRef(({
       console.log('Removing run_messages channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [conversationId]);
+  }, [conversationId, processSpawnWindowMessage]);
 
   const updateMessageContent = useCallback((messageId: string, newContent: string, functionName: string | null = null, isStreaming: boolean = false) => {
     setMessages(prevMessages => 

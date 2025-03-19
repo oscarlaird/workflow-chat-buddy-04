@@ -226,6 +226,7 @@ export const MessageList = ({
             </div>
           )}
           
+          {/* Screen Recording indicator */}
           {hasScreenRecording(message) && (
             <div className="flex justify-center my-4">
               <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
