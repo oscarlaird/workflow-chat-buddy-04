@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Run, RunMessage as RunMessageType } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -159,26 +158,17 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
   };
 
   const formatMessageContent = (message: RunMessageType) => {
-    if (!message.payload) return null;
+    if (!message.type) return null;
     
     switch (message.type) {
       case 'inputs':
-        return (
-          <div className="text-sm">
-            <p className="font-medium mb-1">Input Values:</p>
-            <div className="bg-muted/50 p-2 rounded-md">
-              <pre className="text-xs overflow-x-auto">
-                {JSON.stringify(message.payload, null, 2)}
-              </pre>
-            </div>
-          </div>
-        );
+        return <p className="text-sm">Input Values</p>;
       case 'spawn_window':
         return <p className="text-sm">Opening agent window...</p>;
       case 'download_extension':
         return <p className="text-sm">Extension download requested</p>;
       default:
-        return <p className="text-sm">{message.type}: {JSON.stringify(message.payload)}</p>;
+        return <p className="text-sm">{message.type}</p>;
     }
   };
 
