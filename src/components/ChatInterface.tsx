@@ -147,10 +147,7 @@ export const ChatInterface = forwardRef(({
         const launchMessage = {
           run_id: runMessage.run_id,
           type: 'launch_extension',
-          payload: {
-            chat_id: conversationId,
-            run_id: runMessage.run_id
-          },
+          payload: {},
           chat_id: conversationId,
           username: 'current_user'
         };
@@ -162,7 +159,7 @@ export const ChatInterface = forwardRef(({
           
         console.log('Sent launch_extension message, now sending CREATE_AGENT_RUN_WINDOW');
         
-        // Send message to extension to create window with same payload
+        // Send message to extension to create window - put chat_id and run_id in the event payload
         window.postMessage({
           type: 'CREATE_AGENT_RUN_WINDOW',
           runId: runMessage.run_id,
