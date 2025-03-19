@@ -127,10 +127,14 @@ export const MessageList = ({
   const shouldShowExtensionAlert = (runId: string) => {
     if (isExtensionInstalled) return false;
     
-    return runMessages.some(msg => 
+    const hasSpawnWindowMessage = runMessages.some(msg => 
       msg.run_id === runId && 
       msg.type === 'spawn_window'
     );
+    
+    console.log(`Run ${runId} has spawn_window message: ${hasSpawnWindowMessage}, extension installed: ${isExtensionInstalled}`);
+    
+    return hasSpawnWindowMessage;
   };
 
   if (messages.length === 0) {
