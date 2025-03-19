@@ -148,11 +148,11 @@ export const MessageList = ({
 
   return (
     <div className="space-y-6">
-      {messages.map((message, index) => (
-        <div key={message.id} className="space-y-4">
-          {/* Special Run Message - Fixed to properly display run bubbles */}
-          {message.run_id && (
-            <>
+      {messages.map((message, index) => {
+        // Check if this message is a run message first
+        if (message.run_id) {
+          return (
+            <div key={message.id} className="space-y-4">
               <RunMessage runId={message.run_id} />
               
               {/* Extension Alert for Runs */}
@@ -185,11 +185,13 @@ export const MessageList = ({
                   </div>
                 </div>
               )}
-            </>
-          )}
-          
-          {/* Regular Message */}
-          {!message.run_id && (
+            </div>
+          );
+        }
+        
+        // Regular message rendering
+        return (
+          <div key={message.id} className="space-y-4">
             <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.function_name ? (
                 <div className="max-w-[80%]">
@@ -225,19 +227,19 @@ export const MessageList = ({
                 </div>
               )}
             </div>
-          )}
-          
-          {/* Screen Recording indicator */}
-          {hasScreenRecording(message) && (
-            <div className="flex justify-center my-4">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
-                <Film className="w-4 h-4" />
-                <span>Screen recording, {screenRecordings[message.id]?.duration}</span>
+            
+            {/* Screen Recording indicator */}
+            {hasScreenRecording(message) && (
+              <div className="flex justify-center my-4">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-md text-sm font-medium">
+                  <Film className="w-4 h-4" />
+                  <span>Screen recording, {screenRecordings[message.id]?.duration}</span>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      ))}
+            )}
+          </div>
+        );
+      })}
       
       <div ref={messagesEndRef} />
     </div>
