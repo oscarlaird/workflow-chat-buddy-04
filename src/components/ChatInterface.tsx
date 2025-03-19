@@ -1,3 +1,4 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -159,11 +160,13 @@ export const ChatInterface = forwardRef(({
           
         console.log('Sent launch_extension message, now sending CREATE_AGENT_RUN_WINDOW');
         
-        // Send message to extension to create window - put chat_id and run_id in the event payload
+        // Send message to extension to create window with chat_id and run_id inside the payload
         window.postMessage({
           type: 'CREATE_AGENT_RUN_WINDOW',
-          runId: runMessage.run_id,
-          chatId: conversationId,
+          payload: {
+            runId: runMessage.run_id,
+            chatId: conversationId,
+          }
         }, '*');
       } catch (err) {
         console.error('Error processing spawn_window message:', err);
