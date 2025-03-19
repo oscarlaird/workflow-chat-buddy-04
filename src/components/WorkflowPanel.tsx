@@ -66,9 +66,25 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
         return;
       }
 
+      // Create a message with the run_id for the chat interface
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chatId,
+          role: 'system',
+          content: 'Running workflow',
+          username: 'current_user',
+          run_id: runId
+        });
+
+      if (messageError) {
+        console.error('Error creating run message:', messageError);
+        // Continue anyway as this is not a critical error
+      }
+
       // Store input values as a run message
       const inputPayload = { values: inputValues };
-      const { data: messageData, error: messageError } = await supabase
+      const { data: messageData, error: runMessageError } = await supabase
         .from('run_messages')
         .insert({
           run_id: runId,
@@ -81,8 +97,8 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
         })
         .select();
         
-      if (messageError) {
-        console.error('Error storing input values:', messageError);
+      if (runMessageError) {
+        console.error('Error storing input values:', runMessageError);
         toast.error('Failed to store workflow inputs');
       }
       
@@ -91,6 +107,13 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
       if (onRunWorkflow) {
         onRunWorkflow();
       }
+      
+      // Broadcast a workflow run created event to trigger the ChatInterface to set the current run ID
+      window.postMessage({
+        type: "WORKFLOW_RUN_CREATED", 
+        runId: runId,
+        chatId: chatId
+      }, '*');
       
     } catch (error) {
       console.error('Error running workflow:', error);
