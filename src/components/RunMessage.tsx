@@ -1,10 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { Run, RunMessage as RunMessageType } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import RunBubble from "./RunBubble";
+import RunMessageItem from "./RunMessageItem";
 
 interface RunMessageProps {
   runId: string;
@@ -13,7 +14,6 @@ interface RunMessageProps {
 export const RunMessage = ({ runId }: RunMessageProps) => {
   const [run, setRun] = useState<Run | null>(null);
   const [runMessages, setRunMessages] = useState<RunMessageType[]>([]);
-  const [isStopping, setIsStopping] = useState(false);
 
   // Fetch run and run messages data
   useEffect(() => {
@@ -118,50 +118,6 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
     };
   }, [runId]);
 
-  const handleStopRun = async () => {
-    if (!runId || isStopping || !run?.in_progress) return;
-    
-    setIsStopping(true);
-    
-    try {
-      const { error } = await supabase
-        .from('runs')
-        .update({ 
-          in_progress: false,
-          status: 'Stopped by user'
-        })
-        .eq('id', runId);
-        
-      if (error) {
-        console.error('Error stopping run:', error);
-        toast({
-          title: "Error",
-          description: "Failed to stop run: " + error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Run stopped successfully"
-        });
-      }
-    } catch (err) {
-      console.error('Exception when stopping run:', err);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while stopping the run",
-        variant: "destructive"
-      });
-    } finally {
-      setIsStopping(false);
-    }
-  };
-
-  const formatMessageContent = (message: RunMessageType) => {
-    // Just return the message type directly
-    return <p className="text-sm font-medium">{message.type}</p>;
-  };
-
   if (!run) {
     return (
       <div className="flex justify-center my-4">
@@ -177,59 +133,20 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
 
   return (
     <div className="flex justify-center my-4">
-      <Card className="w-[80%] max-w-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20">
-        <CardHeader className="py-3 flex flex-row items-center justify-between space-y-0">
-          <div className="flex items-center">
-            <div 
-              className={`h-2.5 w-2.5 rounded-full mr-2 ${
-                run.in_progress 
-                  ? "bg-amber-500 animate-pulse" 
-                  : "bg-green-500"
-              }`} 
-            />
-            <span className="font-medium text-sm">
-              {run.in_progress ? "Running" : "Completed"}
-            </span>
+      <div className="w-[80%] max-w-lg">
+        <RunBubble run={run} />
+        
+        {runMessages.length > 0 && (
+          <div className="mt-4 space-y-2 bg-background p-4 rounded-lg border">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Messages:</p>
+            <div className="space-y-2">
+              {runMessages.map((message) => (
+                <RunMessageItem key={message.id} message={message} />
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              Run #{run.id.slice(0, 8)}
-            </span>
-            {run.in_progress && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6" 
-                onClick={handleStopRun}
-                disabled={isStopping}
-              >
-                {isStopping ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="py-3">
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Status: {run.status}</p>
-            
-            {runMessages.length > 0 && (
-              <div className="space-y-2 mt-2">
-                <p className="text-xs font-medium text-muted-foreground">Messages:</p>
-                <div className="space-y-2">
-                  {runMessages.map((message) => (
-                    <div 
-                      key={message.id} 
-                      className="bg-background text-card-foreground p-2 rounded-md border text-sm"
-                    >
-                      {formatMessageContent(message)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </div>
   );
 };
