@@ -2,7 +2,7 @@
 import { RunMessage as RunMessageType } from "@/types";
 import { 
   Brain, 
-  Robot, 
+  Bot, // Changed from Robot to Bot
   Eye, 
   FileText, 
   ExternalLink, 
@@ -22,7 +22,7 @@ const getMessageIcon = (type: string) => {
     case 'rationale':
       return <Brain className="h-4 w-4 flex-shrink-0" />;
     case 'command':
-      return <Robot className="h-4 w-4 flex-shrink-0" />;
+      return <Bot className="h-4 w-4 flex-shrink-0" />; // Changed from Robot to Bot
     case 'result':
       return <Eye className="h-4 w-4 flex-shrink-0" />;
     case 'inputs':
