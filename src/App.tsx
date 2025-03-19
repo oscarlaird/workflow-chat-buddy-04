@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import ChatInterface from "./components/ChatInterface";
 import { Index } from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -65,31 +66,33 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <Index
-              selectedConversationId={selectedConversationId || ""}
-              onSelectConversation={setSelectedConversationId}
-              onNewConversation={() => setSelectedConversationId(null)}
-              chats={chats}
-              exampleChats={exampleChats}
-              systemExampleChats={systemExampleChats}
-              isLoading={isLoading}
-              onCreateChat={handleCreateChat}
-              onDeleteChat={handleDeleteChat}
-              onDuplicateChat={handleDuplicateChat}
-              onRenameChat={handleRenameChat}
-            />
-          }
-        />
-        <Route path="/chat/:id" element={<ConversationPage />} />
-        <Route path="/workflow/:id" element={<WorkflowPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Index
+                selectedConversationId={selectedConversationId || ""}
+                onSelectConversation={setSelectedConversationId}
+                onNewConversation={() => setSelectedConversationId(null)}
+                chats={chats}
+                exampleChats={exampleChats}
+                systemExampleChats={systemExampleChats}
+                isLoading={isLoading}
+                onCreateChat={handleCreateChat}
+                onDeleteChat={handleDeleteChat}
+                onDuplicateChat={handleDuplicateChat}
+                onRenameChat={handleRenameChat}
+              />
+            }
+          />
+          <Route path="/chat/:id" element={<ConversationPage />} />
+          <Route path="/workflow/:id" element={<WorkflowPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
