@@ -158,18 +158,8 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
   };
 
   const formatMessageContent = (message: RunMessageType) => {
-    if (!message.type) return null;
-    
-    switch (message.type) {
-      case 'inputs':
-        return <p className="text-sm">Input Values</p>;
-      case 'spawn_window':
-        return <p className="text-sm">Opening agent window...</p>;
-      case 'download_extension':
-        return <p className="text-sm">Extension download requested</p>;
-      default:
-        return <p className="text-sm">{message.type}</p>;
-    }
+    // Just return the message type directly
+    return <p className="text-sm font-medium">{message.type}</p>;
   };
 
   if (!run) {
