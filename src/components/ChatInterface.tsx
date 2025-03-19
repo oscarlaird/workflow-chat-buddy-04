@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -41,7 +40,6 @@ export const ChatInterface = forwardRef(({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
 
-  // Reset state when conversation changes
   useEffect(() => {
     setRunMessages([]);
     
@@ -140,20 +138,42 @@ export const ChatInterface = forwardRef(({
   }, [conversationId]);
 
   // Process spawn_window messages when extension is installed
-  const processSpawnWindowMessage = useCallback((runMessage: RunMessage) => {
+  const processSpawnWindowMessage = useCallback(async (runMessage: RunMessage) => {
     if (runMessage.type === 'spawn_window' && isExtensionInstalled) {
-      console.log('Extension is installed, sending CREATE_AGENT_RUN_WINDOW message for run:', runMessage.run_id);
+      console.log('Extension is installed, processing spawn_window for run:', runMessage.run_id);
       
-      // Send message to extension to create window
-      window.postMessage({
-        type: 'CREATE_AGENT_RUN_WINDOW',
-        runId: runMessage.run_id,
-        chatId: conversationId,
-      }, '*');
+      try {
+        // First, create and send a launch_extension run_message
+        const launchMessage = {
+          run_id: runMessage.run_id,
+          type: 'launch_extension',
+          payload: {
+            chat_id: conversationId,
+            run_id: runMessage.run_id
+          },
+          chat_id: conversationId,
+          username: 'current_user'
+        };
+        
+        // Insert the launch_extension message to the database
+        await supabase
+          .from('run_messages')
+          .insert(launchMessage);
+          
+        console.log('Sent launch_extension message, now sending CREATE_AGENT_RUN_WINDOW');
+        
+        // Send message to extension to create window with same payload
+        window.postMessage({
+          type: 'CREATE_AGENT_RUN_WINDOW',
+          runId: runMessage.run_id,
+          chatId: conversationId,
+        }, '*');
+      } catch (err) {
+        console.error('Error processing spawn_window message:', err);
+      }
     }
   }, [isExtensionInstalled, conversationId]);
 
-  // Set up real-time listener for run_messages
   useEffect(() => {
     if (!conversationId) return;
     
