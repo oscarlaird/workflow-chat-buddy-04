@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -76,7 +77,7 @@ export interface InputField {
         'currency' | 'percentage' | 'zip_code';
 }
 
-// Updated Run interface with both dashboard_id and chat_id
+// Updated Run interface with both dashboard_id, chat_id and username
 export interface Run {
   id: string;
   dashboard_id: string;
@@ -85,6 +86,7 @@ export interface Run {
   in_progress: boolean;
   created_at: string;
   updated_at: string;
+  username?: string;
 }
 
 export interface RunMessage {
@@ -93,4 +95,6 @@ export interface RunMessage {
   type: string;
   payload: any;
   created_at: string;
+  chat_id?: string;
+  username?: string;
 }

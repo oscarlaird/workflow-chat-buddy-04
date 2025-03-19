@@ -44,6 +44,7 @@ export type Database = {
       }
       keyframes: {
         Row: {
+          chat_id: string | null
           clicked_element: string | null
           created_at: string
           html_snapshot: string | null
@@ -55,8 +56,10 @@ export type Database = {
           timestamp: string | null
           typing_events: string | null
           url: string | null
+          username: string | null
         }
         Insert: {
+          chat_id?: string | null
           clicked_element?: string | null
           created_at?: string
           html_snapshot?: string | null
@@ -68,8 +71,10 @@ export type Database = {
           timestamp?: string | null
           typing_events?: string | null
           url?: string | null
+          username?: string | null
         }
         Update: {
+          chat_id?: string | null
           clicked_element?: string | null
           created_at?: string
           html_snapshot?: string | null
@@ -81,6 +86,7 @@ export type Database = {
           timestamp?: string | null
           typing_events?: string | null
           url?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -150,25 +156,31 @@ export type Database = {
       }
       run_messages: {
         Row: {
+          chat_id: string | null
           created_at: string
           id: string
           payload: Json | null
           run_id: string
           type: string
+          username: string | null
         }
         Insert: {
+          chat_id?: string | null
           created_at?: string
           id?: string
           payload?: Json | null
           run_id: string
           type: string
+          username?: string | null
         }
         Update: {
+          chat_id?: string | null
           created_at?: string
           id?: string
           payload?: Json | null
           run_id?: string
           type?: string
+          username?: string | null
         }
         Relationships: [
           {
@@ -189,6 +201,7 @@ export type Database = {
           in_progress: boolean
           status: string
           updated_at: string
+          username: string | null
         }
         Insert: {
           chat_id?: string
@@ -198,6 +211,7 @@ export type Database = {
           in_progress?: boolean
           status?: string
           updated_at?: string
+          username?: string | null
         }
         Update: {
           chat_id?: string
@@ -207,6 +221,7 @@ export type Database = {
           in_progress?: boolean
           status?: string
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
