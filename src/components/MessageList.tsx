@@ -175,26 +175,13 @@ export const MessageList = ({
                     <p className="text-amber-800 dark:text-amber-300 mb-2">
                       To use this workflow, you need to install the Macro Agents extension first.
                     </p>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => window.open('https://chrome.google.com/webstore/category/extensions', '_blank')}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
-                      >
-                        <Download className="w-5 h-5" />
-                        Download Extension
-                      </Button>
-                      
-                      {onStopRun && (
-                        <Button 
-                          onClick={() => onStopRun(message.run_id || "")}
-                          variant="outline"
-                          className="flex items-center gap-2 text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/50"
-                        >
-                          <Square className="w-5 h-5" />
-                          Stop Run
-                        </Button>
-                      )}
-                    </div>
+                    <Button 
+                      onClick={() => window.open('https://chrome.google.com/webstore/category/extensions', '_blank')}
+                      className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
+                    >
+                      <Download className="w-5 h-5" />
+                      Download Extension
+                    </Button>
                   </div>
                 </div>
               )}

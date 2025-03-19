@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Run, RunMessage as RunMessageType } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2, Square, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import RunMessageItem from "./RunMessageItem";
 import { Badge } from "@/components/ui/badge";
+import RunMessageItem from "./RunMessageItem";
 
 interface RunBubbleProps {
   run: Run;
@@ -16,52 +15,13 @@ interface RunBubbleProps {
 }
 
 export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps) => {
-  const [isStopping, setIsStopping] = useState(false);
   const [isExpanded, setIsExpanded] = useState(isLatestRun);
+  const location = useLocation();
 
   useEffect(() => {
     // When the isLatestRun prop changes, update the expanded state
     setIsExpanded(isLatestRun);
   }, [isLatestRun]);
-
-  const handleStopRun = async () => {
-    if (!run.id || isStopping || !run.in_progress) return;
-    
-    setIsStopping(true);
-    
-    try {
-      const { error } = await supabase
-        .from('runs')
-        .update({ 
-          in_progress: false,
-          status: 'Stopped by user'
-        })
-        .eq('id', run.id);
-        
-      if (error) {
-        console.error('Error stopping run:', error);
-        toast({
-          title: "Error",
-          description: "Failed to stop run: " + error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Run stopped successfully"
-        });
-      }
-    } catch (err) {
-      console.error('Exception when stopping run:', err);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred while stopping the run",
-        variant: "destructive"
-      });
-    } finally {
-      setIsStopping(false);
-    }
-  };
 
   const handleJumpToAgentWindow = () => {
     window.postMessage({
@@ -72,6 +32,9 @@ export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps
       }
     }, '*');
   };
+
+  // Check if we're on the workflow route
+  const isWorkflowRoute = location.pathname.startsWith('/workflow');
 
   return (
     <Card className="w-full max-w-lg border-blue-200 dark:border-blue-800 bg-gradient-to-b from-blue-50/80 to-blue-50/30 dark:from-blue-950/30 dark:to-blue-950/10 backdrop-blur-sm">
@@ -93,32 +56,16 @@ export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {run.in_progress && (
-              <>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1 text-blue-500 hover:text-blue-600 border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  onClick={handleJumpToAgentWindow}
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span>Jump to agent</span>
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1 text-red-500 dark:text-red-400 hover:text-red-600 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  onClick={handleStopRun}
-                  disabled={isStopping}
-                >
-                  {isStopping ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Square className="h-3.5 w-3.5" />
-                  )}
-                  <span>Stop</span>
-                </Button>
-              </>
+            {run.in_progress && !isWorkflowRoute && (
+              <Button 
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1 text-blue-500 hover:text-blue-600 border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                onClick={handleJumpToAgentWindow}
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Jump to agent</span>
+              </Button>
             )}
             <Button
               variant="ghost"

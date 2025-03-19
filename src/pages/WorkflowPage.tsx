@@ -83,11 +83,11 @@ const WorkflowPage = () => {
           {chatId ? (
             <>
               {latestRunId ? (
-                <div className="px-4 pt-4">
+                <div className="pt-4">
                   <RunMessage runId={latestRunId} />
                 </div>
               ) : (
-                <div className="flex justify-center py-4 px-4">
+                <div className="flex justify-center py-4">
                   <div className="w-full max-w-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-300">
                     <p className="text-sm flex items-center">
                       <Info className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -97,11 +97,11 @@ const WorkflowPage = () => {
                 </div>
               )}
               
-              <div className="mt-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+              <div className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
                 Workflow Steps
               </div>
               
-              <div className="flex-grow overflow-auto p-4 pt-2">
+              <div className="flex-grow overflow-auto pt-2">
                 <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                   <WorkflowPanel 
                     chatId={chatId}
