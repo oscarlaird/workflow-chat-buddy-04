@@ -3,7 +3,7 @@ import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
 import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message, RunMessage } from "@/types";
+import { Message, RunMessage, RunMessageType, RunMessageSenderType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "@/components/ui/use-toast";
 
@@ -139,18 +139,18 @@ export const ChatInterface = forwardRef(({
 
   // Process spawn_window messages when extension is installed
   const processSpawnWindowMessage = useCallback(async (runMessage: RunMessage) => {
-    if (runMessage.type === 'spawn_window' && isExtensionInstalled) {
+    if (runMessage.type === RunMessageType.SPAWN_WINDOW && isExtensionInstalled) {
       console.log('Extension is installed, processing spawn_window for run:', runMessage.run_id);
       
       try {
         // First, create and send a launch_extension run_message
         const launchMessage = {
           run_id: runMessage.run_id,
-          type: 'launch_extension',
+          type: RunMessageType.LAUNCH_EXTENSION,
           payload: {},
           chat_id: conversationId,
           username: 'current_user',
-          sender_type: 'dashboard',
+          sender_type: RunMessageSenderType.DASHBOARD,
           display_text: 'Launching extension...'
         };
         

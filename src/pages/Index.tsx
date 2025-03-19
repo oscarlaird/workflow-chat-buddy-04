@@ -96,8 +96,9 @@ export const Index: React.FC<IndexProps> = ({
           {selectedConversationId && (
             <div className="w-1/3 min-w-[300px] max-w-md border-l border-gray-200 dark:border-gray-800">
               <WorkflowPanel 
-                onRunWorkflow={handleRunWorkflow} 
                 chatId={selectedConversationId}
+                onRunWorkflow={handleRunWorkflow}
+                showRunButton={true}
               />
             </div>
           )}

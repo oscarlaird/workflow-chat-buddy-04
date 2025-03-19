@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Table, List, Upload, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,8 @@ interface WorkflowInputsProps {
   showRunButton?: boolean;
   onRunWorkflow?: () => void;
   isRunning?: boolean;
+  onSubmit: (inputValues: InputValues) => void;
+  disabled: boolean;
 }
 
 export const WorkflowInputs = ({ 

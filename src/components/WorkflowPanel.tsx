@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -10,12 +11,14 @@ import { toast } from "sonner";
 
 interface WorkflowPanelProps {
   chatId: string;
+  onRunWorkflow?: () => void;
+  showRunButton?: boolean;
 }
 
-const WorkflowPanel = ({ chatId }: WorkflowPanelProps) => {
+const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [inputSchema, setInputSchema] = useState<any[]>([]);
-  const { steps, isLoading, error, refreshWorkflowSteps } = useWorkflowSteps(chatId);
+  const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
@@ -84,11 +87,15 @@ const WorkflowPanel = ({ chatId }: WorkflowPanelProps) => {
       }
       
       // Simulate running each step of the workflow
-      for (let i = 0; i < steps.length; i++) {
+      for (let i = 0; i < workflowSteps.length; i++) {
         setCurrentStepIndex(i);
         
         // Simulate a delay between steps
         await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      if (onRunWorkflow) {
+        onRunWorkflow();
       }
       
     } catch (error) {
@@ -107,26 +114,27 @@ const WorkflowPanel = ({ chatId }: WorkflowPanelProps) => {
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">Error: {error.message}</div>;
+    return <div className="text-red-500 p-4">Error: {error}</div>;
   }
 
   return (
     <div className="flex flex-col h-full">
       {inputSchema && inputSchema.length > 0 && (
         <WorkflowInputs 
-          inputSchema={inputSchema} 
+          chatId={chatId}
           onSubmit={handleRunWorkflow} 
           disabled={isRunning} 
+          showRunButton={showRunButton}
+          onRunWorkflow={onRunWorkflow}
         />
       )}
 
       <div className="flex-grow overflow-y-auto p-4">
-        {steps && steps.map((step, index) => (
+        {workflowSteps && workflowSteps.map((step, index) => (
           <WorkflowStep
             key={step.id}
             step={step}
-            isCurrent={index === currentStepIndex}
-            isCompleted={index < currentStepIndex}
+            status={index === currentStepIndex ? "active" : index < currentStepIndex ? "complete" : "waiting"}
           />
         ))}
       </div>

@@ -55,9 +55,9 @@ const WorkflowPage = () => {
         <div className="h-full glass-panel">
           {chatId ? (
             <WorkflowPanel 
+              chatId={chatId}
               onRunWorkflow={handleRunWorkflow} 
               showRunButton={false} 
-              chatId={chatId}
             />
           ) : (
             <div className="flex flex-col h-full items-center justify-center p-6 text-center">
