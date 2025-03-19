@@ -27,25 +27,25 @@ interface RunMessageItemProps {
 const getMessageIcon = (type: MessageType) => {
   switch (type) {
     case MessageType.RATIONALE:
-      return <Brain className="h-4 w-4 flex-shrink-0" />;
+      return <Brain className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.COMMAND:
-      return <Bot className="h-4 w-4 flex-shrink-0" />;
+      return <Bot className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.RESULT:
-      return <Eye className="h-4 w-4 flex-shrink-0" />;
+      return <Eye className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.INPUTS:
-      return <FileText className="h-4 w-4 flex-shrink-0" />;
+      return <FileText className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.SPAWN_WINDOW:
-      return <ExternalLink className="h-4 w-4 flex-shrink-0" />;
+      return <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.LAUNCH_EXTENSION:
-      return <Zap className="h-4 w-4 flex-shrink-0" />;
+      return <Zap className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.EXTENSION_LOADED:
-      return <PackageCheck className="h-4 w-4 flex-shrink-0" />;
+      return <PackageCheck className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.CLOSE_EXTENSION:
-      return <XSquare className="h-4 w-4 flex-shrink-0" />;
+      return <XSquare className="h-3.5 w-3.5 flex-shrink-0" />;
     case MessageType.ABORT:
-      return <AlertTriangle className="h-4 w-4 flex-shrink-0" />;
+      return <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />;
     default:
-      return <FileText className="h-4 w-4 flex-shrink-0" />;
+      return <FileText className="h-3.5 w-3.5 flex-shrink-0" />;
   }
 };
 
@@ -71,33 +71,36 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
   return (
     <>
       <div 
-        className="py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+        className="py-1 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
         onClick={() => hasPayload && setIsOpen(!isOpen)}
       >
-        <div className="flex items-start gap-2">
+        <div className="flex items-center gap-1.5">
           <div className="mt-0.5">
             {getMessageIcon(message.type)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
                   {message.type}
                 </span>
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${getSenderBadgeColor(message.sender_type)}`}>
+                <span className={`text-xs px-1 py-0.5 rounded-full ${getSenderBadgeColor(message.sender_type)}`}>
                   {message.sender_type}
                 </span>
+                {hasPayload && (
+                  <span className="text-xs text-blue-500">
+                    {isOpen ? (
+                      <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3" />
+                    )}
+                  </span>
+                )}
               </div>
-              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
+              <span className="text-xs text-gray-400 dark:text-gray-500">
                 {formattedTime}
               </span>
             </div>
-            
-            {message.display_text && (
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 break-words line-clamp-2">
-                {message.display_text}
-              </p>
-            )}
             
             {hasPayload && (
               <Collapsible 
@@ -105,7 +108,7 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
                 onOpenChange={setIsOpen}
                 className="mt-1"
               >
-                <CollapsibleContent className="mt-2 overflow-x-auto">
+                <CollapsibleContent className="mt-1 overflow-x-auto">
                   <CodeBlock 
                     code={JSON.stringify(message.payload, null, 2)} 
                     language="json" 
@@ -113,21 +116,10 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
                 </CollapsibleContent>
               </Collapsible>
             )}
-            
-            {hasPayload && (
-              <div className="flex items-center text-xs text-blue-500 mt-1">
-                {isOpen ? (
-                  <ChevronDown className="h-3 w-3 mr-1" />
-                ) : (
-                  <ChevronRight className="h-3 w-3 mr-1" />
-                )}
-                {isOpen ? "Hide" : "Show"} Payload
-              </div>
-            )}
           </div>
         </div>
       </div>
-      {!isLast && <Separator />}
+      {!isLast && <Separator className="my-0.5" />}
     </>
   );
 };
