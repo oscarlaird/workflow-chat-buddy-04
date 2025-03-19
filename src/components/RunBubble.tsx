@@ -1,17 +1,19 @@
 
 import { useState } from "react";
-import { Run } from "@/types";
+import { Run, RunMessage as RunMessageType } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import RunMessageItem from "./RunMessageItem";
 
 interface RunBubbleProps {
   run: Run;
+  messages: RunMessageType[];
 }
 
-export const RunBubble = ({ run }: RunBubbleProps) => {
+export const RunBubble = ({ run, messages }: RunBubbleProps) => {
   const [isStopping, setIsStopping] = useState(false);
 
   const handleStopRun = async () => {
@@ -88,6 +90,17 @@ export const RunBubble = ({ run }: RunBubbleProps) => {
       <CardContent className="py-3">
         <div className="space-y-2">
           <p className="text-sm font-medium">Status: {run.status}</p>
+          
+          {messages.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Messages:</p>
+              <div className="space-y-2">
+                {messages.map((message) => (
+                  <RunMessageItem key={message.id} message={message} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

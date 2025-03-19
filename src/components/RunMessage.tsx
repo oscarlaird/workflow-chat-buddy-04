@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import RunBubble from "./RunBubble";
-import RunMessageItem from "./RunMessageItem";
 
 interface RunMessageProps {
   runId: string;
@@ -133,20 +132,7 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
 
   return (
     <div className="flex justify-center my-4">
-      <div className="w-[80%] max-w-lg">
-        <RunBubble run={run} />
-        
-        {runMessages.length > 0 && (
-          <div className="mt-4 space-y-2 bg-background p-4 rounded-lg border">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Messages:</p>
-            <div className="space-y-2">
-              {runMessages.map((message) => (
-                <RunMessageItem key={message.id} message={message} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <RunBubble run={run} messages={runMessages} />
     </div>
   );
 };
