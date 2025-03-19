@@ -1,3 +1,4 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -188,7 +189,15 @@ export const ChatInterface = forwardRef(({
             processSpawnWindowMessage(newMessage);
           }
           
-          setRunMessages(prev => [...prev, newMessage]);
+          // Check if this message ID already exists to prevent duplicates
+          setRunMessages(prev => {
+            // If message with this ID already exists, don't add it again
+            if (prev.some(msg => msg.id === newMessage.id)) {
+              console.log(`Skipping duplicate run message with ID: ${newMessage.id}`);
+              return prev;
+            }
+            return [...prev, newMessage];
+          });
         } else {
           console.error('Received incomplete run message:', payload.new);
         }

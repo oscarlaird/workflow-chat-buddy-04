@@ -106,7 +106,16 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
         console.log('Run message received:', payload);
         if (payload.new) {
           const newMessage = payload.new as RunMessageType;
-          setRunMessages(prev => [...prev, newMessage]);
+          
+          // Check if this message ID already exists to prevent duplicates
+          setRunMessages(prev => {
+            // If message with this ID already exists, don't add it again
+            if (prev.some(msg => msg.id === newMessage.id)) {
+              console.log(`Skipping duplicate run message with ID: ${newMessage.id}`);
+              return prev;
+            }
+            return [...prev, newMessage];
+          });
         }
       })
       .subscribe();
