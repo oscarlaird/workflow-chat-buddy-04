@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, Square, Trash2, ExternalLink } from 'lucide-react';
+import { Loader2, Trash2, ExternalLink } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Run } from '@/types';
@@ -27,31 +27,6 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
       return 'bg-green-500 text-white';
     }
     return 'bg-gray-500 text-white';
-  };
-
-  const handleStopRun = async () => {
-    try {
-      const { error } = await supabase
-        .from('runs')
-        .update({ 
-          in_progress: false,
-          status: 'Stopped by user'
-        })
-        .eq('id', run.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success("Run stopped", {
-        description: "The operation was successfully stopped."
-      });
-    } catch (error) {
-      console.error('Error stopping run:', error);
-      toast.error("Failed to stop run", {
-        description: "An error occurred while trying to stop the operation."
-      });
-    }
   };
 
   const handleDeleteRun = async () => {
@@ -112,17 +87,7 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
               </Button>
             )}
             
-            {run.in_progress ? (
-              <Button 
-                variant="outline"
-                size="sm" 
-                onClick={handleStopRun}
-                className="flex items-center gap-1 text-red-500 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                <Square className="h-4 w-4" />
-                <span>Stop</span>
-              </Button>
-            ) : (
+            {!run.in_progress && (
               <Button 
                 variant="outline" 
                 size="sm" 
