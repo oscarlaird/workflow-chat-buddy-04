@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, XCircle, Trash2 } from 'lucide-react';
+import { Loader2, Square, Trash2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Run } from '@/types';
@@ -104,7 +104,7 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
               onClick={handleStopRun}
               className="flex items-center gap-1 text-destructive hover:bg-destructive/10"
             >
-              <XCircle className="h-4 w-4" />
+              <Square className="h-4 w-4" />
               <span>Stop</span>
             </Button>
           ) : (

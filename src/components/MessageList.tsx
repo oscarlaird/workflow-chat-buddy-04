@@ -1,6 +1,6 @@
 
 import { useRef, useEffect } from "react";
-import { Film, Download, Loader2, PenLine, Trash2, Plus } from "lucide-react";
+import { Film, Download, Loader2, PenLine, Trash2, Plus, Square } from "lucide-react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import { Button } from "@/components/ui/button";
@@ -173,8 +173,9 @@ export const MessageList = ({
                         <Button 
                           onClick={() => onStopRun(message.run_id || "")}
                           variant="outline"
-                          className="text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/50"
+                          className="flex items-center gap-2 text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/50"
                         >
+                          <Square className="w-5 h-5" />
                           Stop Run
                         </Button>
                       )}

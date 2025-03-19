@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Run, RunMessage as RunMessageType } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,7 +82,7 @@ export const RunBubble = ({ run, messages }: RunBubbleProps) => {
               onClick={handleStopRun}
               disabled={isStopping}
             >
-              {isStopping ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+              {isStopping ? <Loader2 className="h-3 w-3 animate-spin" /> : <Square className="h-3 w-3" />}
             </Button>
           )}
         </div>
