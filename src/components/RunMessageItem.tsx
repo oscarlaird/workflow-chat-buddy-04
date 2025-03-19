@@ -16,9 +16,11 @@ import {
 } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
 
 interface RunMessageItemProps {
   message: RunMessageType;
+  isLast?: boolean;
 }
 
 // Helper function to get the appropriate icon based on message type
@@ -61,63 +63,72 @@ const getSenderBadgeColor = (sender: RunMessageSenderType) => {
   }
 };
 
-export const RunMessageItem = ({ message }: RunMessageItemProps) => {
+export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps) => {
   const hasPayload = message.payload && typeof message.payload === 'object' && Object.keys(message.payload).length > 0;
   const formattedTime = new Date(message.created_at).toLocaleTimeString();
   const [isOpen, setIsOpen] = useState(false);
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2 transition-all hover:shadow">
-      <div className="flex items-start gap-2">
-        <div className="mt-0.5">
-          {getMessageIcon(message.type)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-1.5">
-              <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
-                {message.type}
-              </span>
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${getSenderBadgeColor(message.sender_type)}`}>
-                {message.sender_type}
+    <>
+      <div 
+        className="py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+        onClick={() => hasPayload && setIsOpen(!isOpen)}
+      >
+        <div className="flex items-start gap-2">
+          <div className="mt-0.5">
+            {getMessageIcon(message.type)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                  {message.type}
+                </span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${getSenderBadgeColor(message.sender_type)}`}>
+                  {message.sender_type}
+                </span>
+              </div>
+              <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
+                {formattedTime}
               </span>
             </div>
-            <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
-              {formattedTime}
-            </span>
-          </div>
-          
-          {message.display_text && (
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 break-words line-clamp-3">
-              {message.display_text}
-            </p>
-          )}
-          
-          {hasPayload && (
-            <Collapsible 
-              open={isOpen}
-              onOpenChange={setIsOpen}
-              className="mt-1"
-            >
-              <CollapsibleTrigger className="flex items-center text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+            
+            {message.display_text && (
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 break-words line-clamp-2">
+                {message.display_text}
+              </p>
+            )}
+            
+            {hasPayload && (
+              <Collapsible 
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                className="mt-1"
+              >
+                <CollapsibleContent className="mt-2 overflow-x-auto">
+                  <CodeBlock 
+                    code={JSON.stringify(message.payload, null, 2)} 
+                    language="json" 
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+            
+            {hasPayload && (
+              <div className="flex items-center text-xs text-blue-500 mt-1">
                 {isOpen ? (
                   <ChevronDown className="h-3 w-3 mr-1" />
                 ) : (
                   <ChevronRight className="h-3 w-3 mr-1" />
                 )}
                 {isOpen ? "Hide" : "Show"} Payload
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 overflow-x-auto">
-                <CodeBlock 
-                  code={JSON.stringify(message.payload, null, 2)} 
-                  language="json" 
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      {!isLast && <Separator />}
+    </>
   );
 };
 

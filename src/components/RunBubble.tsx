@@ -92,14 +92,18 @@ export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps
       {isExpanded && (
         <CardContent className="pt-0 pb-3">
           {messages.length > 0 && (
-            <div className="space-y-2 mt-3">
-              <div className="flex items-center justify-between">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-medium text-muted-foreground">Messages</p>
                 <span className="text-xs text-muted-foreground">{messages.length}</span>
               </div>
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                {messages.map((message) => (
-                  <RunMessageItem key={message.id} message={message} />
+              <div className="max-h-[300px] overflow-y-auto pr-1">
+                {messages.map((message, index) => (
+                  <RunMessageItem 
+                    key={message.id} 
+                    message={message} 
+                    isLast={index === messages.length - 1} 
+                  />
                 ))}
               </div>
             </div>
