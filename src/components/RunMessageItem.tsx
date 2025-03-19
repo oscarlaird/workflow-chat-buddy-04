@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { RunMessage as RunMessageType, RunMessageType as MessageType, RunMessageSenderType } from "@/types";
 import { 
   Brain, 
@@ -10,9 +10,12 @@ import {
   Zap, 
   PackageCheck, 
   XSquare, 
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import CodeBlock from "./CodeBlock";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface RunMessageItemProps {
   message: RunMessageType;
@@ -61,6 +64,7 @@ const getSenderBadgeColor = (sender: RunMessageSenderType) => {
 export const RunMessageItem = ({ message }: RunMessageItemProps) => {
   const hasPayload = message.payload && typeof message.payload === 'object' && Object.keys(message.payload).length > 0;
   const formattedTime = new Date(message.created_at).toLocaleTimeString();
+  const [isOpen, setIsOpen] = useState(false);
   
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2 transition-all hover:shadow">
@@ -90,12 +94,26 @@ export const RunMessageItem = ({ message }: RunMessageItemProps) => {
           )}
           
           {hasPayload && (
-            <div className="mt-1 overflow-x-auto">
-              <CodeBlock 
-                code={JSON.stringify(message.payload, null, 2)} 
-                language="json" 
-              />
-            </div>
+            <Collapsible 
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              className="mt-1"
+            >
+              <CollapsibleTrigger className="flex items-center text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                {isOpen ? (
+                  <ChevronDown className="h-3 w-3 mr-1" />
+                ) : (
+                  <ChevronRight className="h-3 w-3 mr-1" />
+                )}
+                {isOpen ? "Hide" : "Show"} Payload
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-1 overflow-x-auto">
+                <CodeBlock 
+                  code={JSON.stringify(message.payload, null, 2)} 
+                  language="json" 
+                />
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </div>
       </div>
