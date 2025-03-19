@@ -79,20 +79,38 @@ const WorkflowPage = () => {
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-950">
       <div className="h-full p-4">
-        <div className="h-full glass-panel">
+        <div className="h-full glass-panel flex flex-col">
           {chatId ? (
-            <div className="flex flex-col h-full">
-              {latestRunId && (
-                <RunMessage runId={latestRunId} />
+            <>
+              {latestRunId ? (
+                <div className="px-4 pt-4">
+                  <RunMessage runId={latestRunId} />
+                </div>
+              ) : (
+                <div className="flex justify-center py-4 px-4">
+                  <div className="w-full max-w-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-300">
+                    <p className="text-sm flex items-center">
+                      <Info className="h-4 w-4 mr-2 flex-shrink-0" />
+                      No active run found for this workflow
+                    </p>
+                  </div>
+                </div>
               )}
-              <div className="flex-grow overflow-auto">
-                <WorkflowPanel 
-                  chatId={chatId}
-                  showRunButton={false}
-                  showInputs={false}
-                />
+              
+              <div className="mt-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+                Workflow Steps
               </div>
-            </div>
+              
+              <div className="flex-grow overflow-auto p-4 pt-2">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                  <WorkflowPanel 
+                    chatId={chatId}
+                    showRunButton={false}
+                    showInputs={false}
+                  />
+                </div>
+              </div>
+            </>
           ) : (
             <div className="flex flex-col h-full items-center justify-center p-6 text-center">
               <Info className="w-12 h-12 text-gray-400 mb-4" />
