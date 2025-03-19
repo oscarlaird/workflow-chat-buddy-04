@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Run, RunMessage as RunMessageType } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2, Square, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
@@ -12,11 +12,17 @@ import { Badge } from "@/components/ui/badge";
 interface RunBubbleProps {
   run: Run;
   messages: RunMessageType[];
+  isLatestRun?: boolean;
 }
 
-export const RunBubble = ({ run, messages }: RunBubbleProps) => {
+export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps) => {
   const [isStopping, setIsStopping] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(isLatestRun);
+
+  useEffect(() => {
+    // When the isLatestRun prop changes, update the expanded state
+    setIsExpanded(isLatestRun);
+  }, [isLatestRun]);
 
   const handleStopRun = async () => {
     if (!run.id || isStopping || !run.in_progress) return;

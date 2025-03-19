@@ -8,9 +8,10 @@ import RunBubble from "./RunBubble";
 
 interface RunMessageProps {
   runId: string;
+  isLatestRun?: boolean;
 }
 
-export const RunMessage = ({ runId }: RunMessageProps) => {
+export const RunMessage = ({ runId, isLatestRun = true }: RunMessageProps) => {
   const [run, setRun] = useState<Run | null>(null);
   const [runMessages, setRunMessages] = useState<RunMessageType[]>([]);
 
@@ -138,7 +139,7 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
 
   return (
     <div className="flex justify-center my-4">
-      <RunBubble run={run} messages={runMessages} />
+      <RunBubble run={run} messages={runMessages} isLatestRun={isLatestRun} />
     </div>
   );
 };
