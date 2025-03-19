@@ -4,6 +4,7 @@ import { CornerDownLeft, Loader2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from "@/components/ui/use-toast";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -13,6 +14,7 @@ interface ChatInputProps {
 
 export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -29,6 +31,35 @@ export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatIn
       textareaRef.current.focus();
     }
   }, [isLoading, disabled]);
+
+  // Listen for messages from the extension
+  useEffect(() => {
+    const handleRecordingStatus = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'RECORDING_STATUS') {
+        if (event.data.status === 'started') {
+          setIsRecording(true);
+          toast({
+            title: "Recording started",
+            description: "Your screen recording has started. Click the recording button again to stop."
+          });
+        } else if (event.data.status === 'stopped') {
+          setIsRecording(false);
+          toast({
+            title: "Recording completed",
+            description: "Your screen recording has been added to the conversation."
+          });
+          
+          // Send a message to indicate the recording was completed
+          if (event.data.recordingId) {
+            onSendMessage(`I've shared a screen recording (ID: ${event.data.recordingId})`);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleRecordingStatus);
+    return () => window.removeEventListener('message', handleRecordingStatus);
+  }, [onSendMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,17 +92,25 @@ export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatIn
     autoResizeTextarea();
   };
 
-  const handleStartScreenRecording = () => {
-    // Generate a unique ID for this recording session
-    const recordingId = uuidv4();
-    
-    // Send message to extension to create a recording window
-    window.postMessage({
-      type: 'CREATE_RECORDING_WINDOW',
-      payload: {
-        recordingId,
-      }
-    }, '*');
+  const handleScreenRecording = () => {
+    if (isRecording) {
+      // Stop the current recording
+      window.postMessage({
+        type: 'STOP_RECORDING',
+      }, '*');
+    } else {
+      // Generate a unique ID for this recording session
+      const recordingId = uuidv4();
+      
+      // Send message to extension to start recording in the current window
+      window.postMessage({
+        type: 'START_RECORDING',
+        payload: {
+          recordingId,
+          inCurrentWindow: true,
+        }
+      }, '*');
+    }
   };
 
   return (
@@ -81,11 +120,11 @@ export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatIn
           <Button
             type="button"
             size="icon"
-            variant="outline"
+            variant={isRecording ? "destructive" : "outline"}
             className="flex-shrink-0"
-            onClick={handleStartScreenRecording}
+            onClick={handleScreenRecording}
             disabled={disabled}
-            title="Start screen recording"
+            title={isRecording ? "Stop recording" : "Start screen recording"}
           >
             <Video className="h-4 w-4" />
           </Button>
