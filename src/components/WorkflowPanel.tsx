@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
+import WorkflowInputs from "./WorkflowInputs";
 import { InputValues, RunMessageType, RunMessageSenderType } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,13 +13,21 @@ interface WorkflowPanelProps {
   chatId: string;
   onRunWorkflow?: () => void;
   showRunButton?: boolean;
+  showInputs?: boolean;
 }
 
-const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
+const WorkflowPanel = ({ 
+  chatId, 
+  onRunWorkflow, 
+  showRunButton = true,
+  showInputs = true
+}: WorkflowPanelProps) => {
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
+  const [isRunning, setIsRunning] = useState(false);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
+      setIsRunning(true);
       const runId = uuidv4();
       
       // Create a new run
@@ -91,6 +100,8 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
     } catch (error) {
       console.error('Error running workflow:', error);
       toast.error('An unexpected error occurred');
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -107,6 +118,15 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
 
   return (
     <div className="flex flex-col h-full">
+      {showInputs && (
+        <WorkflowInputs
+          chatId={chatId}
+          onSubmit={handleRunWorkflow}
+          disabled={isRunning}
+          showRunButton={showRunButton}
+          isRunning={isRunning}
+        />
+      )}
       <div className="flex-grow overflow-y-auto p-4">
         {workflowSteps && workflowSteps.map((step, index) => (
           <WorkflowStep

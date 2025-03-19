@@ -88,7 +88,8 @@ const WorkflowPage = () => {
               <div className="flex-grow overflow-auto">
                 <WorkflowPanel 
                   chatId={chatId}
-                  showRunButton={false} 
+                  showRunButton={false}
+                  showInputs={false}
                 />
               </div>
             </div>

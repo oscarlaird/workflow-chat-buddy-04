@@ -59,9 +59,7 @@ const getSenderBadgeColor = (sender: RunMessageSenderType) => {
 };
 
 export const RunMessageItem = ({ message }: RunMessageItemProps) => {
-  const hasPayload = message.payload && typeof message.payload === 'object' && 
-    !message.display_text && Object.keys(message.payload).length > 0;
-    
+  const hasPayload = message.payload && typeof message.payload === 'object' && Object.keys(message.payload).length > 0;
   const formattedTime = new Date(message.created_at).toLocaleTimeString();
   
   return (
@@ -92,7 +90,7 @@ export const RunMessageItem = ({ message }: RunMessageItemProps) => {
           )}
           
           {hasPayload && (
-            <div className="mt-1 overflow-auto">
+            <div className="mt-1 overflow-x-auto">
               <CodeBlock 
                 code={JSON.stringify(message.payload, null, 2)} 
                 language="json" 
