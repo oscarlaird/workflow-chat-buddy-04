@@ -89,6 +89,7 @@ function App() {
           />
           <Route path="/chat/:id" element={<ConversationPage />} />
           <Route path="/workflow/:id" element={<WorkflowPage />} />
+          <Route path="/workflow" element={<WorkflowPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
