@@ -1,8 +1,8 @@
 
-import { RunMessage as RunMessageType } from "@/types";
+import { RunMessage as RunMessageType, RunMessageType as MessageType, RunMessageSenderType } from "@/types";
 import { 
   Brain, 
-  Bot, // Changed from Robot to Bot
+  Bot,
   Eye, 
   FileText, 
   ExternalLink, 
@@ -17,12 +17,12 @@ interface RunMessageItemProps {
 }
 
 // Helper function to get the appropriate icon based on message type
-const getMessageIcon = (type: string) => {
+const getMessageIcon = (type: MessageType) => {
   switch (type) {
     case 'rationale':
       return <Brain className="h-4 w-4 flex-shrink-0" />;
     case 'command':
-      return <Bot className="h-4 w-4 flex-shrink-0" />; // Changed from Robot to Bot
+      return <Bot className="h-4 w-4 flex-shrink-0" />;
     case 'result':
       return <Eye className="h-4 w-4 flex-shrink-0" />;
     case 'inputs':
@@ -43,7 +43,7 @@ const getMessageIcon = (type: string) => {
 };
 
 // Helper function to get sender badge color
-const getSenderBadgeColor = (sender: string) => {
+const getSenderBadgeColor = (sender: RunMessageSenderType) => {
   switch (sender) {
     case 'dashboard':
       return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
@@ -69,8 +69,8 @@ export const RunMessageItem = ({ message }: RunMessageItemProps) => {
               {message.type.charAt(0).toUpperCase() + message.type.slice(1)}
             </span>
             
-            <span className={`text-xs px-2 py-0.5 rounded-full ${getSenderBadgeColor(message.sender_type || 'dashboard')}`}>
-              {message.sender_type || 'dashboard'}
+            <span className={`text-xs px-2 py-0.5 rounded-full ${getSenderBadgeColor(message.sender_type)}`}>
+              {message.sender_type}
             </span>
           </div>
           

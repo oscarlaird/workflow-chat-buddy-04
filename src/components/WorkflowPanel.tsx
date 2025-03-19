@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import WorkflowInputs from "./WorkflowInputs";
-import { InputValues } from "@/types";
+import { InputValues, RunMessageType, RunMessageSenderType } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -69,11 +70,11 @@ export const WorkflowPanel = ({
         .from('run_messages')
         .insert({
           run_id: runId,
-          type: 'inputs',
+          type: 'inputs' as RunMessageType,
           payload: inputPayload,
           chat_id: chatId,
           username: 'current_user',
-          sender_type: 'dashboard',
+          sender_type: 'dashboard' as RunMessageSenderType,
           display_text: 'Workflow input values'
         });
         

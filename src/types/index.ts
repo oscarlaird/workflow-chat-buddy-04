@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -88,14 +89,28 @@ export interface Run {
   username?: string;
 }
 
+// Define enum types to match our database enums
+export type RunMessageType = 
+  | 'inputs'
+  | 'spawn_window' 
+  | 'launch_extension'
+  | 'extension_loaded'
+  | 'command'
+  | 'result'
+  | 'rationale'
+  | 'close_extension'
+  | 'abort';
+
+export type RunMessageSenderType = 'dashboard' | 'backend' | 'extension';
+
 export interface RunMessage {
   id: string;
   run_id: string;
-  type: string;
+  type: RunMessageType;
   payload: any;
   created_at: string;
   chat_id?: string;
   username?: string;
-  sender_type: 'dashboard' | 'backend' | 'extension';
+  sender_type: RunMessageSenderType;
   display_text?: string;
 }
