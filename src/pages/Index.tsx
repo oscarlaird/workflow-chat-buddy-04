@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
@@ -44,6 +43,16 @@ export const Index: React.FC<IndexProps> = ({
   // This function is called when the run button is clicked
   const handleRunWorkflow = () => {
     console.log("Running workflow for conversation:", selectedConversationId);
+    
+    // Additional logging to verify this function is called
+    console.log("handleRunWorkflow called in Index component");
+    
+    // If using chatInterfaceRef, log its current state
+    if (chatInterfaceRef.current) {
+      console.log("chatInterfaceRef exists");
+    } else {
+      console.log("chatInterfaceRef is null");
+    }
   };
 
   return (

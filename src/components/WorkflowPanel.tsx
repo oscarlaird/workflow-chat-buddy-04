@@ -23,6 +23,7 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
 
   useEffect(() => {
     const fetchChatInputSchema = async () => {
+      console.log("Fetching chat input schema for chatId:", chatId);
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
         .select('input_schema')
@@ -36,6 +37,7 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
 
       if (chatData && chatData.input_schema) {
         // Fix: Use a function to update the state since we're working with an array
+        console.log("Input schema found:", chatData.input_schema);
         setInputSchema(chatData.input_schema as any[]);
       }
     };
@@ -45,13 +47,16 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
+      console.log("Running workflow with input values:", inputValues);
       setIsRunning(true);
       setCurrentStepIndex(0);
       
       const runId = uuidv4();
+      console.log("Generated runId:", runId);
       
       // Create a new run
-      const { error: runError } = await supabase
+      console.log("Creating new run record in Supabase...");
+      const { data: runData, error: runError } = await supabase
         .from('runs')
         .insert({
           id: runId,
@@ -59,7 +64,8 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
           dashboard_id: 'web-dashboard',
           in_progress: true,
           status: 'running'
-        });
+        })
+        .select();
       
       if (runError) {
         console.error('Error creating run:', runError);
@@ -68,9 +74,12 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
         return;
       }
 
+      console.log("Run record created successfully:", runData);
+
       // Store input values as a run message
       const inputPayload = { values: inputValues };
-      const { error: messageError } = await supabase
+      console.log("Storing input values as run message...");
+      const { data: messageData, error: messageError } = await supabase
         .from('run_messages')
         .insert({
           run_id: runId,
@@ -80,22 +89,30 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
           username: 'current_user',
           sender_type: RunMessageSenderType.DASHBOARD,
           display_text: 'Workflow input values'
-        });
+        })
+        .select();
         
       if (messageError) {
         console.error('Error storing input values:', messageError);
         toast.error('Failed to store workflow inputs');
+      } else {
+        console.log("Run message created successfully:", messageData);
       }
       
       // Simulate running each step of the workflow
       for (let i = 0; i < workflowSteps.length; i++) {
         setCurrentStepIndex(i);
+        console.log(`Running workflow step ${i + 1}/${workflowSteps.length}`);
         
         // Simulate a delay between steps
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
+      console.log("Workflow completed successfully");
+      toast.success("Workflow completed");
+      
       if (onRunWorkflow) {
+        console.log("Calling onRunWorkflow callback");
         onRunWorkflow();
       }
       

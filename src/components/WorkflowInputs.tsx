@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Table, List, Upload, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -40,7 +39,9 @@ export const WorkflowInputs = ({
   onInputValuesChange,
   showRunButton = true,
   onRunWorkflow,
-  isRunning = false
+  isRunning = false,
+  onSubmit,
+  disabled
 }: WorkflowInputsProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>({});
@@ -93,11 +94,36 @@ export const WorkflowInputs = ({
   };
 
   const handleRunWorkflow = () => {
-    if (!onRunWorkflow) return;
+    console.log("Run button clicked in WorkflowInputs");
     
-    // Note: Removed the window.postMessage call for CREATE_AGENT_RUN_WINDOW
-    // Let the parent handle the run workflow logic and state
-    onRunWorkflow();
+    if (!onSubmit) {
+      console.error("onSubmit handler is not provided to WorkflowInputs");
+      return;
+    }
+    
+    console.log("Submitting input values:", multiInput ? tabularData : inputValues);
+    
+    // Call the onSubmit handler with either the single input values or the first row of tabular data
+    if (multiInput) {
+      if (tabularData.length > 0) {
+        onSubmit(tabularData[0]);
+      } else {
+        console.error("No tabular data available to submit");
+        toast({
+          title: "Error",
+          description: "No data available to submit",
+          variant: "destructive"
+        });
+      }
+    } else {
+      onSubmit(inputValues);
+    }
+    
+    // Notify the parent component if there's an onRunWorkflow callback
+    if (onRunWorkflow) {
+      console.log("Calling onRunWorkflow callback from WorkflowInputs");
+      onRunWorkflow();
+    }
   };
 
   const handleInputChange = (name: string, value: string | number | boolean) => {
@@ -311,10 +337,10 @@ export const WorkflowInputs = ({
         )}
       </div>
       
-      {showRunButton && onRunWorkflow && (
+      {showRunButton && (
         <button
           onClick={handleRunWorkflow}
-          disabled={isRunning}
+          disabled={disabled || isRunning}
           className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
         >
           {isRunning ? (
