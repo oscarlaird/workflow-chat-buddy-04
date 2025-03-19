@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from "react";
 import { Film, Download, Loader2, PenLine, Trash2, Plus, Square } from "lucide-react";
 import { Message } from "@/types";
@@ -37,6 +36,17 @@ export const MessageList = ({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Find the latest run ID among all messages
+  const getLatestRunId = () => {
+    const runMessages = messages.filter(msg => msg.run_id);
+    if (runMessages.length === 0) return null;
+    
+    // Sort by message index in the array (most recent will be last)
+    return runMessages[runMessages.length - 1].run_id;
+  };
+
+  const latestRunId = getLatestRunId();
 
   const formatFunctionName = (name: string): string => {
     if (!name) return "";
@@ -153,7 +163,10 @@ export const MessageList = ({
         if (message.run_id) {
           return (
             <div key={message.id} className="space-y-4">
-              <RunMessage runId={message.run_id} />
+              <RunMessage 
+                runId={message.run_id} 
+                isLatestRun={message.run_id === latestRunId} 
+              />
               
               {/* Extension Alert for Runs */}
               {shouldShowExtensionAlert(message.run_id) && (
