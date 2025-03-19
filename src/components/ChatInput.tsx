@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { CornerDownLeft, Loader2 } from "lucide-react";
+import { CornerDownLeft, Loader2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -60,6 +60,13 @@ export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatIn
     autoResizeTextarea();
   };
 
+  const handleScreenRecording = () => {
+    // Send message to create recording window
+    window.postMessage({
+      type: 'CREATE_RECORDING_WINDOW',
+    }, '*');
+  };
+
   return (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
       <form ref={formRef} onSubmit={handleSubmit} className="relative">
@@ -70,10 +77,19 @@ export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatIn
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Select or create a chat to start messaging..." : "Type your message..."}
           rows={1}
-          className="w-full py-3 px-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
+          className="w-full py-3 px-4 pr-12 pl-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading || disabled}
           autoFocus={!disabled}
         />
+        <button
+          type="button"
+          onClick={handleScreenRecording}
+          className="absolute left-3 bottom-3 p-1.5 text-gray-500 hover:text-primary rounded-md transition-colors disabled:opacity-50"
+          disabled={disabled}
+          aria-label="Start screen recording"
+        >
+          <Video className="w-5 h-5" />
+        </button>
         <button
           type="submit"
           className="absolute right-3 bottom-3 p-1.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
