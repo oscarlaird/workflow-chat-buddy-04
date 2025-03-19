@@ -6,19 +6,12 @@ export const ExtensionStatusIndicator = () => {
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if extension status is already stored
-    const storedStatus = localStorage.getItem('extension_installed');
-    if (storedStatus === 'true') {
-      setIsInstalled(true);
-    }
-
     // Function to handle messages from the extension
     const handleExtensionMessage = (event: MessageEvent) => {
       // Check if the message is from our extension
       if (event.data && event.data.type === "EXTENSION_INSTALLED") {
         console.log("Extension installation detected via message:", event.data);
         setIsInstalled(true);
-        localStorage.setItem('extension_installed', 'true');
       }
     };
 

@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -72,6 +71,7 @@ export const ChatInterface = forwardRef(({
       }
       
       if (data) {
+        console.log('Fetched run messages:', data);
         setRunMessages(data as RunMessage[]);
       }
     } catch (err) {
@@ -114,17 +114,10 @@ export const ChatInterface = forwardRef(({
 
   // Check if the extension is installed
   useEffect(() => {
-    // Check if extension status is already stored in localStorage
-    const storedStatus = localStorage.getItem('extension_installed');
-    if (storedStatus === 'true') {
-      setIsExtensionInstalled(true);
-    }
-
     const handleExtensionMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === "EXTENSION_INSTALLED") {
         console.log("Extension installation detected in ChatInterface:", event.data);
         setIsExtensionInstalled(true);
-        localStorage.setItem('extension_installed', 'true');
       }
     };
 
@@ -175,7 +168,7 @@ export const ChatInterface = forwardRef(({
           
           console.log(`New run message of type: ${newMessage.type}`, newMessage);
           
-          // Log extension status when receiving spawn_window message
+          // Check specifically for spawn_window messages
           if (newMessage.type === 'spawn_window') {
             console.log(`Received spawn_window message. Extension installed: ${isExtensionInstalled}`);
           }
@@ -191,7 +184,7 @@ export const ChatInterface = forwardRef(({
       console.log('Removing run_messages channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [conversationId, isExtensionInstalled]);
+  }, [conversationId]);
 
   const updateMessageContent = useCallback((messageId: string, newContent: string, functionName: string | null = null, isStreaming: boolean = false) => {
     setMessages(prevMessages => 
