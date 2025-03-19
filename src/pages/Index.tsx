@@ -37,22 +37,14 @@ export const Index: React.FC<IndexProps> = ({
   const chatInterfaceRef = React.useRef(null);
 
   const handleSendMessage = (message: string) => {
+    // We can keep this minimal log as it's useful for potential debugging
     console.log("Message sent from Index view:", message);
   };
 
   // This function is called when the run button is clicked
   const handleRunWorkflow = () => {
+    // Keep minimal logging for this important function
     console.log("Running workflow for conversation:", selectedConversationId);
-    
-    // Additional logging to verify this function is called
-    console.log("handleRunWorkflow called in Index component");
-    
-    // If using chatInterfaceRef, log its current state
-    if (chatInterfaceRef.current) {
-      console.log("chatInterfaceRef exists");
-    } else {
-      console.log("chatInterfaceRef is null");
-    }
   };
 
   return (

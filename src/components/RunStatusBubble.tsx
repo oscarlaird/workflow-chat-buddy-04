@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, Square, Trash2 } from 'lucide-react';
+import { Loader2, Square, Trash2, ExternalLink } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Run } from '@/types';
@@ -82,6 +82,16 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
     }
   };
 
+  const handleJumpToAgentWindow = () => {
+    window.postMessage({
+      type: 'JUMP_TO_AGENT_WINDOW',
+      payload: {
+        runId: run.id,
+        chatId: run.chat_id
+      }
+    }, '*');
+  };
+
   return (
     <div className="flex justify-center py-4">
       <Card className="w-full max-w-md border-blue-200 dark:border-blue-800 bg-gradient-to-b from-blue-50/80 to-blue-50/30 dark:from-blue-950/30 dark:to-blue-950/10">
@@ -101,27 +111,41 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
             </Badge>
           </div>
           
-          {run.in_progress ? (
-            <Button 
-              variant="outline"
-              size="sm" 
-              onClick={handleStopRun}
-              className="flex items-center gap-1 text-red-500 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <Square className="h-4 w-4" />
-              <span>Stop</span>
-            </Button>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleDeleteRun}
-              className="flex items-center gap-1 text-red-500 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {run.in_progress && (
+              <Button 
+                variant="outline"
+                size="sm" 
+                onClick={handleJumpToAgentWindow}
+                className="flex items-center gap-1 text-blue-500 hover:text-blue-600 border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Jump to agent</span>
+              </Button>
+            )}
+            
+            {run.in_progress ? (
+              <Button 
+                variant="outline"
+                size="sm" 
+                onClick={handleStopRun}
+                className="flex items-center gap-1 text-red-500 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Square className="h-4 w-4" />
+                <span>Stop</span>
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDeleteRun}
+                className="flex items-center gap-1 text-red-500 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete</span>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
