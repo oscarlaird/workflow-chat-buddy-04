@@ -14,6 +14,8 @@ interface MessageListProps {
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
   streamingMessageIds?: Set<string>;
+  runMessages?: any[];
+  onStopRun?: (runId: string) => void;
 }
 
 export const MessageList = ({ 
@@ -22,7 +24,9 @@ export const MessageList = ({
   screenRecordings,
   isExtensionInstalled,
   pendingMessageIds = new Set(),
-  streamingMessageIds = new Set()
+  streamingMessageIds = new Set(),
+  runMessages = [],
+  onStopRun
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -32,14 +36,6 @@ export const MessageList = ({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleStartScreenRecording = () => {
-    window.postMessage({ type: "CREATE_RECORDING_WINDOW" }, "*");
-  };
-
-  const shouldShowRecordingButton = (content: string) => {
-    return content.toLowerCase().includes("ready");
   };
 
   const formatFunctionName = (name: string): string => {
@@ -127,6 +123,16 @@ export const MessageList = ({
     );
   };
 
+  // Check if any run message is of type spawn_window for this run
+  const shouldShowExtensionAlert = (runId: string) => {
+    if (isExtensionInstalled) return false;
+    
+    return runMessages.some(msg => 
+      msg.run_id === runId && 
+      msg.type === 'spawn_window'
+    );
+  };
+
   if (messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -144,7 +150,39 @@ export const MessageList = ({
         <div key={message.id} className="space-y-4">
           {/* Special Run Message */}
           {message.run_id ? (
-            <RunMessage runId={message.run_id} />
+            <>
+              <RunMessage runId={message.run_id} />
+              
+              {/* Extension Alert for Runs */}
+              {shouldShowExtensionAlert(message.run_id) && (
+                <div className="flex justify-center mt-4">
+                  <div className="flex flex-col items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-center">
+                    <p className="text-amber-800 dark:text-amber-300 mb-2">
+                      To use this workflow, you need to install the Macro Agents extension first.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => window.open('https://chrome.google.com/webstore/category/extensions', '_blank')}
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
+                      >
+                        <Download className="w-5 h-5" />
+                        Download Extension
+                      </Button>
+                      
+                      {onStopRun && (
+                        <Button 
+                          onClick={() => onStopRun(message.run_id || "")}
+                          variant="outline"
+                          className="text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/50"
+                        >
+                          Stop Run
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.function_name ? (
@@ -178,33 +216,6 @@ export const MessageList = ({
                       <span>Sending...</span>
                     </div>
                   )}
-                </div>
-              )}
-            </div>
-          )}
-          
-          {message.role === "assistant" && shouldShowRecordingButton(message.content) && (
-            <div className="flex justify-center mt-4">
-              {isExtensionInstalled ? (
-                <Button 
-                  onClick={handleStartScreenRecording}
-                  className="flex items-center gap-2 bg-red-500 hover:bg-red-600"
-                >
-                  <Film className="w-5 h-5" />
-                  Start Screen Recording
-                </Button>
-              ) : (
-                <div className="flex flex-col items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-center">
-                  <p className="text-amber-800 dark:text-amber-300 mb-2">
-                    To use screen recording, you need to install the Macro Agents extension first.
-                  </p>
-                  <Button 
-                    onClick={() => window.open('https://chrome.google.com/webstore/category/extensions', '_blank')}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600"
-                  >
-                    <Download className="w-5 h-5" />
-                    Download Extension
-                  </Button>
                 </div>
               )}
             </div>

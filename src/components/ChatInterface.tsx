@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHand
 import { supabase } from "@/integrations/supabase/client";
 import { Message, RunMessage } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
+import { toast } from "@/components/ui/use-toast";
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -50,7 +51,66 @@ export const ChatInterface = forwardRef(({
     
     // Update the previous conversation ID ref
     prevConversationIdRef.current = conversationId;
+    
+    // Fetch run messages for this conversation
+    fetchRunMessages();
   }, [conversationId]);
+
+  // Fetch run messages for this conversation
+  const fetchRunMessages = async () => {
+    if (!conversationId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('run_messages')
+        .select('*')
+        .eq('chat_id', conversationId);
+        
+      if (error) {
+        console.error('Error fetching run messages:', error);
+        return;
+      }
+      
+      if (data) {
+        setRunMessages(data);
+      }
+    } catch (err) {
+      console.error('Exception when fetching run messages:', err);
+    }
+  };
+
+  // Handle stopping a run
+  const handleStopRun = async (runId: string) => {
+    if (!runId) return;
+    
+    try {
+      // Update the run status to stopped
+      const { error } = await supabase
+        .from('runs')
+        .update({
+          status: 'Stopped - Extension not installed',
+          in_progress: false
+        })
+        .eq('id', runId);
+        
+      if (error) {
+        console.error('Error stopping run:', error);
+        toast({
+          title: "Error",
+          description: "Failed to stop the run",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      toast({
+        title: "Run stopped",
+        description: "The workflow run has been stopped"
+      });
+    } catch (err) {
+      console.error('Exception when stopping run:', err);
+    }
+  };
 
   useEffect(() => {
     const handleExtensionMessage = (event: MessageEvent) => {
@@ -74,6 +134,33 @@ export const ChatInterface = forwardRef(({
         }
       }, 200);
     }
+  }, [conversationId]);
+
+  // Set up real-time listener for run_messages
+  useEffect(() => {
+    if (!conversationId) return;
+    
+    console.log(`Setting up realtime subscription for run_messages in chat ${conversationId}`);
+    
+    const channel = supabase
+      .channel(`run_messages:${conversationId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'run_messages',
+        filter: `chat_id=eq.${conversationId}`
+      }, (payload) => {
+        console.log('Received real-time INSERT run_message:', payload);
+        const newMessage = payload.new;
+        
+        setRunMessages(prev => [...prev, newMessage]);
+      })
+      .subscribe();
+      
+    return () => {
+      console.log('Removing run_messages channel subscription');
+      supabase.removeChannel(channel);
+    };
   }, [conversationId]);
 
   const updateMessageContent = useCallback((messageId: string, newContent: string, functionName: string | null = null, isStreaming: boolean = false) => {
@@ -262,6 +349,8 @@ export const ChatInterface = forwardRef(({
             isExtensionInstalled={isExtensionInstalled}
             pendingMessageIds={pendingMessageIds}
             streamingMessageIds={streamingMessages}
+            runMessages={runMessages}
+            onStopRun={handleStopRun}
           />
         )}
       </div>
