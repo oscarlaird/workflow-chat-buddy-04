@@ -158,27 +158,33 @@ export type Database = {
         Row: {
           chat_id: string | null
           created_at: string
+          display_text: string | null
           id: string
           payload: Json | null
           run_id: string
+          sender_type: string
           type: string
           username: string | null
         }
         Insert: {
           chat_id?: string | null
           created_at?: string
+          display_text?: string | null
           id?: string
           payload?: Json | null
           run_id: string
+          sender_type?: string
           type: string
           username?: string | null
         }
         Update: {
           chat_id?: string | null
           created_at?: string
+          display_text?: string | null
           id?: string
           payload?: Json | null
           run_id?: string
+          sender_type?: string
           type?: string
           username?: string | null
         }

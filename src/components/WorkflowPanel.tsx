@@ -72,7 +72,9 @@ export const WorkflowPanel = ({
           type: 'inputs',
           payload: inputPayload,
           chat_id: chatId,
-          username: 'current_user'
+          username: 'current_user',
+          sender_type: 'dashboard',
+          display_text: 'Workflow input values'
         });
         
       // Create a system message with the run_id

@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -150,7 +149,9 @@ export const ChatInterface = forwardRef(({
           type: 'launch_extension',
           payload: {},
           chat_id: conversationId,
-          username: 'current_user'
+          username: 'current_user',
+          sender_type: 'dashboard',
+          display_text: 'Launching extension...'
         };
         
         // Insert the launch_extension message to the database

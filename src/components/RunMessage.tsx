@@ -129,7 +129,7 @@ export const RunMessage = ({ runId }: RunMessageProps) => {
   if (!run) {
     return (
       <div className="flex justify-center my-4">
-        <Card className="w-[80%] max-w-lg border border-blue-200 dark:border-blue-800">
+        <Card className="w-full max-w-lg border border-blue-200 dark:border-blue-800">
           <CardContent className="py-4 flex items-center justify-center">
             <Loader2 className="h-5 w-5 animate-spin mr-2" />
             <span>Loading run information...</span>

@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -97,4 +96,6 @@ export interface RunMessage {
   created_at: string;
   chat_id?: string;
   username?: string;
+  sender_type: 'dashboard' | 'backend' | 'extension';
+  display_text?: string;
 }
