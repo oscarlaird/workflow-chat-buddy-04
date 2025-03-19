@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import UserIndicator from "./UserIndicator";
 import ExtensionStatusIndicator from "./ExtensionStatusIndicator";
+import VersionDisplay from "./VersionDisplay";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface TopBarProps {
@@ -31,7 +32,8 @@ const TopBar = ({ username = "User" }: TopBarProps) => {
   return (
     <div className="h-14 bg-background border-b border-border flex items-center justify-between px-4">
       <div className="flex items-center">
-        <h1 className="text-lg font-semibold mr-4">Workflow Chat</h1>
+        <h1 className="text-lg font-semibold mr-2">Workflow Chat</h1>
+        <VersionDisplay />
       </div>
       
       <div className="flex items-center gap-4">

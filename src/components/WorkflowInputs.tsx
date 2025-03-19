@@ -92,12 +92,8 @@ export const WorkflowInputs = ({
   const handleRunWorkflow = () => {
     if (!onRunWorkflow) return;
     
+    // Note: Removed the window.postMessage call for CREATE_AGENT_RUN_WINDOW
     // Let the parent handle the run workflow logic and state
-    window.postMessage({ 
-      type: "CREATE_AGENT_RUN_WINDOW",
-      inputs: multiInput ? tabularData : inputValues 
-    }, "*");
-    
     onRunWorkflow();
   };
 
