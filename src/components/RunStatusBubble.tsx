@@ -43,16 +43,13 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
         throw error;
       }
       
-      toast({
-        title: "Run stopped",
+      toast.success("Run stopped", {
         description: "The operation was successfully stopped."
       });
     } catch (error) {
       console.error('Error stopping run:', error);
-      toast({
-        title: "Failed to stop run",
-        description: "An error occurred while trying to stop the operation.",
-        variant: "destructive"
+      toast.error("Failed to stop run", {
+        description: "An error occurred while trying to stop the operation."
       });
     }
   };
@@ -68,16 +65,13 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
         throw error;
       }
       
-      toast({
-        title: "Run deleted",
+      toast.success("Run deleted", {
         description: "The run and its associated data have been deleted."
       });
     } catch (error) {
       console.error('Error deleting run:', error);
-      toast({
-        title: "Failed to delete run",
-        description: "An error occurred while trying to delete the run.",
-        variant: "destructive"
+      toast.error("Failed to delete run", {
+        description: "An error occurred while trying to delete the run."
       });
     }
   };

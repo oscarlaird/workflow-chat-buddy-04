@@ -2,14 +2,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import WorkflowPanel from "@/components/WorkflowPanel";
+import RunMessage from "@/components/RunMessage";
 import { useToast } from "@/components/ui/use-toast";
 import { Info, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const WorkflowPage = () => {
   const { toast } = useToast();
   const location = useLocation();
   const params = useParams();
   const [chatId, setChatId] = useState("");
+  const [latestRunId, setLatestRunId] = useState<string | null>(null);
 
   useEffect(() => {
     // First check if ID is in URL params (from route pattern /workflow/:id)
@@ -30,6 +33,9 @@ const WorkflowPage = () => {
         description: `Attempting to load workflow for chat ID: ${finalId}`,
         variant: "default",
       });
+
+      // Fetch the latest run for this chat
+      fetchLatestRun(finalId);
     } else {
       console.log("No chat ID found, setting to empty string");
       setChatId("");
@@ -48,11 +54,26 @@ const WorkflowPage = () => {
     }
   }, [location.search, params, toast]);
 
-  const handleRunWorkflow = () => {
-    toast({
-      title: "Workflow Running",
-      description: "The workflow is now processing your request in standalone view",
-    });
+  const fetchLatestRun = async (chatId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('runs')
+        .select('id')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching latest run:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setLatestRunId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Exception when fetching latest run:', err);
+    }
   };
 
   return (
@@ -60,11 +81,17 @@ const WorkflowPage = () => {
       <div className="h-full p-4">
         <div className="h-full glass-panel">
           {chatId ? (
-            <WorkflowPanel 
-              chatId={chatId}
-              onRunWorkflow={handleRunWorkflow} 
-              showRunButton={false} 
-            />
+            <div className="flex flex-col h-full">
+              {latestRunId && (
+                <RunMessage runId={latestRunId} />
+              )}
+              <div className="flex-grow overflow-auto">
+                <WorkflowPanel 
+                  chatId={chatId}
+                  showRunButton={false} 
+                />
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col h-full items-center justify-center p-6 text-center">
               <Info className="w-12 h-12 text-gray-400 mb-4" />

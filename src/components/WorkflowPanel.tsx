@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
-import WorkflowInputs from "./WorkflowInputs";
 import { InputValues, RunMessageType, RunMessageSenderType } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,35 +15,10 @@ interface WorkflowPanelProps {
 }
 
 const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: WorkflowPanelProps) => {
-  const [isRunning, setIsRunning] = useState(false);
-  const [inputSchema, setInputSchema] = useState<any[]>([]);
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
-
-  useEffect(() => {
-    const fetchChatInputSchema = async () => {
-      const { data: chatData, error: chatError } = await supabase
-        .from('chats')
-        .select('input_schema')
-        .eq('id', chatId)
-        .single();
-
-      if (chatError) {
-        console.error("Error fetching chat input schema:", chatError);
-        return;
-      }
-
-      if (chatData && chatData.input_schema) {
-        setInputSchema(chatData.input_schema as any[]);
-      }
-    };
-
-    fetchChatInputSchema();
-  }, [chatId]);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
-      setIsRunning(true);
-      
       const runId = uuidv4();
       
       // Create a new run
@@ -62,7 +36,6 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
       if (runError) {
         console.error('Error creating run:', runError);
         toast.error('Failed to start workflow run');
-        setIsRunning(false);
         return;
       }
 
@@ -71,7 +44,7 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
         .from('messages')
         .insert({
           chat_id: chatId,
-          role: 'assistant', // Changed from 'system' to 'assistant' to comply with constraint
+          role: 'assistant',
           content: 'Running workflow',
           username: 'current_user',
           run_id: runId
@@ -118,8 +91,6 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
     } catch (error) {
       console.error('Error running workflow:', error);
       toast.error('An unexpected error occurred');
-    } finally {
-      setIsRunning(false);
     }
   };
 
@@ -136,16 +107,6 @@ const WorkflowPanel = ({ chatId, onRunWorkflow, showRunButton = true }: Workflow
 
   return (
     <div className="flex flex-col h-full">
-      {inputSchema && inputSchema.length > 0 && (
-        <WorkflowInputs 
-          chatId={chatId}
-          onSubmit={handleRunWorkflow} 
-          disabled={isRunning} 
-          showRunButton={showRunButton}
-          onRunWorkflow={onRunWorkflow}
-        />
-      )}
-
       <div className="flex-grow overflow-y-auto p-4">
         {workflowSteps && workflowSteps.map((step, index) => (
           <WorkflowStep
