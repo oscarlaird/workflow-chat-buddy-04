@@ -10,11 +10,13 @@ import { toast } from "@/components/ui/use-toast";
 interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage: (message: string) => void;
+  forceExtensionInstalled?: boolean;
 }
 
 export const ChatInterface = forwardRef(({
   conversationId,
-  onSendMessage
+  onSendMessage,
+  forceExtensionInstalled = false
 }: ChatInterfaceProps, ref) => {
   const { 
     messages,
@@ -397,6 +399,7 @@ export const ChatInterface = forwardRef(({
             streamingMessageIds={streamingMessages}
             runMessages={runMessages}
             onStopRun={handleStopRun}
+            forceExtensionInstalled={forceExtensionInstalled}
           />
         )}
       </div>

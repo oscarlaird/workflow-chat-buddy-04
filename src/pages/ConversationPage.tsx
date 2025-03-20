@@ -49,7 +49,6 @@ const ConversationPage = () => {
           <ChatInterface
             conversationId={conversationId}
             onSendMessage={handleSendMessage}
-            // If accessed through extension, we can assume it's installed
             forceExtensionInstalled={isAccessedThroughExtension}
           />
         </div>
