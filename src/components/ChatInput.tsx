@@ -1,5 +1,6 @@
+
 import { useState, useRef, useEffect } from "react";
-import { CornerDownLeft, Loader2, Video } from "lucide-react";
+import { CornerDownLeft, Loader2, Video, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -7,7 +8,7 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   disabled?: boolean;
-  chatId?: string; // Add chatId prop
+  chatId?: string;
 }
 
 export const ChatInput = ({ 
@@ -17,8 +18,12 @@ export const ChatInput = ({
   chatId
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  
+  // Determine if the page is accessed through the extension
+  const isInExtension = window.location.search.includes("chat_id");
 
   // Focus the textarea when component mounts
   useEffect(() => {
@@ -66,14 +71,67 @@ export const ChatInput = ({
   };
 
   const handleScreenRecording = () => {
-    // Send message to create recording window with chatId in payload object
-    window.postMessage({
-      type: 'CREATE_RECORDING_WINDOW',
-      payload: {
-        chatId: chatId
-      }
-    }, '*');
+    if (isInExtension) {
+      // Toggle recording state
+      const newRecordingState = !isRecording;
+      setIsRecording(newRecordingState);
+      
+      // Send message to the extension to start or stop recording
+      window.postMessage({
+        type: newRecordingState ? 'START_RECORDING' : 'STOP_RECORDING',
+        payload: {
+          chatId: chatId
+        }
+      }, '*');
+    } else {
+      // When in dashboard, create recording window
+      window.postMessage({
+        type: 'CREATE_RECORDING_WINDOW',
+        payload: {
+          chatId: chatId
+        }
+      }, '*');
+    }
   };
+
+  // Generate recording button classes based on state
+  const getRecordingButtonClasses = () => {
+    let classes = "absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50";
+    
+    if (isInExtension && isRecording) {
+      // Red recording button with pulsing border when recording in extension
+      classes += " bg-red-500 hover:bg-red-600 text-white animate-pulse ring-2 ring-red-500";
+    } else {
+      // Default state
+      classes += " text-gray-500 hover:text-primary";
+    }
+    
+    return classes;
+  };
+
+  // Get the appropriate icon and aria-label for the recording button
+  const getRecordingButtonProps = () => {
+    if (isInExtension) {
+      if (isRecording) {
+        return {
+          icon: <Square className="w-5 h-5" />,
+          ariaLabel: "Stop screen recording",
+        };
+      } else {
+        return {
+          icon: <Video className="w-5 h-5" />,
+          ariaLabel: "Start screen recording",
+        };
+      }
+    } else {
+      return {
+        icon: <Video className="w-5 h-5" />,
+        ariaLabel: "Open screen recording",
+      };
+    }
+  };
+
+  const recordingButtonProps = getRecordingButtonProps();
 
   return (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -92,11 +150,11 @@ export const ChatInput = ({
         <button
           type="button"
           onClick={handleScreenRecording}
-          className="absolute left-3 bottom-3 p-1.5 text-gray-500 hover:text-primary rounded-md transition-colors disabled:opacity-50"
+          className={getRecordingButtonClasses()}
           disabled={disabled}
-          aria-label="Start screen recording"
+          aria-label={recordingButtonProps.ariaLabel}
         >
-          <Video className="w-5 h-5" />
+          {recordingButtonProps.icon}
         </button>
         <button
           type="submit"
@@ -113,7 +171,9 @@ export const ChatInput = ({
       <div className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
         {disabled ? 
           "Select a chat from the sidebar or create a new one" : 
-          "Press Enter to send, Shift+Enter for a new line"}
+          isInExtension && isRecording ?
+            "Recording in progress. Click the stop button to finish recording." :
+            "Press Enter to send, Shift+Enter for a new line"}
       </div>
     </div>
   );
