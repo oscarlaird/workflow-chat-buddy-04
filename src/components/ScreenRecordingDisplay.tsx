@@ -17,7 +17,7 @@ export const ScreenRecordingDisplay = ({ message, duration = "00:45" }: ScreenRe
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Format recording timestamp 
-  const recordingDate = message.created_at ? new Date(message.created_at) : new Date();
+  const recordingDate = new Date();
   const formattedDate = format(recordingDate, "MMM d, yyyy 'at' h:mm a");
   
   // Generate timestamps for the preview images (25%, 50%, 75% of the video)
