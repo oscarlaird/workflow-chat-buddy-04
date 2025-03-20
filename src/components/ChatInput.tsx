@@ -76,14 +76,40 @@ export const ChatInput = ({
       const newRecordingState = !isRecording;
       setIsRecording(newRecordingState);
       
-      // Send message to the parent window (extension) using window.parent.postMessage
-      const messageType = newRecordingState ? 'START_RECORDING' : 'STOP_RECORDING';
-      window.parent.postMessage({
-        type: messageType,
-        payload: {
-          chatId: chatId
+      // Message directly to background script
+      if (newRecordingState) {
+        // Start recording
+        if (chrome && chrome.runtime) {
+          chrome.runtime.sendMessage({
+            action: "startRecording",
+            chatId: chatId
+          });
+        } else {
+          // Fallback for when chrome API is not available but we're in extension
+          window.parent.postMessage({
+            type: 'START_RECORDING',
+            payload: {
+              chatId: chatId
+            }
+          }, '*');
         }
-      }, '*');
+      } else {
+        // Stop recording
+        if (chrome && chrome.runtime) {
+          chrome.runtime.sendMessage({
+            action: "stopRecording",
+            chatId: chatId
+          });
+        } else {
+          // Fallback for when chrome API is not available but we're in extension
+          window.parent.postMessage({
+            type: 'STOP_RECORDING',
+            payload: {
+              chatId: chatId
+            }
+          }, '*');
+        }
+      }
     } else {
       // When in dashboard, create recording window
       window.postMessage({
