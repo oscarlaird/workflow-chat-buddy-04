@@ -8,9 +8,15 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   disabled?: boolean;
+  chatId?: string; // Add chatId prop
 }
 
-export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatInputProps) => {
+export const ChatInput = ({ 
+  onSendMessage, 
+  isLoading, 
+  disabled = false,
+  chatId
+}: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -61,9 +67,10 @@ export const ChatInput = ({ onSendMessage, isLoading, disabled = false }: ChatIn
   };
 
   const handleScreenRecording = () => {
-    // Send message to create recording window
+    // Send message to create recording window with chatId
     window.postMessage({
       type: 'CREATE_RECORDING_WINDOW',
+      chatId: chatId, // Include the chatId in the message
     }, '*');
   };
 
