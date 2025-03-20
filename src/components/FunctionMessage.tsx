@@ -1,5 +1,5 @@
 
-import { PenLine, Trash2, Plus } from "lucide-react";
+import { PenLine, Trash2, Plus, Film } from "lucide-react";
 import { Message } from "@/types";
 
 interface FunctionMessageProps {
@@ -30,8 +30,17 @@ export const FunctionMessage = ({ message, isStreaming }: FunctionMessageProps) 
       return <Trash2 className="h-4 w-4" />;
     }
     
+    if (normalizedName === 'screen_recording') {
+      return <Film className="h-4 w-4" />;
+    }
+    
     return <PenLine className="h-4 w-4" />;
   };
+
+  // If this is a screen recording message, we'll handle it in MessageList
+  if (message.function_name === "screen_recording") {
+    return null;
+  }
 
   const formattedName = formatFunctionName(message.function_name || "");
   const functionIcon = getFunctionIcon(message.function_name || "");

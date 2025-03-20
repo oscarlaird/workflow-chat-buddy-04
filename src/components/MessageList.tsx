@@ -7,6 +7,7 @@ import UserMessage from "./UserMessage";
 import FunctionMessage from "./FunctionMessage";
 import WorkflowStepMessage from "./WorkflowStepMessage";
 import ScreenRecordingMessage from "./ScreenRecordingMessage";
+import ScreenRecordingDisplay from "./ScreenRecordingDisplay";
 import ExtensionAlert from "./ExtensionAlert";
 import EmptyMessageList from "./EmptyMessageList";
 
@@ -92,6 +93,18 @@ export const MessageList = ({
           );
         }
         
+        // Special handling for screen_recording function
+        if (message.function_name === "screen_recording") {
+          return (
+            <div key={message.id} className="flex justify-center">
+              <ScreenRecordingDisplay 
+                message={message} 
+                duration={hasScreenRecording(message) ? screenRecordings[message.id]?.duration : undefined}
+              />
+            </div>
+          );
+        }
+        
         // Regular message rendering
         return (
           <div key={message.id} className="space-y-4">
@@ -116,8 +129,8 @@ export const MessageList = ({
               )}
             </div>
             
-            {/* Screen Recording indicator */}
-            {hasScreenRecording(message) && (
+            {/* Screen Recording indicator for other message types */}
+            {hasScreenRecording(message) && message.function_name !== "screen_recording" && (
               <ScreenRecordingMessage 
                 messageId={message.id} 
                 screenRecordings={screenRecordings} 
