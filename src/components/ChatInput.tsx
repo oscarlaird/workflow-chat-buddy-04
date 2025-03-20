@@ -67,10 +67,12 @@ export const ChatInput = ({
   };
 
   const handleScreenRecording = () => {
-    // Send message to create recording window with chatId
+    // Send message to create recording window with chatId in payload object
     window.postMessage({
       type: 'CREATE_RECORDING_WINDOW',
-      chatId: chatId, // Include the chatId in the message
+      payload: {
+        chatId: chatId
+      }
     }, '*');
   };
 

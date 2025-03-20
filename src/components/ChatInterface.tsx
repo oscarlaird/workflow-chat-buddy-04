@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -406,6 +405,7 @@ export const ChatInterface = forwardRef(({
         onSendMessage={handleSubmit} 
         isLoading={isLoading} 
         disabled={!conversationId}
+        chatId={conversationId}
       />
     </div>
   );
