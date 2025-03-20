@@ -1,13 +1,15 @@
+
 import { useState, useRef, useEffect } from "react";
-import { CornerDownLeft, Loader2, Video } from "lucide-react";
+import { CornerDownLeft, Loader2, Video, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   disabled?: boolean;
-  chatId?: string; // Add chatId prop
+  chatId?: string;
 }
 
 export const ChatInput = ({ 
@@ -17,6 +19,7 @@ export const ChatInput = ({
   chatId
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -66,14 +69,35 @@ export const ChatInput = ({
   };
 
   const handleScreenRecording = () => {
-    // Send message to create recording window with chatId in payload object
-    window.postMessage({
-      type: 'CREATE_RECORDING_WINDOW',
-      payload: {
-        chatId: chatId
-      }
-    }, '*');
+    if (isRecording) {
+      // If currently recording, stop recording
+      window.postMessage({
+        type: 'STOP_RECORDING',
+        payload: {
+          chatId: chatId
+        }
+      }, '*');
+      setIsRecording(false);
+    } else {
+      // If not recording, start recording
+      window.postMessage({
+        type: 'START_RECORDING',
+        payload: {
+          chatId: chatId
+        }
+      }, '*');
+      setIsRecording(true);
+    }
   };
+
+  // Determine button styling based on recording state
+  const recordingButtonClasses = cn(
+    "absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50",
+    {
+      "text-red-500 hover:text-red-700 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite] border border-red-500": isRecording,
+      "text-gray-500 hover:text-primary": !isRecording
+    }
+  );
 
   return (
     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -92,11 +116,15 @@ export const ChatInput = ({
         <button
           type="button"
           onClick={handleScreenRecording}
-          className="absolute left-3 bottom-3 p-1.5 text-gray-500 hover:text-primary rounded-md transition-colors disabled:opacity-50"
+          className={recordingButtonClasses}
           disabled={disabled}
-          aria-label="Start screen recording"
+          aria-label={isRecording ? "Stop recording" : "Start recording"}
         >
-          <Video className="w-5 h-5" />
+          {isRecording ? (
+            <Square className="w-5 h-5" />
+          ) : (
+            <Video className="w-5 h-5" />
+          )}
         </button>
         <button
           type="submit"
@@ -113,7 +141,10 @@ export const ChatInput = ({
       <div className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
         {disabled ? 
           "Select a chat from the sidebar or create a new one" : 
-          "Press Enter to send, Shift+Enter for a new line"}
+          isRecording ?
+            "Recording in progress. Click the square icon to stop recording." :
+            "Press Enter to send, Shift+Enter for a new line"
+        }
       </div>
     </div>
   );
