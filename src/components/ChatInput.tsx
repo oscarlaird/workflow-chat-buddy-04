@@ -79,8 +79,8 @@ export const ChatInput = ({
       // Message directly to background script
       if (newRecordingState) {
         // Start recording
-        if (chrome && chrome.runtime) {
-          chrome.runtime.sendMessage({
+        if (window.chrome && window.chrome.runtime) {
+          window.chrome.runtime.sendMessage({
             action: "startRecording",
             chatId: chatId
           });
@@ -95,8 +95,8 @@ export const ChatInput = ({
         }
       } else {
         // Stop recording
-        if (chrome && chrome.runtime) {
-          chrome.runtime.sendMessage({
+        if (window.chrome && window.chrome.runtime) {
+          window.chrome.runtime.sendMessage({
             action: "stopRecording",
             chatId: chatId
           });
