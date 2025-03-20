@@ -76,9 +76,10 @@ export const ChatInput = ({
       const newRecordingState = !isRecording;
       setIsRecording(newRecordingState);
       
-      // Send message to the extension to start or stop recording
-      window.postMessage({
-        type: newRecordingState ? 'START_RECORDING' : 'STOP_RECORDING',
+      // Send message to the parent window (extension) using window.parent.postMessage
+      const messageType = newRecordingState ? 'START_RECORDING' : 'STOP_RECORDING';
+      window.parent.postMessage({
+        type: messageType,
         payload: {
           chatId: chatId
         }
