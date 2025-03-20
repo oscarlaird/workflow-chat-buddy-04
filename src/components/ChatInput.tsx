@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { CornerDownLeft, Loader2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -88,6 +88,8 @@ function App() {
             }
           />
           <Route path="/chat/:id" element={<ConversationPage />} />
+          {/* Add new route to handle conversation with query parameter */}
+          <Route path="/conversation" element={<ConversationPage />} />
           <Route path="/workflow/:id" element={<WorkflowPage />} />
           <Route path="/workflow" element={<WorkflowPage />} />
           <Route path="*" element={<NotFound />} />
