@@ -19,6 +19,7 @@ interface MessageListProps {
   streamingMessageIds?: Set<string>;
   runMessages?: any[];
   onStopRun?: (runId: string) => void;
+  forceExtensionInstalled?: boolean;
 }
 
 export const MessageList = ({ 
@@ -29,8 +30,12 @@ export const MessageList = ({
   pendingMessageIds = new Set(),
   streamingMessageIds = new Set(),
   runMessages = [],
+  forceExtensionInstalled = false,
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // If forceExtensionInstalled is true, we'll consider the extension as installed
+  const effectiveIsExtensionInstalled = isExtensionInstalled || forceExtensionInstalled;
 
   useEffect(() => {
     scrollToBottom();
@@ -53,7 +58,7 @@ export const MessageList = ({
 
   // Check if any run message is of type spawn_window for this run
   const shouldShowExtensionAlert = (runId: string) => {
-    if (isExtensionInstalled) return false;
+    if (effectiveIsExtensionInstalled) return false;
     
     const hasSpawnWindowMessage = runMessages.some(msg => 
       msg.run_id === runId && 

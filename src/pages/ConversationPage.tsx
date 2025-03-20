@@ -2,6 +2,7 @@
 import { useParams, useLocation } from "react-router-dom";
 import ChatInterface from "@/components/ChatInterface";
 import { useToast } from "@/components/ui/use-toast";
+import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 
 const ConversationPage = () => {
   const { id: urlParamId } = useParams();
@@ -11,6 +12,9 @@ const ConversationPage = () => {
   
   // Use URL parameter first, then fall back to query parameter
   const conversationId = urlParamId || chatIdFromQuery || "";
+  
+  // Determine if the page is being accessed through the extension (via query param)
+  const isAccessedThroughExtension = Boolean(chatIdFromQuery);
   
   const { toast } = useToast();
 
@@ -35,11 +39,18 @@ const ConversationPage = () => {
 
   return (
     <div className="h-screen bg-gray-50 dark:bg-gray-950">
+      {!isAccessedThroughExtension && (
+        <div className="absolute top-4 right-4 z-10">
+          <ExtensionStatusIndicator />
+        </div>
+      )}
       <div className="h-full p-4">
         <div className="h-full glass-panel">
           <ChatInterface
             conversationId={conversationId}
             onSendMessage={handleSendMessage}
+            // If accessed through extension, we can assume it's installed
+            forceExtensionInstalled={isAccessedThroughExtension}
           />
         </div>
       </div>
