@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { CornerDownLeft, Loader2, Video, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,7 +78,7 @@ export const ChatInput = ({
       // Message directly to background script
       if (newRecordingState) {
         // Start recording
-        if (window.chrome && window.chrome.runtime) {
+        if (window.chrome?.runtime) {
           window.chrome.runtime.sendMessage({
             action: "startRecording",
             chatId: chatId
@@ -95,7 +94,7 @@ export const ChatInput = ({
         }
       } else {
         // Stop recording
-        if (window.chrome && window.chrome.runtime) {
+        if (window.chrome?.runtime) {
           window.chrome.runtime.sendMessage({
             action: "stopRecording",
             chatId: chatId
