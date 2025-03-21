@@ -49,6 +49,7 @@ export type Database = {
           created_at: string
           html_snapshot: string | null
           id: number
+          message_id: string | null
           screenshot_base64: string | null
           screenshot_url: string | null
           tab_id: string | null
@@ -64,6 +65,7 @@ export type Database = {
           created_at?: string
           html_snapshot?: string | null
           id?: number
+          message_id?: string | null
           screenshot_base64?: string | null
           screenshot_url?: string | null
           tab_id?: string | null
@@ -79,6 +81,7 @@ export type Database = {
           created_at?: string
           html_snapshot?: string | null
           id?: number
+          message_id?: string | null
           screenshot_base64?: string | null
           screenshot_url?: string | null
           tab_id?: string | null
@@ -101,6 +104,7 @@ export type Database = {
           is_currently_streaming: boolean | null
           role: string
           run_id: string | null
+          screenrecording_url: string | null
           username: string
           workflow_step_id: string | null
         }
@@ -114,6 +118,7 @@ export type Database = {
           is_currently_streaming?: boolean | null
           role: string
           run_id?: string | null
+          screenrecording_url?: string | null
           username: string
           workflow_step_id?: string | null
         }
@@ -127,6 +132,7 @@ export type Database = {
           is_currently_streaming?: boolean | null
           role?: string
           run_id?: string | null
+          screenrecording_url?: string | null
           username?: string
           workflow_step_id?: string | null
         }

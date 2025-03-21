@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -8,6 +7,7 @@ export interface Message {
   function_name?: string;
   workflow_step_id?: string;
   run_id?: string;
+  screenrecording_url?: string;
 }
 
 export interface Conversation {
