@@ -26,22 +26,26 @@ const CodeBlock = ({ code, language = "javascript" }: CodeBlockProps) => {
   };
 
   return (
-    <div className="relative group">
-      <ScrollArea className="max-h-[400px] rounded-md">
-        <SyntaxHighlighter
-          language={language}
-          style={isDark ? vscDarkPlus : vs}
-          className="rounded-md overflow-x-auto text-sm font-mono"
-          customStyle={{
-            margin: 0,
-            padding: '1rem',
-            borderRadius: '0.375rem',
-            background: isDark ? '#0f1629' : '#f8f9fc',
-          }}
-        >
-          {code}
-        </SyntaxHighlighter>
-      </ScrollArea>
+    <div className="relative">
+      <div className="max-h-[400px] overflow-hidden rounded-md">
+        <ScrollArea className="h-full max-h-[400px]">
+          <SyntaxHighlighter
+            language={language}
+            style={isDark ? vscDarkPlus : vs}
+            className="text-sm font-mono"
+            customStyle={{
+              margin: 0,
+              padding: '1rem',
+              borderRadius: '0.375rem',
+              background: isDark ? '#0f1629' : '#f8f9fc',
+            }}
+            wrapLines={true}
+            wrapLongLines={true}
+          >
+            {code}
+          </SyntaxHighlighter>
+        </ScrollArea>
+      </div>
       
       <button
         onClick={handleCopy}
