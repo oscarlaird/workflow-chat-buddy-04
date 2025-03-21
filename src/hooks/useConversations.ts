@@ -74,8 +74,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           username: msg.username,
           function_name: msg.function_name,
           workflow_step_id: msg.workflow_step_id,
-          run_id: msg.run_id,
-          screenrecording_url: msg.screenrecording_url
+          run_id: msg.run_id
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
