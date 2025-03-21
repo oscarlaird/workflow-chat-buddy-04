@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Message } from "@/types";
+import { Message, Keyframe } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,13 +22,16 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [chatId] = useState(() => conversationId || uuidv4());
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [keyframes, setKeyframes] = useState<Record<string, Keyframe[]>>({});
 
   useEffect(() => {
     if (conversationId) {
       loadMessages();
+      loadKeyframes();
     } else {
       setMessages([]);
       setScreenRecordings({});
+      setKeyframes({});
     }
   }, [conversationId]);
 
@@ -44,6 +47,49 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     window.addEventListener("message", handleWorkflowRunCreated);
     return () => window.removeEventListener("message", handleWorkflowRunCreated);
   }, [conversationId]);
+
+  // Load keyframes from Supabase
+  const loadKeyframes = async () => {
+    try {
+      if (!conversationId) return;
+      
+      const { data, error } = await supabase
+        .from('keyframes')
+        .select('*')
+        .eq('chat_id', conversationId);
+      
+      if (error) {
+        console.error('Error loading keyframes from Supabase:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const keyframesMap: Record<string, Keyframe[]> = {};
+        
+        // Group keyframes by message_id
+        data.forEach(keyframe => {
+          const messageId = keyframe.message_id;
+          
+          if (!keyframesMap[messageId]) {
+            keyframesMap[messageId] = [];
+          }
+          
+          keyframesMap[messageId].push({
+            id: keyframe.id,
+            message_id: keyframe.message_id,
+            screenshot_url: keyframe.screenshot_url,
+            url: keyframe.url || '',
+            tab_title: keyframe.tab_title || '',
+            timestamp: keyframe.timestamp || new Date().toISOString()
+          });
+        });
+        
+        setKeyframes(keyframesMap);
+      }
+    } catch (error) {
+      console.error('Error in loadKeyframes:', error);
+    }
+  };
 
   // Load messages from Supabase
   const loadMessages = async () => {
@@ -75,7 +121,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           function_name: msg.function_name,
           workflow_step_id: msg.workflow_step_id,
           run_id: msg.run_id,
-          screenrecording_url: msg.screenrecording_url
+          screenrecording_url: msg.screenrecording_url,
+          chat_id: msg.chat_id
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
@@ -133,6 +180,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     hasScreenRecording: (message: Message) => message.id in screenRecordings,
     setMessages,
     currentRunId,
-    setCurrentRunId
+    setCurrentRunId,
+    keyframes
   };
 };

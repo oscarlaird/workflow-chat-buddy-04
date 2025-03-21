@@ -10,6 +10,7 @@ import ScreenRecordingMessage from "./ScreenRecordingMessage";
 import ScreenRecordingDisplay from "./ScreenRecordingDisplay";
 import ExtensionAlert from "./ExtensionAlert";
 import EmptyMessageList from "./EmptyMessageList";
+import RecordingButton from "./RecordingButton";
 
 interface MessageListProps {
   messages: Message[];
@@ -76,6 +77,18 @@ export const MessageList = ({
   return (
     <div className="space-y-6">
       {messages.map((message) => {
+        // Special handling for recording_requested and recording_progress functions
+        if (message.function_name === "recording_requested" || message.function_name === "recording_progress") {
+          return (
+            <div key={message.id} className="flex justify-center">
+              <RecordingButton 
+                message={message} 
+                isInProgress={message.function_name === "recording_progress"} 
+              />
+            </div>
+          );
+        }
+        
         // Check if this message is a run message first
         if (message.run_id) {
           return (

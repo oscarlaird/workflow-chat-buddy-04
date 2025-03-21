@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -9,6 +8,7 @@ export interface Message {
   workflow_step_id?: string;
   run_id?: string;
   screenrecording_url?: string;
+  chat_id?: string;
 }
 
 export interface Conversation {
@@ -90,6 +90,16 @@ export interface Run {
   username?: string;
 }
 
+// Add Keyframe interface for screen recording keyframes
+export interface Keyframe {
+  id: number;
+  message_id: string;
+  screenshot_url: string;
+  url: string;
+  tab_title: string;
+  timestamp: string;
+}
+
 // Define enum types to match our database enums
 export enum RunMessageType {
   INPUTS = 'inputs',
@@ -119,4 +129,11 @@ export interface RunMessage {
   username?: string;
   sender_type: RunMessageSenderType;
   display_text?: string;
+}
+
+// Add recording status enum
+export enum RecordingStatus {
+  REQUESTED = 'requested',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed'
 }

@@ -7,6 +7,7 @@ import { Index } from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ConversationPage from "./pages/ConversationPage";
 import WorkflowPage from "./pages/WorkflowPage";
+import RecordingScreen from "./pages/RecordingScreen";
 import { useChats } from "./hooks/useChats";
 import Cookies from "js-cookie";
 
@@ -92,6 +93,8 @@ function App() {
           <Route path="/conversation" element={<ConversationPage />} />
           <Route path="/workflow/:id" element={<WorkflowPage />} />
           <Route path="/workflow" element={<WorkflowPage />} />
+          {/* Add new route for recording screen */}
+          <Route path="/recording-screen" element={<RecordingScreen />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

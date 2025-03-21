@@ -1,7 +1,10 @@
+
 import { useState, useRef, useEffect } from "react";
 import { CornerDownLeft, Loader2, Video, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -69,7 +72,28 @@ export const ChatInput = ({
     autoResizeTextarea();
   };
 
-  const handleScreenRecording = () => {
+  const addRecordingRequestedMessage = async () => {
+    if (!chatId) return;
+    
+    try {
+      const messageId = uuidv4();
+      
+      const messageData = {
+        id: messageId,
+        chat_id: chatId,
+        role: 'assistant',
+        content: 'Click Here to Start Recording',
+        function_name: 'recording_requested',
+        is_currently_streaming: false
+      };
+      
+      await supabase.from('messages').insert(messageData);
+    } catch (error) {
+      console.error('Error adding recording_requested message:', error);
+    }
+  };
+
+  const handleScreenRecording = async () => {
     if (isInExtension) {
       // Toggle recording state
       const newRecordingState = !isRecording;
@@ -117,6 +141,9 @@ export const ChatInput = ({
           chatId: chatId
         }
       }, '*');
+      
+      // Add recording_requested message
+      await addRecordingRequestedMessage();
     }
   };
 
