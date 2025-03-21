@@ -15,12 +15,12 @@ import {
 } from "@/components/ui/carousel";
 
 interface Keyframe {
-  id: string;
+  id: number;
   message_id: string;
-  screenshot_url: string;
-  url: string;
-  tab_title: string;
-  timestamp: string;
+  screenshot_url: string | null;
+  url: string | null;
+  tab_title: string | null;
+  timestamp: string | null;
 }
 
 interface ScreenRecordingDisplayProps {
