@@ -99,12 +99,14 @@ export type Database = {
       messages: {
         Row: {
           chat_id: string
+          code_run: boolean
           content: string
           created_at: string | null
           from_template: boolean | null
           function_name: string | null
           id: string
           is_currently_streaming: boolean | null
+          requires_text_reply: boolean
           role: string
           run_id: string | null
           screenrecording_url: string | null
@@ -113,12 +115,14 @@ export type Database = {
         }
         Insert: {
           chat_id: string
+          code_run?: boolean
           content: string
           created_at?: string | null
           from_template?: boolean | null
           function_name?: string | null
           id?: string
           is_currently_streaming?: boolean | null
+          requires_text_reply?: boolean
           role: string
           run_id?: string | null
           screenrecording_url?: string | null
@@ -127,12 +131,14 @@ export type Database = {
         }
         Update: {
           chat_id?: string
+          code_run?: boolean
           content?: string
           created_at?: string | null
           from_template?: boolean | null
           function_name?: string | null
           id?: string
           is_currently_streaming?: boolean | null
+          requires_text_reply?: boolean
           role?: string
           run_id?: string | null
           screenrecording_url?: string | null

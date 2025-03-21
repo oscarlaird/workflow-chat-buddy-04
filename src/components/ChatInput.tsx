@@ -159,14 +159,14 @@ export const ChatInput = ({
 
   // Generate recording button classes based on state
   const getRecordingButtonClasses = () => {
-    let classes = "flex items-center gap-2 absolute left-3 bottom-3 p-2 rounded-md transition-all disabled:opacity-50";
+    let classes = "flex items-center gap-1.5 absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50";
     
     if (isInExtension && isRecording) {
-      // Red recording button with pulsing animation when recording in extension
+      // Red recording button with pulsing animation when recording
       classes += " bg-red-100 hover:bg-red-200 text-red-600 animate-pulse";
     } else {
-      // Improved default state with better visibility
-      classes += " bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 border border-purple-200";
+      // Improved subtle button with better contrast
+      classes += " bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-300";
     }
     
     return classes;
@@ -183,8 +183,8 @@ export const ChatInput = ({
     } else {
       return {
         icon: <Video className="w-4 h-4" />,
-        text: "Record screen",
-        ariaLabel: "Record your screen",
+        text: "Capture screen",
+        ariaLabel: "Capture your screen",
       };
     }
   };

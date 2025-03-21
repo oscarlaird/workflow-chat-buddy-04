@@ -7,6 +7,8 @@ import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
 import { TypedInputField, InputFieldIcon } from "@/components/InputField";
 import { formatFieldName, parseSpreadsheetFile, mapSpreadsheetToInputSchema } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Table as UITable,
   TableBody,
@@ -123,6 +125,41 @@ export const WorkflowInputs = ({
     if (onRunWorkflow) {
       console.log("Calling onRunWorkflow callback from WorkflowInputs");
       onRunWorkflow();
+    }
+  };
+
+  const handleRunCode = async () => {
+    if (!chatId) {
+      console.error("Cannot run code without a chat ID");
+      return;
+    }
+
+    try {
+      const messageId = uuidv4();
+      
+      const messageData = {
+        id: messageId,
+        chat_id: chatId,
+        role: 'user',
+        content: 'Please execute my workflow',
+        username: 'current_user',
+        requires_text_reply: false,
+        code_run: true
+      };
+      
+      await supabase.from('messages').insert(messageData);
+      
+      toast({
+        title: "Code execution requested",
+        description: "Your workflow code will be executed"
+      });
+    } catch (error) {
+      console.error('Error requesting code execution:', error);
+      toast({
+        title: "Error",
+        description: "Failed to request code execution",
+        variant: "destructive"
+      });
     }
   };
 
@@ -337,27 +374,41 @@ export const WorkflowInputs = ({
         )}
       </div>
       
-      {showRunButton && (
+      <div className="space-y-3">
+        {showRunButton && (
+          <button
+            onClick={handleRunWorkflow}
+            disabled={disabled || isRunning}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
+          >
+            {isRunning ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Running...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Run Workflow</span>
+              </>
+            )}
+          </button>
+        )}
+        
         <button
-          onClick={handleRunWorkflow}
+          onClick={handleRunCode}
           disabled={disabled || isRunning}
-          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-70"
         >
-          {isRunning ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span>Running...</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-              <span>Run Workflow</span>
-            </>
-          )}
+          <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Run Code</span>
         </button>
-      )}
+      </div>
 
       {/* File Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>

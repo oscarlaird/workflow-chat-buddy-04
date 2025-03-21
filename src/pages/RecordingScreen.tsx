@@ -1,109 +1,86 @@
-
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Video, Square } from "lucide-react";
-import { v4 as uuidv4 } from 'uuid';
 import { supabase } from "@/integrations/supabase/client";
 
-const RecordingScreen = () => {
+export const RecordingScreen = () => {
+  const { chatId } = useParams<{ chatId: string }>();
+  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const chatId = queryParams.get('chat_id');
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    // Listen for recording status changes
-    const handleRecordingStatus = (event: MessageEvent) => {
-      if (event.data && event.data.type === "RECORDING_STATUS") {
-        setIsRecording(event.data.isRecording);
+    // Listen for messages from the background script
+    const handleBackgroundMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === "RECORDING_ERROR") {
+        setHasError(true);
       }
     };
 
-    window.addEventListener("message", handleRecordingStatus);
-    
-    // Notify the parent window that the recording screen is ready
-    window.parent.postMessage({
-      type: "RECORDING_SCREEN_READY",
-      chatId: chatId
-    }, "*");
-    
-    return () => window.removeEventListener("message", handleRecordingStatus);
-  }, [chatId]);
+    window.addEventListener("message", handleBackgroundMessage);
+    return () => window.removeEventListener("message", handleBackgroundMessage);
+  }, []);
 
-  const addRecordingProgressMessage = async () => {
-    if (!chatId) return;
-    
-    try {
-      const messageId = uuidv4();
-      
-      const messageData = {
-        id: messageId,
-        chat_id: chatId,
-        role: 'assistant',
-        content: 'Recording in Progress...',
-        function_name: 'recording_progress',
-        is_currently_streaming: false,
-        username: 'system' // Required username field
-      };
-      
-      await supabase.from('messages').insert(messageData);
-    } catch (error) {
-      console.error('Error adding recording_progress message:', error);
+  const handleToggleRecording = () => {
+    if (!chatId) {
+      console.error("Chat ID is missing");
+      return;
+    }
+
+    if (isRecording) {
+      // Stop recording
+      setIsRecording(false);
+      window.postMessage({ type: 'STOP_RECORDING', payload: { chatId } }, '*');
+    } else {
+      // Start recording
+      setIsRecording(true);
+      window.postMessage({ type: 'START_RECORDING', payload: { chatId } }, '*');
     }
   };
 
-  const handleToggleRecording = async () => {
-    // Toggle recording state
-    const newRecordingState = !isRecording;
-    setIsRecording(newRecordingState);
-    
-    // Send message to parent window to start/stop recording
-    if (newRecordingState) {
-      // Start recording
-      window.parent.postMessage({
-        type: 'START_RECORDING',
-        payload: { chatId }
-      }, '*');
-      
-      // Add a recording_progress message
-      await addRecordingProgressMessage();
-    } else {
-      // Stop recording
-      window.parent.postMessage({
-        type: 'STOP_RECORDING',
-        payload: { chatId }
-      }, '*');
-    }
-    
-    // Also notify the main chat window to update recording buttons
-    window.parent.postMessage({
-      type: 'RECORDING_STATUS',
-      isRecording: newRecordingState
-    }, '*');
+  const closeWindow = () => {
+    navigate(`/`);
   };
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-md w-full glass-panel p-8 rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold mb-6">Screen Recording</h1>
-        
-        <div className="space-y-6 mb-8">
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-            <h2 className="font-medium text-lg mb-2">Instructions:</h2>
-            <ol className="text-left space-y-2 text-sm">
-              <li>1. Click this window to be recorded - your entire window will be recorded</li>
-              <li>2. Do your steps as you would normally</li>
-              <li>3. Once you are done, click the stop recording button</li>
-              <li>4. Review the recording to make sure it is correct</li>
-            </ol>
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 p-3 shadow-md z-10 flex justify-between items-center">
+        <h1 className="text-lg font-semibold">Screen Recording</h1>
+        <button 
+          onClick={closeWindow}
+          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.8536 2.85355C13.0488 2.65829 13.0488 2.34171 12.8536 2.14645C12.6583 1.95118 12.3417 1.95118 12.1464 2.14645L7.5 6.79289L2.85355 2.14645C2.65829 1.95118 2.34171 1.95118 2.14645 2.14645C1.95118 2.34171 1.95118 2.65829 2.14645 2.85355L6.79289 7.5L2.14645 12.1464C1.95118 12.3417 1.95118 12.6583 2.14645 12.8536C2.34171 13.0488 2.65829 13.0488 2.85355 12.8536L7.5 8.20711L12.1464 12.8536C12.3417 13.0488 12.6583 13.0488 12.8536 12.8536C13.0488 12.6583 13.0488 12.3417 12.8536 12.1464L8.20711 7.5L12.8536 2.85355Z" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+      
+      <div className="flex-1 pt-16 p-6 overflow-auto">
+        <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <div className="mb-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">
+              {isRecording ? "Recording in progress..." : "Ready to capture"}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              {isRecording 
+                ? "Your screen is being recorded. Click 'Stop Recording' when you're done." 
+                : "Click the button below to record your screen and capture your workflow."}
+            </p>
           </div>
+          
+          {hasError && (
+            <div className="mb-6 p-3 bg-red-100 border border-red-200 text-red-700 rounded">
+              <p>There was a problem starting the recording. Please make sure you've granted permission to record your screen.</p>
+            </div>
+          )}
           
           <Button 
             onClick={handleToggleRecording}
             className={`w-full py-6 text-lg ${isRecording ? 
               'bg-red-500 hover:bg-red-600 animate-pulse' : 
-              'bg-purple-600 hover:bg-purple-700'}`}
+              'bg-gray-700 hover:bg-gray-800'}`}
           >
             {isRecording ? (
               <>
@@ -113,17 +90,17 @@ const RecordingScreen = () => {
             ) : (
               <>
                 <Video className="w-5 h-5 mr-2" />
-                Record Your Screen
+                Capture Screen
               </>
             )}
           </Button>
+          
+          {isRecording && (
+            <p className="mt-3 text-center text-red-600 text-sm animate-pulse">
+              Recording in progress...
+            </p>
+          )}
         </div>
-        
-        {isRecording && (
-          <div className="text-red-500 animate-pulse font-medium">
-            Recording in progress...
-          </div>
-        )}
       </div>
     </div>
   );

@@ -26,11 +26,11 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
 
   const getButtonText = () => {
     if (message.function_name === 'recording_requested') {
-      return message.content || 'Start Screen Recording';
+      return message.content || 'Capture Screen';
     } else if (message.function_name === 'recording_progress') {
       return 'Recording in Progress...';
     }
-    return 'Record Screen';
+    return 'Capture Screen';
   };
 
   const handleClick = () => {
@@ -66,7 +66,7 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
       className={`w-full max-w-xs ${
         message.function_name === 'recording_progress' || recording ? 
           'animate-pulse bg-red-50 border-red-300 text-red-700 hover:bg-red-100' : 
-          'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'
+          'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
       }`}
     >
       {message.function_name === 'recording_progress' || recording ? (
