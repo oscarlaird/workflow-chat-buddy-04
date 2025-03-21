@@ -14,34 +14,62 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchPythonCode = async () => {
-      if (!chatId) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('chats')
-          .select('script')
-          .eq('id', chatId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching Python code:', error);
-          return;
-        }
+  // Function to fetch Python code
+  const fetchPythonCode = async () => {
+    if (!chatId) return;
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('chats')
+        .select('script')
+        .eq('id', chatId)
+        .single();
         
-        setPythonCode(data.script);
-      } catch (err) {
-        console.error('Exception when fetching Python code:', err);
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        console.error('Error fetching Python code:', error);
+        return;
       }
-    };
+      
+      setPythonCode(data.script);
+    } catch (err) {
+      console.error('Exception when fetching Python code:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    // Fetch Python code on initial load (if panel is open)
     if (isOpen) {
       fetchPythonCode();
     }
+    
+    // Subscribe to real-time updates to the 'script' field for this chat
+    const channel = supabase
+      .channel('script-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chats',
+          filter: `id=eq.${chatId}`
+        },
+        (payload) => {
+          console.log('Script updated:', payload);
+          // If the component is already rendered, update the pythonCode state
+          if (payload.new && 'script' in payload.new) {
+            setPythonCode(payload.new.script);
+          }
+        }
+      )
+      .subscribe();
+    
+    // Clean up the subscription when the component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [chatId, isOpen]);
 
   if (!chatId) return null;
