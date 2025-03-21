@@ -59,15 +59,28 @@ const RecordingScreen = () => {
     setIsRecording(newRecordingState);
     
     // Send message to parent window to start/stop recording
-    window.parent.postMessage({
-      type: newRecordingState ? 'START_RECORDING' : 'STOP_RECORDING',
-      payload: { chatId }
-    }, '*');
-
-    // If starting a recording, add a recording_progress message
     if (newRecordingState) {
+      // Start recording
+      window.parent.postMessage({
+        type: 'START_RECORDING',
+        payload: { chatId }
+      }, '*');
+      
+      // Add a recording_progress message
       await addRecordingProgressMessage();
+    } else {
+      // Stop recording
+      window.parent.postMessage({
+        type: 'STOP_RECORDING',
+        payload: { chatId }
+      }, '*');
     }
+    
+    // Also notify the main chat window to update recording buttons
+    window.parent.postMessage({
+      type: 'RECORDING_STATUS',
+      isRecording: newRecordingState
+    }, '*');
   };
 
   return (

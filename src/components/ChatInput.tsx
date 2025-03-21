@@ -41,6 +41,18 @@ export const ChatInput = ({
     }
   }, [isLoading, disabled]);
 
+  useEffect(() => {
+    // Listen for recording status changes
+    const handleRecordingStatus = (event: MessageEvent) => {
+      if (event.data && event.data.type === "RECORDING_STATUS") {
+        setIsRecording(event.data.isRecording);
+      }
+    };
+
+    window.addEventListener("message", handleRecordingStatus);
+    return () => window.removeEventListener("message", handleRecordingStatus);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || disabled) return;
@@ -151,7 +163,7 @@ export const ChatInput = ({
     
     if (isInExtension && isRecording) {
       // Red recording button with pulsing border when recording in extension
-      classes += " bg-red-500 hover:bg-red-600 text-white animate-pulse ring-2 ring-red-500";
+      classes += " bg-red-100 hover:bg-red-200 text-red-600 animate-pulse";
     } else {
       // Default state
       classes += " text-gray-500 hover:text-primary";
@@ -162,20 +174,12 @@ export const ChatInput = ({
 
   // Get the appropriate icon and aria-label for the recording button
   const getRecordingButtonProps = () => {
-    if (isInExtension) {
-      if (isRecording) {
-        return {
-          icon: <Square className="w-5 h-5" />,
-          text: "Stop recording",
-          ariaLabel: "Stop screen recording",
-        };
-      } else {
-        return {
-          icon: <Video className="w-5 h-5" />,
-          text: "Add screen recording",
-          ariaLabel: "Start screen recording",
-        };
-      }
+    if (isRecording) {
+      return {
+        icon: <Square className="w-5 h-5" />,
+        text: "Stop recording",
+        ariaLabel: "Stop screen recording",
+      };
     } else {
       return {
         icon: <Video className="w-5 h-5" />,
@@ -197,7 +201,7 @@ export const ChatInput = ({
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Select or create a chat to start messaging..." : "Type your message..."}
           rows={1}
-          className="w-full py-3 px-4 pr-12 pl-28 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
+          className="w-full py-3 px-4 pr-12 pl-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading || disabled}
           autoFocus={!disabled}
         />
