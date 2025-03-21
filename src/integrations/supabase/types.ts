@@ -16,6 +16,7 @@ export type Database = {
           input_schema: Json | null
           is_example: boolean | null
           multi_input: boolean | null
+          script: string | null
           title: string
           updated_at: string | null
           username: string | null
@@ -26,6 +27,7 @@ export type Database = {
           input_schema?: Json | null
           is_example?: boolean | null
           multi_input?: boolean | null
+          script?: string | null
           title: string
           updated_at?: string | null
           username?: string | null
@@ -36,6 +38,7 @@ export type Database = {
           input_schema?: Json | null
           is_example?: boolean | null
           multi_input?: boolean | null
+          script?: string | null
           title?: string
           updated_at?: string | null
           username?: string | null

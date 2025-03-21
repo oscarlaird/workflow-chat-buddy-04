@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import WorkflowPanel from "@/components/WorkflowPanel";
 import RunMessage from "@/components/RunMessage";
+import PythonCodeDisplay from "@/components/PythonCodeDisplay";
 import { useToast } from "@/components/ui/use-toast";
 import { Info, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
 import WorkflowInputs from "./WorkflowInputs";
+import PythonCodeDisplay from "./PythonCodeDisplay";
 import { InputValues, RunMessageType, RunMessageSenderType } from "@/types";
 import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,6 +138,7 @@ const WorkflowPanel = ({
           />
         ))}
       </div>
+      {chatId && <PythonCodeDisplay chatId={chatId} />}
     </div>
   );
 };
