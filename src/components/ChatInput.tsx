@@ -84,7 +84,8 @@ export const ChatInput = ({
         role: 'assistant',
         content: 'Click Here to Start Recording',
         function_name: 'recording_requested',
-        is_currently_streaming: false
+        is_currently_streaming: false,
+        username: 'system' // Adding the required username field
       };
       
       await supabase.from('messages').insert(messageData);
