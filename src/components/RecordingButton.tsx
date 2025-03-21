@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Message, RecordingStatus } from "@/types";
+import { Message } from "@/types";
 import { Play, Square } from "lucide-react";
 
 interface RecordingButtonProps {
@@ -23,7 +23,7 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
 
   const handleClick = () => {
     if (message.function_name === 'recording_requested' || (message.function_name === 'recording_progress' && !recording)) {
-      // Start recording
+      // Start recording - Create recording window
       setRecording(true);
       
       // Send message to create recording window or start recording

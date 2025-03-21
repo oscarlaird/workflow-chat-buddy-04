@@ -85,7 +85,7 @@ export const ChatInput = ({
         content: 'Click Here to Start Recording',
         function_name: 'recording_requested',
         is_currently_streaming: false,
-        username: 'system' // Adding the required username field
+        username: 'system' // Required username field
       };
       
       await supabase.from('messages').insert(messageData);
@@ -135,22 +135,19 @@ export const ChatInput = ({
         }
       }
     } else {
-      // When in dashboard, create recording window
+      // When in dashboard, create recording window without adding a message yet
       window.postMessage({
         type: 'CREATE_RECORDING_WINDOW',
         payload: {
           chatId: chatId
         }
       }, '*');
-      
-      // Add recording_requested message
-      await addRecordingRequestedMessage();
     }
   };
 
   // Generate recording button classes based on state
   const getRecordingButtonClasses = () => {
-    let classes = "absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50";
+    let classes = "flex items-center gap-1 absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50";
     
     if (isInExtension && isRecording) {
       // Red recording button with pulsing border when recording in extension
@@ -169,17 +166,20 @@ export const ChatInput = ({
       if (isRecording) {
         return {
           icon: <Square className="w-5 h-5" />,
+          text: "Stop recording",
           ariaLabel: "Stop screen recording",
         };
       } else {
         return {
           icon: <Video className="w-5 h-5" />,
+          text: "Add screen recording",
           ariaLabel: "Start screen recording",
         };
       }
     } else {
       return {
         icon: <Video className="w-5 h-5" />,
+        text: "Add screen recording",
         ariaLabel: "Open screen recording",
       };
     }
@@ -197,7 +197,7 @@ export const ChatInput = ({
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Select or create a chat to start messaging..." : "Type your message..."}
           rows={1}
-          className="w-full py-3 px-4 pr-12 pl-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
+          className="w-full py-3 px-4 pr-12 pl-28 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading || disabled}
           autoFocus={!disabled}
         />
@@ -209,6 +209,7 @@ export const ChatInput = ({
           aria-label={recordingButtonProps.ariaLabel}
         >
           {recordingButtonProps.icon}
+          <span className="text-xs font-medium">{recordingButtonProps.text}</span>
         </button>
         <button
           type="submit"

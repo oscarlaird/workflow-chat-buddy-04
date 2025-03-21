@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Video, Square } from "lucide-react";
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
 
 const RecordingScreen = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -29,7 +31,29 @@ const RecordingScreen = () => {
     return () => window.removeEventListener("message", handleRecordingStatus);
   }, [chatId]);
 
-  const handleToggleRecording = () => {
+  const addRecordingProgressMessage = async () => {
+    if (!chatId) return;
+    
+    try {
+      const messageId = uuidv4();
+      
+      const messageData = {
+        id: messageId,
+        chat_id: chatId,
+        role: 'assistant',
+        content: 'Recording in Progress...',
+        function_name: 'recording_progress',
+        is_currently_streaming: false,
+        username: 'system' // Required username field
+      };
+      
+      await supabase.from('messages').insert(messageData);
+    } catch (error) {
+      console.error('Error adding recording_progress message:', error);
+    }
+  };
+
+  const handleToggleRecording = async () => {
     // Toggle recording state
     const newRecordingState = !isRecording;
     setIsRecording(newRecordingState);
@@ -39,6 +63,11 @@ const RecordingScreen = () => {
       type: newRecordingState ? 'START_RECORDING' : 'STOP_RECORDING',
       payload: { chatId }
     }, '*');
+
+    // If starting a recording, add a recording_progress message
+    if (newRecordingState) {
+      await addRecordingProgressMessage();
+    }
   };
 
   return (
