@@ -103,7 +103,7 @@ const RecordingScreen = () => {
             onClick={handleToggleRecording}
             className={`w-full py-6 text-lg ${isRecording ? 
               'bg-red-500 hover:bg-red-600 animate-pulse' : 
-              'bg-blue-500 hover:bg-blue-600'}`}
+              'bg-purple-600 hover:bg-purple-700'}`}
           >
             {isRecording ? (
               <>
@@ -113,7 +113,7 @@ const RecordingScreen = () => {
             ) : (
               <>
                 <Video className="w-5 h-5 mr-2" />
-                Start Recording
+                Record Your Screen
               </>
             )}
           </Button>

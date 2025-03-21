@@ -159,14 +159,14 @@ export const ChatInput = ({
 
   // Generate recording button classes based on state
   const getRecordingButtonClasses = () => {
-    let classes = "flex items-center gap-1 absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50";
+    let classes = "flex items-center gap-2 absolute left-3 bottom-3 p-2 rounded-md transition-all disabled:opacity-50";
     
     if (isInExtension && isRecording) {
-      // Red recording button with pulsing border when recording in extension
+      // Red recording button with pulsing animation when recording in extension
       classes += " bg-red-100 hover:bg-red-200 text-red-600 animate-pulse";
     } else {
-      // Default state
-      classes += " text-gray-500 hover:text-primary";
+      // Improved default state with better visibility
+      classes += " bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-700 border border-purple-200";
     }
     
     return classes;
@@ -176,15 +176,15 @@ export const ChatInput = ({
   const getRecordingButtonProps = () => {
     if (isRecording) {
       return {
-        icon: <Square className="w-5 h-5" />,
+        icon: <Square className="w-4 h-4" />,
         text: "Stop recording",
         ariaLabel: "Stop screen recording",
       };
     } else {
       return {
-        icon: <Video className="w-5 h-5" />,
-        text: "Add screen recording",
-        ariaLabel: "Open screen recording",
+        icon: <Video className="w-4 h-4" />,
+        text: "Record screen",
+        ariaLabel: "Record your screen",
       };
     }
   };
@@ -201,7 +201,7 @@ export const ChatInput = ({
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Select or create a chat to start messaging..." : "Type your message..."}
           rows={1}
-          className="w-full py-3 px-4 pr-12 pl-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
+          className="w-full py-3 px-4 pr-12 pl-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading || disabled}
           autoFocus={!disabled}
         />

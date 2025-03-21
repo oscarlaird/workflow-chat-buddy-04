@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Message } from "@/types";
-import { Play, Square } from "lucide-react";
+import { Video, Square } from "lucide-react";
 
 interface RecordingButtonProps {
   message: Message;
@@ -26,7 +26,7 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
 
   const getButtonText = () => {
     if (message.function_name === 'recording_requested') {
-      return message.content || 'Click Here to Start Recording';
+      return message.content || 'Start Screen Recording';
     } else if (message.function_name === 'recording_progress') {
       return 'Recording in Progress...';
     }
@@ -65,8 +65,8 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
       variant="outline"
       className={`w-full max-w-xs ${
         message.function_name === 'recording_progress' || recording ? 
-          'animate-pulse bg-red-50 border-red-200 text-red-700 hover:bg-red-100' : 
-          'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+          'animate-pulse bg-red-50 border-red-300 text-red-700 hover:bg-red-100' : 
+          'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'
       }`}
     >
       {message.function_name === 'recording_progress' || recording ? (
@@ -76,7 +76,7 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
         </>
       ) : (
         <>
-          <Play className="w-4 h-4 mr-2" />
+          <Video className="w-4 h-4 mr-2" />
           {getButtonText()}
         </>
       )}
