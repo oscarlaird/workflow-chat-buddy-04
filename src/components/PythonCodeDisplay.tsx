@@ -92,7 +92,9 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
           {isLoading ? (
             <div className="text-sm text-gray-500">Loading...</div>
           ) : pythonCode ? (
-            <CodeBlock code={pythonCode} language="python" />
+            <div className="py-2">
+              <CodeBlock code={pythonCode} language="python" />
+            </div>
           ) : (
             <div className="text-sm text-gray-500">No Python code available for this workflow.</div>
           )}
