@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Run, RunMessage as RunMessageType } from "@/types";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import RunMessageItem from "./RunMessage/RunMessageItem";
+import RunMessageItem from "./RunMessageItem";
 
 interface RunBubbleProps {
   run: Run;
