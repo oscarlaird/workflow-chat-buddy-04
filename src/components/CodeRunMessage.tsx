@@ -103,36 +103,34 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             <strong>Command:</strong> {message.content || "Executing workflow..."}
           </div>
           
-          {/* Code Run Events section - Always show the dropdown if there are events */}
-          {(
-            <div className="mt-3 border-t pt-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEventsExpanded(!eventsExpanded);
-                }}
-                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
-              >
-                {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                <span>Function Calls</span>
-                <span className="text-xs text-muted-foreground">({events.length})</span>
-              </button>
-              
-              {eventsExpanded && (
-                <div className="space-y-1 mt-2">
-                  {events.length > 0 ? (
-                    events.map((event) => (
-                      <CodeRunEventItem key={event.id} event={event} />
-                    ))
-                  ) : (
-                    <div className="text-sm text-muted-foreground italic px-2">
-                      No function calls recorded yet
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Code Run Events section - Always show the dropdown */}
+          <div className="mt-3 border-t pt-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setEventsExpanded(!eventsExpanded);
+              }}
+              className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
+            >
+              {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              <span>Function Calls</span>
+              <span className="text-xs text-muted-foreground">({events.length})</span>
+            </button>
+            
+            {eventsExpanded && (
+              <div className="space-y-1 mt-2">
+                {events.length > 0 ? (
+                  events.map((event) => (
+                    <CodeRunEventItem key={event.id} event={event} />
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground italic px-2">
+                    No function calls recorded yet
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           
           {message.code_output && (
             <div className="mt-3">

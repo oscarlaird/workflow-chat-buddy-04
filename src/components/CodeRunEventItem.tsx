@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { CodeRunEvent } from "@/hooks/useCodeRunEvents";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Code, ChevronDown, ChevronUp } from "lucide-react";
+import { Code, ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CodeBlock from "@/components/CodeBlock";
+import DataTable from "@/components/DataTable";
 
 interface CodeRunEventItemProps {
   event: CodeRunEvent;
@@ -12,12 +13,40 @@ interface CodeRunEventItemProps {
 
 const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
   const [expanded, setExpanded] = useState(false);
+  const [isInputExpanded, setIsInputExpanded] = useState(false);
+  const [isOutputExpanded, setIsOutputExpanded] = useState(false);
   
   const hasInput = event.example_input && Object.keys(event.example_input).length > 0;
   const hasOutput = event.example_output !== null;
   
   const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString();
+  };
+  
+  const renderOutput = (output: any) => {
+    if (output === null) return <div className="text-gray-500">No output available</div>;
+    
+    if (Array.isArray(output)) {
+      return <DataTable data={output} />;
+    }
+    
+    if (typeof output === 'object') {
+      // Special case for _ret field which is typically a table
+      if (output._ret && Array.isArray(output._ret)) {
+        return <DataTable data={output._ret} />;
+      }
+      
+      // For other objects, render as JSON
+      return (
+        <CodeBlock 
+          code={JSON.stringify(output, null, 2)} 
+          language="json" 
+        />
+      );
+    }
+    
+    // For primitive values
+    return <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">{String(output)}</div>;
   };
   
   return (
@@ -34,7 +63,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
             </Badge>
           </div>
           <div>
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </div>
         </div>
       </CardHeader>
@@ -42,22 +71,47 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
       {expanded && (
         <CardContent className="p-2 pt-0">
           {hasInput && (
-            <div className="mb-2">
-              <div className="text-xs font-medium text-muted-foreground mb-1">Input:</div>
-              <CodeBlock 
-                code={JSON.stringify(event.example_input, null, 2)} 
-                language="json" 
-              />
+            <div className="mt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsInputExpanded(!isInputExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
+              >
+                {isInputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <span>Inputs</span>
+              </button>
+              
+              {isInputExpanded && (
+                <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
+                  <CodeBlock 
+                    code={JSON.stringify(event.example_input, null, 2)} 
+                    language="json" 
+                  />
+                </div>
+              )}
             </div>
           )}
           
           {hasOutput && (
-            <div>
-              <div className="text-xs font-medium text-muted-foreground mb-1">Output:</div>
-              <CodeBlock 
-                code={JSON.stringify(event.example_output, null, 2)} 
-                language="json" 
-              />
+            <div className="mt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOutputExpanded(!isOutputExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
+              >
+                {isOutputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <span>Output</span>
+              </button>
+              
+              {isOutputExpanded && (
+                <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
+                  {renderOutput(event.example_output)}
+                </div>
+              )}
             </div>
           )}
           
