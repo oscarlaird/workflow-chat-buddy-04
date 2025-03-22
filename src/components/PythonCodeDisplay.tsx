@@ -73,6 +73,15 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
     };
   }, [chatId, isOpen]);
 
+  // Notify parent component when collapsible state changes
+  useEffect(() => {
+    // Broadcast the panel state to parent components
+    window.postMessage(
+      { type: 'PYTHON_CODE_PANEL_STATE', isOpen },
+      '*'
+    );
+  }, [isOpen]);
+
   if (!chatId) return null;
 
   return (
