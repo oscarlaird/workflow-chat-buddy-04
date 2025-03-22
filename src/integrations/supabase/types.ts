@@ -43,7 +43,7 @@ export type Database = {
           example_input: Json | null
           example_output: Json | null
           function_name: string | null
-          id: number
+          id: string | null
         }
         Insert: {
           chat_id?: string | null
@@ -51,7 +51,7 @@ export type Database = {
           example_input?: Json | null
           example_output?: Json | null
           function_name?: string | null
-          id?: number
+          id?: string | null
         }
         Update: {
           chat_id?: string | null
@@ -59,7 +59,7 @@ export type Database = {
           example_input?: Json | null
           example_output?: Json | null
           function_name?: string | null
-          id?: number
+          id?: string | null
         }
         Relationships: [
           {

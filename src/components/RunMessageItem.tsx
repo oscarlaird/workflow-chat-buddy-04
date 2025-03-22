@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { RunMessage as RunMessageType, RunMessageType as MessageType, RunMessageSenderType } from "@/types";
 import { 
   Brain, 
@@ -19,12 +20,16 @@ import {
   History,
   ArrowDown,
   MoveDown,
-  MoveUp
+  MoveUp,
+  Check,
+  Trophy
 } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface RunMessageItemProps {
   message: RunMessageType;
@@ -105,13 +110,22 @@ const getActionDescription = (action: any) => {
         <span>Scroll <span className="font-medium">{direction}</span> {action.scroll.amount && `by ${action.scroll.amount}px`}</span>
       </div>
     );
-  } 
+  } else if (action.done) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded-md">
+        <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+        <span className="font-medium text-green-700 dark:text-green-300">
+          {action.done.text || "Task completed"} {action.done.success ? "successfully" : ""}
+        </span>
+      </div>
+    );
+  }
   
   return null;
 };
 
 // Helper function to render the current state visualization
-const renderCurrentState = (currentState: any) => {
+const renderCurrentState = (currentState: any, isLast: boolean) => {
   if (!currentState) return null;
   
   return (
@@ -127,11 +141,13 @@ const renderCurrentState = (currentState: any) => {
       )}
       
       {currentState.next_goal && (
-        <div className="flex items-start gap-1.5">
-          <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+        <div className={`flex items-start gap-1.5 ${isLast ? "animate-pulse" : ""}`}>
+          <Lightbulb className={`h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0 ${isLast ? "animate-pulse" : ""}`} />
           <div className="text-xs">
             <span className="font-medium text-amber-600 dark:text-amber-400">Next Goal:</span> 
-            <span className="text-gray-700 dark:text-gray-300">{currentState.next_goal}</span>
+            <div className={`text-gray-800 dark:text-gray-200 font-medium p-1 rounded-sm ${isLast ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}>
+              {currentState.next_goal}
+            </div>
           </div>
         </div>
       )}
@@ -160,6 +176,24 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
                           message.payload && 
                           message.payload.action && 
                           Array.isArray(message.payload.action);
+
+  // Check for completion action
+  const hasDoneAction = isBackendCommand && 
+                       message.payload.action.some((action: any) => action.done);
+
+  // Show toast notification for completed runs
+  useEffect(() => {
+    if (isLast && hasDoneAction) {
+      const doneAction = message.payload.action.find((action: any) => action.done);
+      if (doneAction && doneAction.done.success) {
+        toast({
+          title: "Run Completed",
+          description: doneAction.done.text || "The automation run has completed successfully.",
+          duration: 5000,
+        });
+      }
+    }
+  }, [isLast, hasDoneAction, message.payload]);
   
   return (
     <>
@@ -197,12 +231,19 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
             {isBackendCommand && (
               <div className="mt-1">
                 {/* Action summary */}
-                <div className="space-y-0.5 p-1 bg-gray-50 dark:bg-gray-800/30 rounded-sm">
+                <div className={`space-y-0.5 p-1 rounded-sm ${isLast && !hasDoneAction ? "bg-blue-50 dark:bg-blue-900/20 animate-pulse" : "bg-gray-50 dark:bg-gray-800/30"}`}>
                   <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Actions:</div>
                   {message.payload.action.map((actionObj: any, index: number) => {
                     const actionType = Object.keys(actionObj)[0];
                     return (
-                      <div key={`${actionType}-${index}`} className="pl-2 mb-0.5 border-l-2 border-gray-200 dark:border-gray-700">
+                      <div 
+                        key={`${actionType}-${index}`} 
+                        className={`pl-2 mb-0.5 border-l-2 ${
+                          actionType === 'done' && actionObj.done.success 
+                            ? "border-green-400 dark:border-green-600" 
+                            : "border-gray-200 dark:border-gray-700"
+                        } ${isLast && index === message.payload.action.length - 1 && !hasDoneAction ? "animate-pulse" : ""}`}
+                      >
                         {getActionDescription(actionObj)}
                       </div>
                     );
@@ -210,7 +251,18 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
                 </div>
                 
                 {/* Current state visualization */}
-                {message.payload.current_state && renderCurrentState(message.payload.current_state)}
+                {message.payload.current_state && renderCurrentState(message.payload.current_state, isLast && !hasDoneAction)}
+
+                {/* Success alert for done action */}
+                {hasDoneAction && message.payload.action.some((action: any) => action.done && action.done.success) && (
+                  <Alert className="mt-2 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                    <Trophy className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <AlertTitle className="text-green-800 dark:text-green-300">Run Completed</AlertTitle>
+                    <AlertDescription className="text-green-700 dark:text-green-400">
+                      {message.payload.action.find((action: any) => action.done)?.done.text || "The automation run has completed successfully."}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             )}
             
