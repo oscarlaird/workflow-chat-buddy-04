@@ -77,7 +77,11 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
 
   return (
     <div className="border-t border-gray-200 dark:border-gray-800 h-full flex flex-col">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full h-full flex flex-col">
+      <Collapsible 
+        open={isOpen} 
+        onOpenChange={setIsOpen} 
+        className="w-full h-full flex flex-col"
+      >
         <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <div className="flex items-center">
             <Code2 className="w-4 h-4 mr-2" />
@@ -90,19 +94,17 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
           )}
         </CollapsibleTrigger>
         <CollapsibleContent className="flex-grow overflow-hidden">
-          {isOpen && (
-            <div className="p-0 w-full h-full flex-grow">
-              {isLoading ? (
-                <div className="p-4 text-sm text-gray-500">Loading...</div>
-              ) : pythonCode ? (
-                <ScrollArea className="w-full h-full" type="always">
-                  <CodeBlock code={pythonCode} language="python" />
-                </ScrollArea>
-              ) : (
-                <div className="p-4 text-sm text-gray-500">No Python code available for this workflow.</div>
-              )}
-            </div>
-          )}
+          <div className="p-0 w-full h-full flex flex-col">
+            {isLoading ? (
+              <div className="p-4 text-sm text-gray-500">Loading...</div>
+            ) : pythonCode ? (
+              <ScrollArea className="w-full h-full overflow-auto flex-grow" type="always">
+                <CodeBlock code={pythonCode} language="python" />
+              </ScrollArea>
+            ) : (
+              <div className="p-4 text-sm text-gray-500">No Python code available for this workflow.</div>
+            )}
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </div>

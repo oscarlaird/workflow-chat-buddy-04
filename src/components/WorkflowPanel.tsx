@@ -26,6 +26,8 @@ const WorkflowPanel = ({
 }: WorkflowPanelProps) => {
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
   const [isRunning, setIsRunning] = useState(false);
+  const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
+  const [codeDefaultSize, setCodeDefaultSize] = useState(25);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
@@ -109,6 +111,24 @@ const WorkflowPanel = ({
     }
   };
 
+  // Listen for Python code panel open/close state changes
+  const handleMessage = (event: MessageEvent) => {
+    if (event.data && event.data.type === 'PYTHON_CODE_PANEL_STATE') {
+      setIsCodePanelOpen(event.data.isOpen);
+      // When opening, set a default size that's more substantial
+      if (event.data.isOpen && !isCodePanelOpen) {
+        setCodeDefaultSize(40); // Sets to 40% of available space
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [isCodePanelOpen]);
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-4">
       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -119,6 +139,10 @@ const WorkflowPanel = ({
   if (error) {
     return <div className="text-red-500 p-4">Error: {error}</div>;
   }
+
+  // Calculate the panel sizes based on code panel state
+  const workflowPanelSize = isCodePanelOpen ? 100 - codeDefaultSize : 100;
+  const codePanelSize = isCodePanelOpen ? codeDefaultSize : 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -135,8 +159,18 @@ const WorkflowPanel = ({
       <ResizablePanelGroup 
         direction="vertical" 
         className="flex-grow"
+        onLayout={(sizes) => {
+          // Only update the default size when the panel is open
+          // This ensures we remember the last size when collapsing/expanding
+          if (isCodePanelOpen && sizes.length > 1) {
+            setCodeDefaultSize(sizes[1]);
+          }
+        }}
       >
-        <ResizablePanel defaultSize={75} minSize={20}>
+        <ResizablePanel 
+          defaultSize={workflowPanelSize} 
+          minSize={20}
+        >
           <div className="h-full overflow-y-auto p-4">
             {workflowSteps && workflowSteps.map((step, index) => (
               <WorkflowStep
@@ -151,9 +185,20 @@ const WorkflowPanel = ({
         
         {chatId && (
           <>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={25} minSize={10}>
-              <PythonCodeDisplay chatId={chatId} />
+            <ResizableHandle className={isCodePanelOpen ? "opacity-100" : "opacity-0 pointer-events-none"} withHandle />
+            <ResizablePanel 
+              defaultSize={codePanelSize} 
+              minSize={isCodePanelOpen ? 10 : 0}
+              className="flex flex-col transition-all duration-200"
+              style={{
+                height: isCodePanelOpen ? undefined : "40px",
+                maxHeight: isCodePanelOpen ? undefined : "40px",
+                overflow: "hidden"
+              }}
+            >
+              <PythonCodeDisplay 
+                chatId={chatId} 
+              />
             </ResizablePanel>
           </>
         )}
