@@ -129,6 +129,7 @@ const WorkflowPanel = ({
           isRunning={isRunning}
         />
       )}
+      
       <ResizablePanelGroup direction="vertical" className="flex-grow">
         <ResizablePanel defaultSize={80} minSize={20} className="overflow-y-auto">
           <div className="p-4">
@@ -142,10 +143,9 @@ const WorkflowPanel = ({
             ))}
           </div>
         </ResizablePanel>
+        
         {chatId && (
-          <>
-            <PythonCodeDisplay chatId={chatId} />
-          </>
+          <PythonCodeDisplay chatId={chatId} />
         )}
       </ResizablePanelGroup>
     </div>
