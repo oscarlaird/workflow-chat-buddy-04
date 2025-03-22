@@ -113,6 +113,7 @@ export const Index: React.FC<IndexProps> = ({
                 chatId={selectedConversationId}
                 onRunWorkflow={handleRunWorkflow}
                 showRunButton={true}
+                showInputs={true}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
