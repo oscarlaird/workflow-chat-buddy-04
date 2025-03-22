@@ -25,7 +25,7 @@ const WorkflowPanel = ({
 }: WorkflowPanelProps) => {
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
   const [isRunning, setIsRunning] = useState(false);
-  const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
+  const [isCodePanelOpen, setIsCodePanelOpen] = useState(true); // Set default to true
   const [codePanelSize, setCodePanelSize] = useState(40);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
