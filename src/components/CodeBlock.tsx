@@ -27,25 +27,25 @@ const CodeBlock = ({ code, language = "javascript" }: CodeBlockProps) => {
 
   return (
     <div className="relative group">
-      <ScrollArea className="max-h-[400px] w-full rounded-md" type="hover">
-        <div className="w-full">
-          <SyntaxHighlighter
-            language={language}
-            style={isDark ? vscDarkPlus : vs}
-            className="rounded-md text-sm font-mono"
-            customStyle={{
-              margin: 0,
-              padding: '1rem',
-              borderRadius: '0.375rem',
-              background: isDark ? '#0f1629' : '#f8f9fc',
-            }}
-            wrapLines={false}
-            wrapLongLines={false}
-          >
-            {code}
-          </SyntaxHighlighter>
-        </div>
-        <ScrollBar orientation="horizontal" />
+      <ScrollArea className="max-h-[400px] w-full rounded-md" type="always">
+        <SyntaxHighlighter
+          language={language}
+          style={isDark ? vscDarkPlus : vs}
+          className="rounded-md text-sm font-mono"
+          customStyle={{
+            margin: 0,
+            padding: '1rem',
+            borderRadius: '0.375rem',
+            background: isDark ? '#0f1629' : '#f8f9fc',
+            maxWidth: '100%',
+            overflowX: 'visible',
+            overflowY: 'visible'
+          }}
+          wrapLines={true}
+          wrapLongLines={true}
+        >
+          {code}
+        </SyntaxHighlighter>
         <ScrollBar orientation="vertical" />
       </ScrollArea>
       
