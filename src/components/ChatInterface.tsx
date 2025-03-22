@@ -305,7 +305,8 @@ export const ChatInterface = forwardRef(({
           content: updatedMessage.content,
           function_name: updatedMessage.function_name,
           code_output: updatedMessage.code_output,
-          code_output_error: updatedMessage.code_output_error
+          code_output_error: updatedMessage.code_output_error,
+          code_run: updatedMessage.code_run
         };
         
         updateMessageContent(

@@ -68,17 +68,9 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
           status === 'error' ? 'border-l-2 border-red-500' : 
           status === 'success' ? 'border-l-2 border-green-500' : ''
         }`}>
-          {message.content && (
-            <div className="mb-2 text-sm">
-              <strong>Command:</strong> {message.content || "Executing workflow..."}
-            </div>
-          )}
-          
-          {!message.content && (
-            <div className="mb-2 text-sm">
-              <strong>Command:</strong> Executing workflow...
-            </div>
-          )}
+          <div className="mb-2 text-sm">
+            <strong>Command:</strong> {message.content || "Executing workflow..."}
+          </div>
           
           {message.code_output && (
             <div className="mt-3">

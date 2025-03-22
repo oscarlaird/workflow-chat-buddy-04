@@ -90,7 +90,19 @@ export const MessageList = ({
           );
         }
         
-        // Check if this message is a run message first
+        // Check if this message is a code run message
+        if (message.code_run === true) {
+          return (
+            <div key={message.id} className="flex justify-start">
+              <CodeRunMessage 
+                message={message} 
+                isStreaming={streamingMessageIds.has(message.id)} 
+              />
+            </div>
+          );
+        }
+        
+        // Check if this message is a run message
         if (message.run_id) {
           return (
             <div key={message.id} className="space-y-4">
@@ -114,18 +126,6 @@ export const MessageList = ({
               <ScreenRecordingDisplay 
                 message={message} 
                 duration={hasScreenRecording(message) ? screenRecordings[message.id]?.duration : undefined}
-              />
-            </div>
-          );
-        }
-        
-        // Code Run Messages - special handling
-        if (message.code_run) {
-          return (
-            <div key={message.id} className="flex justify-start">
-              <CodeRunMessage 
-                message={message} 
-                isStreaming={streamingMessageIds.has(message.id)} 
               />
             </div>
           );

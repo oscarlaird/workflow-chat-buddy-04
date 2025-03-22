@@ -122,7 +122,10 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           workflow_step_id: msg.workflow_step_id,
           run_id: msg.run_id,
           screenrecording_url: msg.screenrecording_url,
-          chat_id: msg.chat_id
+          chat_id: msg.chat_id,
+          code_run: msg.code_run,
+          code_output: msg.code_output,
+          code_output_error: msg.code_output_error
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
