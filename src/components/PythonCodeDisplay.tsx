@@ -4,7 +4,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Code2, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import CodeBlock from "@/components/CodeBlock";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PythonCodeDisplayProps {
   chatId: string;
@@ -91,13 +91,13 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           {isOpen && (
-            <div className="p-0 w-full">
+            <div className="p-0 w-full h-full">
               {isLoading ? (
                 <div className="p-4 text-sm text-gray-500">Loading...</div>
               ) : pythonCode ? (
-                <div className="w-full h-[300px] min-h-[100px] resize-y overflow-auto">
+                <ScrollArea className="w-full h-full">
                   <CodeBlock code={pythonCode} language="python" />
-                </div>
+                </ScrollArea>
               ) : (
                 <div className="p-4 text-sm text-gray-500">No Python code available for this workflow.</div>
               )}

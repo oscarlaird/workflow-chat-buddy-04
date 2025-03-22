@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -129,22 +130,32 @@ const WorkflowPanel = ({
         />
       )}
       
-      <div className="flex-grow flex flex-col overflow-hidden">
-        <div className="flex-grow overflow-y-auto p-4">
-          {workflowSteps && workflowSteps.map((step, index) => (
-            <WorkflowStep
-              key={step.id}
-              step={step}
-              index={index}
-              isDeleting={false}
-            />
-          ))}
-        </div>
+      <ResizablePanelGroup 
+        direction="vertical" 
+        className="flex-grow"
+      >
+        <ResizablePanel defaultSize={75} minSize={20}>
+          <div className="h-full overflow-y-auto p-4">
+            {workflowSteps && workflowSteps.map((step, index) => (
+              <WorkflowStep
+                key={step.id}
+                step={step}
+                index={index}
+                isDeleting={false}
+              />
+            ))}
+          </div>
+        </ResizablePanel>
         
         {chatId && (
-          <PythonCodeDisplay chatId={chatId} />
+          <>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={25} minSize={10}>
+              <PythonCodeDisplay chatId={chatId} />
+            </ResizablePanel>
+          </>
         )}
-      </div>
+      </ResizablePanelGroup>
     </div>
   );
 };
