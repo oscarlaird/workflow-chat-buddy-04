@@ -42,10 +42,8 @@ const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayPr
   };
 
   useEffect(() => {
-    // Fetch Python code on initial load (if panel is open)
-    if (isOpen) {
-      fetchPythonCode();
-    }
+    // Fetch Python code on initial load
+    fetchPythonCode();
     
     // Subscribe to real-time updates to the 'script' field for this chat
     const channel = supabase
@@ -72,7 +70,7 @@ const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayPr
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chatId, isOpen]);
+  }, [chatId]);
 
   if (!chatId) return null;
 
@@ -95,11 +93,11 @@ const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayPr
           )}
         </CollapsibleTrigger>
         <CollapsibleContent className="flex-grow overflow-hidden">
-          <div className="p-0 w-full h-full flex flex-col">
+          <div className="p-0 w-full h-full">
             {isLoading ? (
               <div className="p-4 text-sm text-gray-500">Loading...</div>
             ) : pythonCode ? (
-              <ScrollArea className="w-full h-full overflow-auto flex-grow" type="always">
+              <ScrollArea className="w-full h-full" type="always">
                 <CodeBlock code={pythonCode} language="python" />
               </ScrollArea>
             ) : (

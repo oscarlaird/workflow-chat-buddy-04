@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -25,8 +26,7 @@ const WorkflowPanel = ({
 }: WorkflowPanelProps) => {
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
   const [isRunning, setIsRunning] = useState(false);
-  const [isCodePanelOpen, setIsCodePanelOpen] = useState(true); // Set default to true
-  const [codePanelSize, setCodePanelSize] = useState(40);
+  const [isCodePanelOpen, setIsCodePanelOpen] = useState(true);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
@@ -115,10 +115,6 @@ const WorkflowPanel = ({
     setIsCodePanelOpen(open);
   };
 
-  // Calculate panel sizes based on open state
-  const workflowPanelSize = isCodePanelOpen ? 60 : 100;
-  const pythonPanelSize = isCodePanelOpen ? 40 : 0;
-
   if (isLoading) {
     return <div className="flex items-center justify-center p-4">
       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -142,19 +138,8 @@ const WorkflowPanel = ({
         />
       )}
       
-      <ResizablePanelGroup 
-        direction="vertical" 
-        className="flex-grow"
-        onLayout={(sizes) => {
-          if (isCodePanelOpen && sizes.length > 1) {
-            setCodePanelSize(sizes[1]);
-          }
-        }}
-      >
-        <ResizablePanel 
-          defaultSize={workflowPanelSize} 
-          minSize={20}
-        >
+      <ResizablePanelGroup direction="vertical" className="flex-grow">
+        <ResizablePanel defaultSize={60} minSize={20}>
           <div className="h-full overflow-y-auto p-4">
             {workflowSteps && workflowSteps.map((step, index) => (
               <WorkflowStep
@@ -169,22 +154,13 @@ const WorkflowPanel = ({
         
         {chatId && (
           <>
-            <ResizableHandle 
-              className={isCodePanelOpen ? "opacity-100" : "opacity-0 pointer-events-none"} 
-              withHandle 
-            />
-            <ResizablePanel 
-              defaultSize={pythonPanelSize} 
-              minSize={isCodePanelOpen ? 10 : 0}
-              className="transition-all duration-200"
-            >
-              <div className={`h-full ${isCodePanelOpen ? "" : "h-10 overflow-hidden"}`}>
-                <PythonCodeDisplay 
-                  chatId={chatId}
-                  isOpen={isCodePanelOpen}
-                  onOpenChange={handlePythonPanelToggle}
-                />
-              </div>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40} minSize={10}>
+              <PythonCodeDisplay 
+                chatId={chatId}
+                isOpen={isCodePanelOpen}
+                onOpenChange={handlePythonPanelToggle}
+              />
             </ResizablePanel>
           </>
         )}
