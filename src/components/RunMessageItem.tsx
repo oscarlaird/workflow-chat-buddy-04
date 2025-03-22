@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { RunMessage as RunMessageType, RunMessageType as MessageType, RunMessageSenderType } from "@/types";
 import { 
@@ -17,7 +16,10 @@ import {
   MousePointer,
   Keyboard,
   Lightbulb,
-  History
+  History,
+  ArrowDown,
+  MoveDown,
+  MoveUp
 } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -69,7 +71,7 @@ const getSenderBadgeColor = (sender: RunMessageSenderType) => {
   }
 };
 
-// Helper function to convert action to human-readable text
+// Helper function to convert action to human-readable text with improved visualization
 const getActionDescription = (action: any) => {
   if (!action) return null;
   
@@ -94,7 +96,16 @@ const getActionDescription = (action: any) => {
         <span>Type "<span className="font-medium">{action.input_text.text}</span>" at index: {action.input_text.index}</span>
       </div>
     );
-  }
+  } else if (action.scroll) {
+    const direction = action.scroll.direction || "down";
+    const Icon = direction === "up" ? MoveUp : MoveDown;
+    return (
+      <div className="flex items-center gap-1.5 text-xs">
+        <Icon className="h-3 w-3 text-purple-500" />
+        <span>Scroll <span className="font-medium">{direction}</span> {action.scroll.amount && `by ${action.scroll.amount}px`}</span>
+      </div>
+    );
+  } 
   
   return null;
 };
@@ -186,12 +197,13 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
             {isBackendCommand && (
               <div className="mt-1">
                 {/* Action summary */}
-                <div className="space-y-0.5">
-                  {message.payload.action.map((action: any, index: number) => {
-                    const actionKey = Object.keys(action)[0];
+                <div className="space-y-0.5 p-1 bg-gray-50 dark:bg-gray-800/30 rounded-sm">
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Actions:</div>
+                  {message.payload.action.map((actionObj: any, index: number) => {
+                    const actionType = Object.keys(actionObj)[0];
                     return (
-                      <div key={`${actionKey}-${index}`}>
-                        {getActionDescription(action[actionKey])}
+                      <div key={`${actionType}-${index}`} className="pl-2 mb-0.5 border-l-2 border-gray-200 dark:border-gray-700">
+                        {getActionDescription(actionObj)}
                       </div>
                     );
                   })}
