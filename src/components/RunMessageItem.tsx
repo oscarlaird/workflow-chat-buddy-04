@@ -12,11 +12,17 @@ import {
   XSquare, 
   AlertTriangle,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Globe,
+  MousePointer,
+  Keyboard,
+  Lightbulb,
+  History
 } from "lucide-react";
 import CodeBlock from "./CodeBlock";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface RunMessageItemProps {
   message: RunMessageType;
@@ -63,10 +69,86 @@ const getSenderBadgeColor = (sender: RunMessageSenderType) => {
   }
 };
 
+// Helper function to convert action to human-readable text
+const getActionDescription = (action: any) => {
+  if (!action) return null;
+  
+  if (action.go_to_url) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs">
+        <Globe className="h-3 w-3 text-blue-500" />
+        <span>Navigate to: <span className="font-medium">{action.go_to_url.url}</span></span>
+      </div>
+    );
+  } else if (action.click_element) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs">
+        <MousePointer className="h-3 w-3 text-amber-500" />
+        <span>Click element at index: <span className="font-medium">{action.click_element.index}</span></span>
+      </div>
+    );
+  } else if (action.input_text) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs">
+        <Keyboard className="h-3 w-3 text-emerald-500" />
+        <span>Type "<span className="font-medium">{action.input_text.text}</span>" at index: {action.input_text.index}</span>
+      </div>
+    );
+  }
+  
+  return null;
+};
+
+// Helper function to render the current state visualization
+const renderCurrentState = (currentState: any) => {
+  if (!currentState) return null;
+  
+  return (
+    <div className="space-y-2 my-2 pl-3 border-l-2 border-blue-200 dark:border-blue-800">
+      {currentState.memory && (
+        <div className="flex items-start gap-1.5">
+          <History className="h-3.5 w-3.5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <div className="text-xs">
+            <span className="font-medium text-blue-600 dark:text-blue-400">Memory:</span> 
+            <span className="text-gray-700 dark:text-gray-300">{currentState.memory}</span>
+          </div>
+        </div>
+      )}
+      
+      {currentState.next_goal && (
+        <div className="flex items-start gap-1.5">
+          <Lightbulb className="h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
+          <div className="text-xs">
+            <span className="font-medium text-amber-600 dark:text-amber-400">Next Goal:</span> 
+            <span className="text-gray-700 dark:text-gray-300">{currentState.next_goal}</span>
+          </div>
+        </div>
+      )}
+      
+      {currentState.evaluation_previous_goal && currentState.evaluation_previous_goal !== "N/A" && (
+        <div className="flex items-start gap-1.5">
+          <Eye className="h-3.5 w-3.5 text-purple-500 mt-0.5 flex-shrink-0" />
+          <div className="text-xs">
+            <span className="font-medium text-purple-600 dark:text-purple-400">Previous Goal:</span> 
+            <span className="text-gray-700 dark:text-gray-300">{currentState.evaluation_previous_goal}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps) => {
   const hasPayload = message.payload && typeof message.payload === 'object' && Object.keys(message.payload).length > 0;
   const formattedTime = new Date(message.created_at).toLocaleTimeString();
   const [isOpen, setIsOpen] = useState(false);
+  
+  // Check if this is a command from backend with actions
+  const isBackendCommand = message.type === MessageType.COMMAND && 
+                          message.sender_type === RunMessageSenderType.BACKEND &&
+                          message.payload && 
+                          message.payload.action && 
+                          Array.isArray(message.payload.action);
   
   return (
     <>
@@ -99,6 +181,26 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
                 {formattedTime}
               </span>
             </div>
+            
+            {/* Visual summary of backend commands */}
+            {isBackendCommand && (
+              <div className="mt-1">
+                {/* Action summary */}
+                <div className="space-y-0.5">
+                  {message.payload.action.map((action: any, index: number) => {
+                    const actionKey = Object.keys(action)[0];
+                    return (
+                      <div key={`${actionKey}-${index}`}>
+                        {getActionDescription(action[actionKey])}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Current state visualization */}
+                {message.payload.current_state && renderCurrentState(message.payload.current_state)}
+              </div>
+            )}
             
             {hasPayload && (
               <Collapsible 
