@@ -1,11 +1,15 @@
 
 import { memo } from "react";
-import { ChevronDown, ChevronRight, Code, Table, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Code, Table, Database, Trash2, ArrowDownUp } from "lucide-react";
 import { WorkflowStep as WorkflowStepType } from "@/types";
 import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
 import { useState } from "react";
 import { MotionDiv } from "@/lib/transitions";
+import { Button } from "./ui/button";
+import { TypedInputField, InputFieldIcon } from "./InputField";
+import { InputField } from "@/types";
+import { inferFieldType } from "@/hooks/useSelectedChatSettings";
 
 interface WorkflowStepProps {
   step: WorkflowStepType;
@@ -15,10 +19,11 @@ interface WorkflowStepProps {
 
 export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowStepProps) => {
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
-  const [isDataExpanded, setIsDataExpanded] = useState(false);
+  const [isInputExpanded, setIsInputExpanded] = useState(false);
+  const [isOutputExpanded, setIsOutputExpanded] = useState(false);
   
   // Create a key based on step data to ensure proper re-renders
-  const stepKey = `${step.id}-${step.description}-${step.status}`;
+  const stepKey = `${step.id}-${step.description}`;
 
   const getStatusClass = () => {
     switch (step.status) {
@@ -33,24 +38,59 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
     }
   };
 
-  // Detect code language based on content or use default
-  const detectLanguage = (code: string) => {
-    if (code.includes("function") || code.includes("const") || code.includes("let") || code.includes("var")) {
-      return "javascript";
+  // Function to infer field types from example inputs and outputs
+  const inferInputFields = (inputData: Record<string, any> | null): InputField[] => {
+    if (!inputData) return [];
+    
+    return Object.entries(inputData).map(([fieldName, value]) => ({
+      field_name: fieldName,
+      type: inferFieldType(fieldName, value)
+    }));
+  };
+
+  // Prepare input and output fields
+  const inputFields = step.exampleInput ? inferInputFields(step.exampleInput) : [];
+  const hasInputs = inputFields.length > 0;
+  
+  const getOutputType = (output: any): string => {
+    if (output === null) return 'null';
+    if (Array.isArray(output)) return 'table';
+    if (typeof output === 'object') {
+      // Check if we have a _ret field which is typically a table
+      if (output._ret && Array.isArray(output._ret)) return 'table';
+      return 'object';
     }
-    if (code.includes("<html") || code.includes("</div>")) {
-      return "html";
+    return typeof output;
+  };
+  
+  const renderOutput = (output: any) => {
+    if (output === null) return <div className="text-gray-500">No output available</div>;
+    
+    if (Array.isArray(output)) {
+      return <DataTable data={output} />;
     }
-    if (code.includes("SELECT") || code.includes("FROM") || code.includes("WHERE")) {
-      return "sql";
+    
+    if (typeof output === 'object') {
+      // Special case for _ret field which is typically a table
+      if (output._ret && Array.isArray(output._ret)) {
+        return <DataTable data={output._ret} />;
+      }
+      
+      // For other objects, display each field separately
+      return (
+        <div className="space-y-3">
+          {Object.entries(output).map(([key, value]) => (
+            <div key={key} className="border rounded-md p-3">
+              <div className="font-medium text-sm mb-1">{key}</div>
+              {renderOutput(value)}
+            </div>
+          ))}
+        </div>
+      );
     }
-    if (code.includes("import") && code.includes("from") && (code.includes("React") || code.includes("useState"))) {
-      return "jsx";
-    }
-    if (code.includes("python") || code.includes("def ") || code.includes("import ") && code.includes(":")) {
-      return "python";
-    }
-    return "javascript"; // Default
+    
+    // For primitive values
+    return <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">{String(output)}</div>;
   };
 
   return (
@@ -85,24 +125,59 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
         <p className="text-gray-600 dark:text-gray-400">{step.description}</p>
       </div>
 
-      {step.screenshots && step.screenshots.length > 0 && (
-        <div className="mt-4 mb-4">
-          <div className="flex flex-wrap gap-4">
-            {step.screenshots.map((screenshot) => (
-              <div key={screenshot.id} className="relative group">
-                <div className="relative w-48 h-36 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                  <img
-                    src={screenshot.url}
-                    alt={screenshot.caption}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-2">
-                    <span className="text-white text-xs">{screenshot.caption}</span>
+      {hasInputs && (
+        <div className="mt-3">
+          <button
+            onClick={() => setIsInputExpanded(!isInputExpanded)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
+          >
+            {isInputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <Database className="w-4 h-4" />
+            <span>Example Inputs {isInputExpanded ? "▾" : "▸"}</span>
+          </button>
+          
+          {isInputExpanded && (
+            <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {inputFields.map((field) => (
+                  <div key={field.field_name} className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <InputFieldIcon type={field.type} className="text-gray-500" />
+                      <label className="text-sm font-medium">
+                        {field.field_name}
+                        <span className="ml-2 text-xs text-gray-500">({field.type})</span>
+                      </label>
+                    </div>
+                    <TypedInputField 
+                      field={field} 
+                      value={step.exampleInput?.[field.field_name]} 
+                      onChange={() => {}} // Read-only
+                      showValidation={false}
+                    />
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {step.exampleOutput && (
+        <div className="mt-3">
+          <button
+            onClick={() => setIsOutputExpanded(!isOutputExpanded)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
+          >
+            {isOutputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <ArrowDownUp className="w-4 h-4" />
+            <span>Example Output {isOutputExpanded ? "▾" : "▸"}</span>
+          </button>
+          
+          {isOutputExpanded && (
+            <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
+              {renderOutput(step.exampleOutput)}
+            </div>
+          )}
         </div>
       )}
 
@@ -119,26 +194,7 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
           
           {isCodeExpanded && (
             <div className="mt-2 overflow-hidden rounded-md animate-slide-in-bottom">
-              <CodeBlock code={step.code} language={detectLanguage(step.code)} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {step.exampleData && step.exampleData.length > 0 && (
-        <div className="mt-3">
-          <button
-            onClick={() => setIsDataExpanded(!isDataExpanded)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
-          >
-            {isDataExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <Table className="w-4 h-4" />
-            <span>Example Data {isDataExpanded ? "▾" : "▸"}</span>
-          </button>
-          
-          {isDataExpanded && (
-            <div className="mt-2 overflow-hidden rounded-md animate-slide-in-bottom">
-              <DataTable data={step.exampleData} />
+              <CodeBlock code={step.code} language="python" />
             </div>
           )}
         </div>

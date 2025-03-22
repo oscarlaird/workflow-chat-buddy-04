@@ -37,7 +37,8 @@ export interface WorkflowStep {
   status: "complete" | "active" | "waiting";
   screenshots?: WorkflowStepScreenshot[];
   code?: string;
-  exampleData?: any[];
+  exampleInput?: Record<string, any> | null;
+  exampleOutput?: any | null;
   step_number: number;
 }
 

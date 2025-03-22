@@ -49,19 +49,22 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
 
         if (messageData && messageData.length > 0 && messageData[0].steps) {
           // Transform the steps object into an array of workflow steps
-          const stepsObject = messageData[0].steps as Record<string, string>;
+          const stepsObject = messageData[0].steps as Record<string, {
+            description: string;
+            example_input?: Record<string, any>;
+            example_output?: Record<string, any>;
+          }>;
           
-          const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, description], index) => ({
+          const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
             id: `${chatId}-step-${index}`,
             chat_id: chatId,
             title: key,
-            description: description,
+            description: stepData.description,
             step_number: index + 1,
             status: "waiting", // Default status
-            code: null,
-            exampleData: null,
-            screenshots: null,
-            username: 'current_user'
+            exampleInput: stepData.example_input || null,
+            exampleOutput: stepData.example_output || null,
+            code: null
           }));
 
           setWorkflowSteps(transformedSteps);
@@ -92,19 +95,22 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
         if (payload.new && 'steps' in payload.new && payload.new.steps) {
           console.log('Message with steps updated:', payload.new);
           
-          const stepsObject = payload.new.steps as Record<string, string>;
+          const stepsObject = payload.new.steps as Record<string, {
+            description: string;
+            example_input?: Record<string, any>;
+            example_output?: Record<string, any>;
+          }>;
           
-          const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, description], index) => ({
+          const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
             id: `${chatId}-step-${index}`,
             chat_id: chatId,
             title: key,
-            description: description,
+            description: stepData.description,
             step_number: index + 1,
             status: "waiting", // Default status
-            code: null,
-            exampleData: null,
-            screenshots: null,
-            username: 'current_user'
+            exampleInput: stepData.example_input || null,
+            exampleOutput: stepData.example_output || null,
+            code: null
           }));
 
           setWorkflowSteps(transformedSteps);
