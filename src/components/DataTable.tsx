@@ -1,6 +1,14 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
+import { 
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell
+} from "@/components/ui/table";
 
 interface DataTableProps {
   data: any[];
@@ -67,13 +75,13 @@ const DataTable = ({ data }: DataTableProps) => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 dark:bg-gray-800">
+      <Table>
+        <TableHeader>
+          <TableRow>
             {columns.map((column) => (
-              <th 
+              <TableHead 
                 key={column}
-                className="p-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700"
+                className="p-3 text-left"
               >
                 <button
                   onClick={() => requestSort(column)}
@@ -82,30 +90,27 @@ const DataTable = ({ data }: DataTableProps) => {
                   {column}
                   {getSortIcon(column)}
                 </button>
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {getSortedData().map((row, rowIndex) => (
-            <tr 
-              key={rowIndex}
-              className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-            >
+            <TableRow key={rowIndex}>
               {columns.map((column) => (
-                <td 
+                <TableCell 
                   key={`${rowIndex}-${column}`}
                   className="p-3 text-sm"
                 >
                   {typeof row[column] === 'boolean' 
                     ? (row[column] ? '✅' : '❌') 
                     : String(row[column])}
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };

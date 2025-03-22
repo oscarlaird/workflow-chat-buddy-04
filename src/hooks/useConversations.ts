@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -125,7 +124,9 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           chat_id: msg.chat_id,
           code_run: msg.code_run,
           code_output: msg.code_output,
-          code_output_error: msg.code_output_error
+          code_output_error: msg.code_output_error,
+          code_run_success: msg.code_run_success,
+          code_output_tables: msg.code_output_tables
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);

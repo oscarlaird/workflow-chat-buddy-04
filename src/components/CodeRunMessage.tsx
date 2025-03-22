@@ -1,9 +1,10 @@
 
 import { useState } from "react";
-import { Loader2, Play, AlertCircle, CheckCircle } from "lucide-react";
+import { Loader2, Play, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Table } from "lucide-react";
 import { Message } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import CodeBlock from "@/components/CodeBlock";
+import DataTable from "@/components/DataTable";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -12,16 +13,39 @@ interface CodeRunMessageProps {
 
 const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const [expanded, setExpanded] = useState(true);
+  const [tablesExpanded, setTablesExpanded] = useState(true);
   
   // Determine the code execution status
   const getExecutionStatus = () => {
     if (isStreaming) return "running";
+    if (message.code_run_success === false) return "error";
+    if (message.code_run_success === true) return "success";
     if (message.code_output_error) return "error";
     if (message.code_output) return "success";
     return "pending";
   };
 
   const status = getExecutionStatus();
+  
+  // Parse tables from message.code_output_tables if it exists
+  const getTables = () => {
+    if (!message.code_output_tables) return null;
+    
+    try {
+      // If it's a string, parse it, otherwise use it directly
+      const tables = typeof message.code_output_tables === 'string' 
+        ? JSON.parse(message.code_output_tables) 
+        : message.code_output_tables;
+      
+      return tables;
+    } catch (error) {
+      console.error("Error parsing code_output_tables:", error);
+      return null;
+    }
+  };
+
+  const tables = getTables();
+  const hasTableData = tables && Object.keys(tables).length > 0;
   
   return (
     <div className="max-w-[80%] w-full space-y-2">
@@ -86,7 +110,39 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             </div>
           )}
           
-          {!message.code_output && !message.code_output_error && status === 'running' && (
+          {/* Tables output section */}
+          {hasTableData && (
+            <div className="mt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTablesExpanded(!tablesExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
+              >
+                {tablesExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <Table className="w-4 h-4" />
+                <span>Result Tables {tablesExpanded ? "▾" : "▸"}</span>
+              </button>
+              
+              {tablesExpanded && (
+                <div className="space-y-4 mt-2">
+                  {Object.entries(tables).map(([tableName, tableData], index) => (
+                    <div key={`table-${index}`} className="border rounded-md overflow-hidden">
+                      <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 font-medium text-sm border-b">
+                        {tableName}
+                      </div>
+                      <div className="p-1">
+                        <DataTable data={tableData as any[]} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {!message.code_output && !message.code_output_error && !hasTableData && status === 'running' && (
             <div className="py-2 text-sm text-muted-foreground italic">
               Executing code, please wait...
             </div>

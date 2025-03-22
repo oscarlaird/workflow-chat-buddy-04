@@ -12,6 +12,8 @@ export interface Message {
   code_run?: boolean;
   code_output?: string;
   code_output_error?: string;
+  code_run_success?: boolean;
+  code_output_tables?: any;
 }
 
 export interface Conversation {

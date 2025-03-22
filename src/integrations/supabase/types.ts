@@ -101,7 +101,9 @@ export type Database = {
           chat_id: string
           code_output: string | null
           code_output_error: string | null
+          code_output_tables: Json | null
           code_run: boolean
+          code_run_success: boolean | null
           content: string
           created_at: string | null
           from_template: boolean | null
@@ -119,7 +121,9 @@ export type Database = {
           chat_id: string
           code_output?: string | null
           code_output_error?: string | null
+          code_output_tables?: Json | null
           code_run?: boolean
+          code_run_success?: boolean | null
           content: string
           created_at?: string | null
           from_template?: boolean | null
@@ -137,7 +141,9 @@ export type Database = {
           chat_id?: string
           code_output?: string | null
           code_output_error?: string | null
+          code_output_tables?: Json | null
           code_run?: boolean
+          code_run_success?: boolean | null
           content?: string
           created_at?: string | null
           from_template?: boolean | null
