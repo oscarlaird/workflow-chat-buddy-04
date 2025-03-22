@@ -43,7 +43,7 @@ export type Database = {
           example_input: Json | null
           example_output: Json | null
           function_name: string | null
-          id: string | null
+          id: string
           message_id: string | null
         }
         Insert: {
@@ -52,7 +52,7 @@ export type Database = {
           example_input?: Json | null
           example_output?: Json | null
           function_name?: string | null
-          id?: string | null
+          id?: string
           message_id?: string | null
         }
         Update: {
@@ -61,7 +61,7 @@ export type Database = {
           example_input?: Json | null
           example_output?: Json | null
           function_name?: string | null
-          id?: string | null
+          id?: string
           message_id?: string | null
         }
         Relationships: [

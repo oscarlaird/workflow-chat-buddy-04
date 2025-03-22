@@ -33,15 +33,13 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
               {formatTime(event.created_at)}
             </Badge>
           </div>
-          {(hasInput || hasOutput) && (
-            <div>
-              {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </div>
-          )}
+          <div>
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </div>
         </div>
       </CardHeader>
       
-      {expanded && (hasInput || hasOutput) && (
+      {expanded && (
         <CardContent className="p-2 pt-0">
           {hasInput && (
             <div className="mb-2">
@@ -60,6 +58,12 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
                 code={JSON.stringify(event.example_output, null, 2)} 
                 language="json" 
               />
+            </div>
+          )}
+          
+          {!hasInput && !hasOutput && (
+            <div className="text-xs text-muted-foreground italic">
+              No input or output data available
             </div>
           )}
         </CardContent>

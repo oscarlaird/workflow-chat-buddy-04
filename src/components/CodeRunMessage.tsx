@@ -103,8 +103,8 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             <strong>Command:</strong> {message.content || "Executing workflow..."}
           </div>
           
-          {/* Code Run Events section */}
-          {hasEvents && (
+          {/* Code Run Events section - Always show the dropdown if there are events */}
+          {(
             <div className="mt-3 border-t pt-3">
               <button
                 onClick={(e) => {
@@ -114,15 +114,21 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
               >
                 {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                <span>Function Calls {eventsExpanded ? "▾" : "▸"}</span>
+                <span>Function Calls</span>
                 <span className="text-xs text-muted-foreground">({events.length})</span>
               </button>
               
               {eventsExpanded && (
                 <div className="space-y-1 mt-2">
-                  {events.map((event) => (
-                    <CodeRunEventItem key={event.id} event={event} />
-                  ))}
+                  {events.length > 0 ? (
+                    events.map((event) => (
+                      <CodeRunEventItem key={event.id} event={event} />
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic px-2">
+                      No function calls recorded yet
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -154,7 +160,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
               >
                 {tablesExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 <Table className="w-4 h-4" />
-                <span>Result Tables {tablesExpanded ? "▾" : "▸"}</span>
+                <span>Result Tables</span>
               </button>
               
               {tablesExpanded && (
@@ -174,7 +180,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             </div>
           )}
           
-          {!message.code_output && !message.code_output_error && !hasTableData && !hasEvents && status === 'running' && (
+          {!message.code_output && !message.code_output_error && !hasTableData && events.length === 0 && status === 'running' && (
             <div className="py-2 text-sm text-muted-foreground italic">
               Executing code, please wait...
             </div>
