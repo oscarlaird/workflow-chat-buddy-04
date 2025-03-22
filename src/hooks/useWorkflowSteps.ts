@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { formatFieldName } from "@/lib/utils";
 
 interface UseWorkflowStepsResult {
   workflowSteps: WorkflowStep[];
@@ -55,19 +56,25 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
             example_output?: Record<string, any>;
           }>;
           
-          const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
-            id: `${chatId}-step-${index}`,
-            chat_id: chatId,
-            title: key,
-            description: stepData.description,
-            step_number: index + 1,
-            status: "waiting", // Default status
-            exampleInput: stepData.example_input || null,
-            exampleOutput: stepData.example_output || null,
-            code: null
-          }));
+          // Safely convert steps object to array with defensive check
+          if (stepsObject && typeof stepsObject === 'object') {
+            const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
+              id: `${chatId}-step-${index}`,
+              chat_id: chatId,
+              title: formatFieldName(key), // Format the title
+              description: stepData.description || "No description available",
+              step_number: index + 1,
+              status: "waiting", // Default status
+              exampleInput: stepData.example_input || null,
+              exampleOutput: stepData.example_output || null,
+              code: null
+            }));
 
-          setWorkflowSteps(transformedSteps);
+            setWorkflowSteps(transformedSteps);
+          } else {
+            console.error('Steps data is not a valid object:', stepsObject);
+            setWorkflowSteps([]);
+          }
         } else {
           // No steps found
           setWorkflowSteps([]);
@@ -75,6 +82,7 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
       } catch (err) {
         console.error('Error in fetchWorkflowSteps:', err);
         setError('An unexpected error occurred while loading workflow steps');
+        setWorkflowSteps([]); // Ensure we set empty array on error
       } finally {
         setIsLoading(false);
       }
@@ -101,19 +109,25 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
             example_output?: Record<string, any>;
           }>;
           
-          const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
-            id: `${chatId}-step-${index}`,
-            chat_id: chatId,
-            title: key,
-            description: stepData.description,
-            step_number: index + 1,
-            status: "waiting", // Default status
-            exampleInput: stepData.example_input || null,
-            exampleOutput: stepData.example_output || null,
-            code: null
-          }));
+          // Safely convert steps object to array with defensive check
+          if (stepsObject && typeof stepsObject === 'object') {
+            const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
+              id: `${chatId}-step-${index}`,
+              chat_id: chatId,
+              title: formatFieldName(key), // Format the title
+              description: stepData.description || "No description available",
+              step_number: index + 1,
+              status: "waiting", // Default status
+              exampleInput: stepData.example_input || null,
+              exampleOutput: stepData.example_output || null,
+              code: null
+            }));
 
-          setWorkflowSteps(transformedSteps);
+            setWorkflowSteps(transformedSteps);
+          } else {
+            console.error('Steps data in subscription is not a valid object:', stepsObject);
+            setWorkflowSteps([]);
+          }
         }
       })
       .subscribe();

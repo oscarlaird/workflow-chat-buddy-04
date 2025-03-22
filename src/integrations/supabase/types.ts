@@ -36,6 +36,41 @@ export type Database = {
         }
         Relationships: []
       }
+      coderun_events: {
+        Row: {
+          chat_id: string | null
+          created_at: string
+          example_input: Json | null
+          example_output: Json | null
+          function_name: string | null
+          id: number
+        }
+        Insert: {
+          chat_id?: string | null
+          created_at?: string
+          example_input?: Json | null
+          example_output?: Json | null
+          function_name?: string | null
+          id?: number
+        }
+        Update: {
+          chat_id?: string | null
+          created_at?: string
+          example_input?: Json | null
+          example_output?: Json | null
+          function_name?: string | null
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coderun_events_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keyframes: {
         Row: {
           chat_id: string | null
