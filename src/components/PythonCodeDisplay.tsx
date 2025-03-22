@@ -4,7 +4,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Code2, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import CodeBlock from "@/components/CodeBlock";
-import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface PythonCodeDisplayProps {
   chatId: string;
@@ -91,20 +91,16 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           {isOpen && (
-            <div className="w-full">
-              <ResizablePanelGroup direction="vertical">
-                <ResizablePanel defaultSize={100} minSize={20}>
-                  <div className="py-2 px-4">
-                    {isLoading ? (
-                      <div className="text-sm text-gray-500">Loading...</div>
-                    ) : pythonCode ? (
-                      <CodeBlock code={pythonCode} language="python" />
-                    ) : (
-                      <div className="text-sm text-gray-500">No Python code available for this workflow.</div>
-                    )}
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
+            <div className="p-0 w-full">
+              {isLoading ? (
+                <div className="p-4 text-sm text-gray-500">Loading...</div>
+              ) : pythonCode ? (
+                <div className="w-full h-[300px] min-h-[100px] resize-y overflow-auto">
+                  <CodeBlock code={pythonCode} language="python" />
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-gray-500">No Python code available for this workflow.</div>
+              )}
             </div>
           )}
         </CollapsibleContent>
