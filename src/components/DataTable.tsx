@@ -23,7 +23,8 @@ const DataTable = ({ data }: DataTableProps) => {
     direction: null,
   });
 
-  if (!data || data.length === 0) {
+  // Ensure data is an array before proceeding
+  if (!data || !Array.isArray(data) || data.length === 0) {
     return <div className="text-center p-4 text-gray-500">No data available</div>;
   }
 
@@ -44,6 +45,12 @@ const DataTable = ({ data }: DataTableProps) => {
   };
 
   const getSortedData = () => {
+    // Ensure data is an array before trying to sort it
+    if (!Array.isArray(data)) {
+      console.error('DataTable received non-array data:', data);
+      return [];
+    }
+    
     if (!sortConfig.key || !sortConfig.direction) return data;
     
     return [...data].sort((a, b) => {
@@ -73,6 +80,15 @@ const DataTable = ({ data }: DataTableProps) => {
     return <ChevronsUpDown className="w-4 h-4 opacity-50" />;
   };
 
+  // Get the sorted data once to ensure it's an array
+  const sortedData = getSortedData();
+  
+  // Final safety check before rendering
+  if (!Array.isArray(sortedData)) {
+    console.error('getSortedData did not return an array:', sortedData);
+    return <div className="text-center p-4 text-gray-500">Error processing data</div>;
+  }
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -95,7 +111,7 @@ const DataTable = ({ data }: DataTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {getSortedData().map((row, rowIndex) => (
+          {sortedData.map((row, rowIndex) => (
             <TableRow key={rowIndex}>
               {columns.map((column) => (
                 <TableCell 
