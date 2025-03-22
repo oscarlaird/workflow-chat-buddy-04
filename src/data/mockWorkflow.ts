@@ -1,6 +1,7 @@
 
 import { Workflow } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { formatFieldName } from "@/lib/utils";
 
 // Function to get the Supabase URL for an image
 export const getSupabaseImageUrl = (fileName: string) => {

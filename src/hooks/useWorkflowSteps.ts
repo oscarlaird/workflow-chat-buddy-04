@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { formatFieldName } from "@/lib/utils";
 
 interface UseWorkflowStepsResult {
   workflowSteps: WorkflowStep[];
@@ -58,7 +59,7 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
             id: `${chatId}-step-${index}`,
             chat_id: chatId,
-            title: key,
+            title: formatFieldName(key), // Format the title by replacing underscores with spaces and capitalizing
             description: stepData.description,
             step_number: index + 1,
             status: "waiting", // Default status
@@ -104,7 +105,7 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
             id: `${chatId}-step-${index}`,
             chat_id: chatId,
-            title: key,
+            title: formatFieldName(key), // Format the title by replacing underscores with spaces and capitalizing
             description: stepData.description,
             step_number: index + 1,
             status: "waiting", // Default status
