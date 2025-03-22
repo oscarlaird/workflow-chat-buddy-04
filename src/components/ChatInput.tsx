@@ -159,14 +159,14 @@ export const ChatInput = ({
 
   // Generate recording button classes based on state
   const getRecordingButtonClasses = () => {
-    let classes = "flex items-center gap-1.5 absolute left-3 bottom-3 p-1.5 rounded-md transition-colors disabled:opacity-50";
+    let classes = "flex items-center gap-1.5 p-2 rounded-md transition-colors disabled:opacity-50";
     
     if (isInExtension && isRecording) {
-      // Red recording button with pulsing animation when recording
-      classes += " bg-red-100 hover:bg-red-200 text-red-600 animate-pulse";
+      // Recording active state
+      classes += " bg-red-100 text-red-600 hover:bg-red-200 animate-pulse";
     } else {
-      // Improved subtle button with better contrast
-      classes += " bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 border border-gray-300";
+      // Default state with purple accent
+      classes += " bg-primary/10 text-primary hover:bg-primary/20";
     }
     
     return classes;
@@ -177,13 +177,11 @@ export const ChatInput = ({
     if (isRecording) {
       return {
         icon: <Square className="w-4 h-4" />,
-        text: "Stop recording",
         ariaLabel: "Stop screen recording",
       };
     } else {
       return {
         icon: <Video className="w-4 h-4" />,
-        text: "Capture screen",
         ariaLabel: "Capture your screen",
       };
     }
@@ -201,31 +199,35 @@ export const ChatInput = ({
           onKeyDown={handleKeyDown}
           placeholder={disabled ? "Select or create a chat to start messaging..." : "Type your message..."}
           rows={1}
-          className="w-full py-3 px-4 pr-12 pl-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
+          className="w-full py-3 px-4 pr-24 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none transition-all"
           disabled={isLoading || disabled}
           autoFocus={!disabled}
         />
-        <button
-          type="button"
-          onClick={handleScreenRecording}
-          className={getRecordingButtonClasses()}
-          disabled={disabled}
-          aria-label={recordingButtonProps.ariaLabel}
-        >
-          {recordingButtonProps.icon}
-          <span className="text-xs font-medium">{recordingButtonProps.text}</span>
-        </button>
-        <button
-          type="submit"
-          className="absolute right-3 bottom-3 p-1.5 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-          disabled={!inputValue.trim() || isLoading || disabled}
-        >
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <CornerDownLeft className="w-5 h-5" />
-          )}
-        </button>
+        
+        <div className="absolute right-3 bottom-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleScreenRecording}
+            className={getRecordingButtonClasses()}
+            disabled={disabled}
+            aria-label={recordingButtonProps.ariaLabel}
+            title={isRecording ? "Stop recording" : "Capture screen"}
+          >
+            {recordingButtonProps.icon}
+          </button>
+          <button
+            type="submit"
+            className="p-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+            disabled={!inputValue.trim() || isLoading || disabled}
+            title="Send message"
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <CornerDownLeft className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </form>
       <div className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
         {disabled ? 
