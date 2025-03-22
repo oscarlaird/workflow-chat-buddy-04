@@ -50,37 +50,21 @@ const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayPr
     // Fetch Python code on initial load
     fetchPythonCode();
     
-    // Subscribe to real-time updates to the messages with scripts for this chat
+    // Subscribe to real-time updates for all messages in this chat
     const channel = supabase
-      .channel('script-messages-updates')
+      .channel(`messages-with-script-${chatId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'messages',
-          filter: `chat_id=eq.${chatId} AND script=is.not.null`
+          filter: `chat_id=eq.${chatId}`
         },
         (payload) => {
-          console.log('New message with script:', payload);
-          // Update the pythonCode state when a new message with script is added
+          // Only process if the message has a script
           if (payload.new && 'script' in payload.new && payload.new.script) {
-            setPythonCode(payload.new.script);
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `chat_id=eq.${chatId} AND script=is.not.null`
-        },
-        (payload) => {
-          console.log('Message with script updated:', payload);
-          // Update the pythonCode state when a message with script is updated
-          if (payload.new && 'script' in payload.new && payload.new.script) {
+            console.log('Message with script updated:', payload.new);
             setPythonCode(payload.new.script);
           }
         }
