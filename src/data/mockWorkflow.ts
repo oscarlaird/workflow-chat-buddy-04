@@ -202,7 +202,8 @@ function normalizeNameFormat(name) {
       description: "Link each representative to their voting record",
       status: "waiting",
       step_number: 6,
-      exampleData: [
+      exampleInput: null,
+      exampleOutput: [
         { "name": "Rep. Adams, Alma S.", "party": "D", "state": "NC", "vote": "Nay", "rating": "5%" },
         { "name": "Rep. Aderholt, Robert B.", "party": "R", "state": "AL", "vote": "Yea", "rating": "92%" },
         { "name": "Rep. Aguilar, Pete", "party": "D", "state": "CA", "vote": "Nay", "rating": "8%" },

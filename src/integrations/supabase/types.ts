@@ -12,30 +12,24 @@ export type Database = {
       chats: {
         Row: {
           created_at: string | null
-          example_inputs: Json | null
           id: string
           is_example: boolean | null
-          script: string | null
           title: string
           updated_at: string | null
           username: string | null
         }
         Insert: {
           created_at?: string | null
-          example_inputs?: Json | null
           id: string
           is_example?: boolean | null
-          script?: string | null
           title: string
           updated_at?: string | null
           username?: string | null
         }
         Update: {
           created_at?: string | null
-          example_inputs?: Json | null
           id?: string
           is_example?: boolean | null
-          script?: string | null
           title?: string
           updated_at?: string | null
           username?: string | null
