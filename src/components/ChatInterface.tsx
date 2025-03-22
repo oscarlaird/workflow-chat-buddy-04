@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -284,7 +283,8 @@ export const ChatInterface = forwardRef(({
               code_run: newMessage.code_run,
               code_output: newMessage.code_output,
               code_output_error: newMessage.code_output_error,
-              screenrecording_url: newMessage.screenrecording_url
+              screenrecording_url: newMessage.screenrecording_url,
+              code_output_tables: newMessage.code_output_tables
             }
           ];
         });
@@ -306,7 +306,9 @@ export const ChatInterface = forwardRef(({
           function_name: updatedMessage.function_name,
           code_output: updatedMessage.code_output,
           code_output_error: updatedMessage.code_output_error,
-          code_run: updatedMessage.code_run
+          code_run: updatedMessage.code_run,
+          code_run_success: updatedMessage.code_run_success,
+          code_output_tables: updatedMessage.code_output_tables
         };
         
         updateMessageContent(
