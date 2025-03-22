@@ -28,7 +28,7 @@ const CodeBlock = ({ code, language = "javascript" }: CodeBlockProps) => {
   return (
     <div className="relative group">
       <ScrollArea className="max-h-[400px] w-full rounded-md" type="hover">
-        <div className="min-w-full overflow-auto">
+        <div className="w-full">
           <SyntaxHighlighter
             language={language}
             style={isDark ? vscDarkPlus : vs}
