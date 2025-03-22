@@ -12,6 +12,7 @@ export type Database = {
       chats: {
         Row: {
           created_at: string | null
+          example_inputs: Json | null
           id: string
           input_schema: Json | null
           is_example: boolean | null
@@ -23,6 +24,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          example_inputs?: Json | null
           id: string
           input_schema?: Json | null
           is_example?: boolean | null
@@ -34,6 +36,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          example_inputs?: Json | null
           id?: string
           input_schema?: Json | null
           is_example?: boolean | null

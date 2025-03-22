@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash, Table, List, Upload, AlertCircle } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Plus, Trash, Upload, AlertCircle } from "lucide-react";
 import { InputField, InputValues } from "@/types";
 import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
 import { TypedInputField, InputFieldIcon } from "@/components/InputField";
@@ -28,7 +26,7 @@ import { Button } from "@/components/ui/button";
 
 interface WorkflowInputsProps {
   chatId?: string;
-  onInputValuesChange?: (values: InputValues | InputValues[]) => void;
+  onInputValuesChange?: (values: InputValues) => void;
   showRunButton?: boolean;
   onRunWorkflow?: () => void;
   isRunning?: boolean;
@@ -47,53 +45,51 @@ export const WorkflowInputs = ({
 }: WorkflowInputsProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [inputValues, setInputValues] = useState<InputValues>({});
-  const [tabularData, setTabularData] = useState<InputValues[]>([{}]);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   const { 
-    multiInput, 
-    inputSchema, 
-    isLoading, 
-    isSaving, 
-    updateMultiInput 
+    exampleInputs,
+    inferredSchema,
+    isLoading
   } = useSelectedChatSettings(chatId);
 
   useEffect(() => {
-    const initialValues: InputValues = {};
-    inputSchema.forEach((field: InputField) => {
-      if (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
-          field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
-          field.type === 'zip_code' || field.type === 'state' || field.type === 'country') {
-        initialValues[field.field_name] = '';
-      }
-      else if (field.type === 'number' || field.type === 'integer' || 
-               field.type === 'currency' || field.type === 'percentage' || field.type === 'year') {
-        initialValues[field.field_name] = 0;
-      }
-      else if (field.type === 'date') {
-        initialValues[field.field_name] = '';
-      }
-      else if (field.type === 'bool') {
-        initialValues[field.field_name] = false;
-      }
-    });
-    
-    setInputValues(initialValues);
-    setTabularData([{...initialValues}]);
-  }, [inputSchema]);
+    // Initialize input values from example inputs if available
+    if (exampleInputs) {
+      setInputValues({...exampleInputs});
+    } else {
+      // Otherwise initialize with default values based on inferred schema
+      const initialValues: InputValues = {};
+      inferredSchema.forEach((field: InputField) => {
+        if (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
+            field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
+            field.type === 'zip_code' || field.type === 'state' || field.type === 'country') {
+          initialValues[field.field_name] = '';
+        }
+        else if (field.type === 'number' || field.type === 'integer' || 
+                field.type === 'currency' || field.type === 'percentage' || field.type === 'year') {
+          initialValues[field.field_name] = 0;
+        }
+        else if (field.type === 'date') {
+          initialValues[field.field_name] = '';
+        }
+        else if (field.type === 'bool') {
+          initialValues[field.field_name] = false;
+        }
+      });
+      
+      setInputValues(initialValues);
+    }
+  }, [exampleInputs, inferredSchema]);
 
   useEffect(() => {
     if (onInputValuesChange) {
-      onInputValuesChange(multiInput ? tabularData : inputValues);
+      onInputValuesChange(inputValues);
     }
-  }, [inputValues, tabularData, multiInput, onInputValuesChange]);
-
-  const toggleInputMode = async () => {
-    await updateMultiInput(!multiInput);
-  };
+  }, [inputValues, onInputValuesChange]);
 
   const handleRunWorkflow = () => {
     console.log("Run button clicked in WorkflowInputs");
@@ -103,23 +99,10 @@ export const WorkflowInputs = ({
       return;
     }
     
-    console.log("Submitting input values:", multiInput ? tabularData : inputValues);
+    console.log("Submitting input values:", inputValues);
     
-    // Call the onSubmit handler with either the single input values or the first row of tabular data
-    if (multiInput) {
-      if (tabularData.length > 0) {
-        onSubmit(tabularData[0]);
-      } else {
-        console.error("No tabular data available to submit");
-        toast({
-          title: "Error",
-          description: "No data available to submit",
-          variant: "destructive"
-        });
-      }
-    } else {
-      onSubmit(inputValues);
-    }
+    // Call the onSubmit handler with the input values
+    onSubmit(inputValues);
     
     // Notify the parent component if there's an onRunWorkflow callback
     if (onRunWorkflow) {
@@ -170,29 +153,6 @@ export const WorkflowInputs = ({
     }));
   };
 
-  const handleTabularInputChange = (rowIndex: number, name: string, value: string | number | boolean) => {
-    setTabularData(prev => {
-      const newData = [...prev];
-      if (!newData[rowIndex]) {
-        newData[rowIndex] = {};
-      }
-      newData[rowIndex] = {
-        ...newData[rowIndex],
-        [name]: value
-      };
-      return newData;
-    });
-  };
-
-  const addTableRow = () => {
-    setTabularData(prev => [...prev, {}]);
-  };
-
-  const removeTableRow = (index: number) => {
-    if (tabularData.length <= 1) return;
-    setTabularData(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -210,33 +170,18 @@ export const WorkflowInputs = ({
       const data = await parseSpreadsheetFile(file);
       
       // Map the data to the input schema
-      const mappedData = mapSpreadsheetToInputSchema(data, inputSchema);
+      const mappedData = mapSpreadsheetToInputSchema(data, inferredSchema);
       
       if (mappedData.length === 0) {
         throw new Error('No valid data found in the file');
       }
 
-      if (!multiInput && mappedData.length > 0) {
-        // In single input mode, just use the first row
-        setInputValues(mappedData[0]);
-        toast({
-          title: "Data imported",
-          description: `Imported the first row from ${file.name}`,
-        });
-      } else {
-        // In tabular mode, use all rows
-        setTabularData(mappedData);
-        
-        // Switch to tabular mode if we're not already there
-        if (!multiInput) {
-          await updateMultiInput(true);
-        }
-        
-        toast({
-          title: "Data imported",
-          description: `Imported ${mappedData.length} rows from ${file.name}`,
-        });
-      }
+      // Use the first row of data
+      setInputValues(mappedData[0]);
+      toast({
+        title: "Data imported",
+        description: `Imported the first row from ${file.name}`,
+      });
       
       setShowUploadDialog(false);
     } catch (error) {
@@ -253,68 +198,6 @@ export const WorkflowInputs = ({
 
   const triggerFileUpload = () => {
     setShowUploadDialog(true);
-  };
-
-  const renderTabularInputs = () => {
-    return (
-      <div className="overflow-x-auto">
-        <UITable>
-          <TableHeader>
-            <TableRow>
-              {inputSchema.map((field) => (
-                <TableHead key={field.field_name} className="capitalize">
-                  <div className="flex items-center gap-1.5">
-                    <InputFieldIcon type={field.type} className="text-muted-foreground" />
-                    <span>{formatFieldName(field.field_name)}</span>
-                  </div>
-                </TableHead>
-              ))}
-              <TableHead className="w-[80px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tabularData.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {inputSchema.map((field) => (
-                  <TableCell key={`${rowIndex}-${field.field_name}`}>
-                    <TypedInputField
-                      field={field}
-                      value={row[field.field_name] !== undefined ? row[field.field_name] : 
-                        (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
-                         field.type === 'phone' || field.type === 'address' || field.type === 'url' || 
-                         field.type === 'zip_code' || field.type === 'state' || field.type === 'country' ||
-                         field.type === 'date') ? '' : 
-                        (field.type === 'number' || field.type === 'integer' || 
-                         field.type === 'currency' || field.type === 'percentage' || 
-                         field.type === 'year') ? 0 : false
-                      }
-                      onChange={(name, value) => handleTabularInputChange(rowIndex, name, value)}
-                      showValidation={false} // Disable validation messages in table view to save space
-                    />
-                  </TableCell>
-                ))}
-                <TableCell>
-                  <button 
-                    onClick={() => removeTableRow(rowIndex)}
-                    className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-                    disabled={tabularData.length <= 1}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </UITable>
-        
-        <button 
-          onClick={addTableRow}
-          className="mt-2 text-sm flex items-center gap-1 text-primary hover:underline"
-        >
-          <Plus className="h-4 w-4" /> Add Row
-        </button>
-      </div>
-    );
   };
 
   if (isLoading) {
@@ -334,43 +217,32 @@ export const WorkflowInputs = ({
             variant="outline" 
             size="sm" 
             onClick={triggerFileUpload}
-            className="mr-2"
           >
             <Upload className="h-4 w-4 mr-1" />
             <span>Import</span>
           </Button>
-          <Label htmlFor="input-mode" className="text-sm">
-            {multiInput ? <Table className="h-4 w-4" /> : <List className="h-4 w-4" />}
-          </Label>
-          <Switch
-            id="input-mode"
-            checked={multiInput}
-            onCheckedChange={toggleInputMode}
-            disabled={isSaving}
-          />
-          <span className="text-sm">
-            {multiInput ? 'Tabular' : 'Single'}
-          </span>
         </div>
       </div>
       
       <div className="space-y-4 mb-4">
-        {multiInput ? (
-          renderTabularInputs()
-        ) : (
-          inputSchema.map((field) => (
-            <div key={field.field_name} className="space-y-2">
-              <Label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
-                <InputFieldIcon type={field.type} className="text-muted-foreground" />
-                <span>{formatFieldName(field.field_name)}</span>
-              </Label>
-              <TypedInputField
-                field={field}
-                value={inputValues[field.field_name]}
-                onChange={handleInputChange}
-              />
-            </div>
-          ))
+        {inferredSchema.map((field) => (
+          <div key={field.field_name} className="space-y-2">
+            <label htmlFor={field.field_name} className="flex items-center gap-1.5 capitalize">
+              <InputFieldIcon type={field.type} className="text-muted-foreground" />
+              <span>{formatFieldName(field.field_name)}</span>
+            </label>
+            <TypedInputField
+              field={field}
+              value={inputValues[field.field_name]}
+              onChange={handleInputChange}
+            />
+          </div>
+        ))}
+
+        {inferredSchema.length === 0 && (
+          <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground">
+            No example inputs available. Please add example inputs to your workflow.
+          </div>
         )}
       </div>
       
@@ -378,7 +250,7 @@ export const WorkflowInputs = ({
         {showRunButton && (
           <button
             onClick={handleRunWorkflow}
-            disabled={disabled || isRunning}
+            disabled={disabled || isRunning || inferredSchema.length === 0}
             className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
           >
             {isRunning ? (

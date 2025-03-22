@@ -5,43 +5,68 @@ import { toast } from "@/components/ui/use-toast";
 import { InputField } from "@/types";
 import { Json } from "@/integrations/supabase/types";
 
-// Helper function to safely parse input_schema JSON from Supabase
-const parseInputSchema = (inputSchema: Json | null): InputField[] => {
-  if (!inputSchema) return [];
+// Helper function to infer input field types from example values
+export const inferFieldType = (fieldName: string, value: any): InputField['type'] => {
+  if (value === null || value === undefined) return 'string';
   
-  if (Array.isArray(inputSchema)) {
-    // Cast each item to InputField if it has the correct structure
-    return inputSchema
-      .filter(item => 
-        typeof item === 'object' && 
-        item !== null && 
-        'field_name' in item && 
-        typeof item.field_name === 'string' &&
-        'type' in item
-      )
-      .map(item => ({
-        field_name: (item as any).field_name,
-        type: (item as any).type
-      }));
+  if (typeof value === 'boolean') return 'bool';
+  
+  if (typeof value === 'number') {
+    // Check if it's an integer
+    if (Number.isInteger(value)) {
+      if (value >= 1900 && value <= 2100) return 'year';
+      return 'integer';
+    }
+    // If it's a decimal number
+    return 'number';
   }
   
-  return [];
+  if (typeof value === 'string') {
+    // Try to infer more specific string types
+    if (/^\d{5}(-\d{4})?$/.test(value)) return 'zip_code';
+    if (/^(https?:\/\/)/.test(value)) return 'url';
+    if (/^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(value)) return 'email';
+    if (/^\+?[\d\s-()]{7,}$/.test(value)) return 'phone';
+    
+    // Check for dates in various formats
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value) || // YYYY-MM-DD
+        /^\d{2}\/\d{2}\/\d{4}$/.test(value) || // MM/DD/YYYY
+        /^\d{1,2}\s[a-zA-Z]{3}\s\d{4}$/.test(value)) { // D MMM YYYY
+      return 'date';
+    }
+    
+    // Check for state/country
+    const states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"];
+    if (states.includes(value.toUpperCase()) || value.length === 2) return 'state';
+    
+    // Default to string
+    return 'string';
+  }
+  
+  // Default to string for any other type
+  return 'string';
+};
+
+// Convert example_inputs to input schema
+export const inferInputSchema = (exampleInputs: Record<string, any> | null): InputField[] => {
+  if (!exampleInputs) return [];
+  
+  return Object.entries(exampleInputs).map(([fieldName, value]) => ({
+    field_name: fieldName,
+    type: inferFieldType(fieldName, value)
+  }));
 };
 
 export interface ChatSettings {
-  multiInput: boolean;
-  inputSchema: InputField[];
+  exampleInputs: Record<string, any> | null;
+  inferredSchema: InputField[];
   isLoading: boolean;
-  isSaving: boolean;
-  updateMultiInput: (value: boolean) => Promise<void>;
-  updateInputSchema: (schema: InputField[]) => Promise<void>;
 }
 
 export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
-  const [multiInput, setMultiInput] = useState(false);
-  const [inputSchema, setInputSchema] = useState<InputField[]>([]);
+  const [exampleInputs, setExampleInputs] = useState<Record<string, any> | null>(null);
+  const [inferredSchema, setInferredSchema] = useState<InputField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchChatSettings = async () => {
@@ -54,7 +79,7 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
         setIsLoading(true);
         const { data, error } = await supabase
           .from('chats')
-          .select('multi_input, input_schema')
+          .select('example_inputs')
           .eq('id', chatId)
           .single();
 
@@ -66,9 +91,13 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
             variant: "destructive"
           });
         } else if (data) {
-          setMultiInput(data.multi_input || false);
-          const parsedSchema = parseInputSchema(data.input_schema);
-          setInputSchema(parsedSchema);
+          const examples = data.example_inputs as Record<string, any> | null;
+          setExampleInputs(examples);
+          
+          if (examples) {
+            const schema = inferInputSchema(examples);
+            setInferredSchema(schema);
+          }
         }
       } catch (error) {
         console.error('Error in fetchChatSettings:', error);
@@ -91,13 +120,14 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
         }, (payload) => {
           const newData = payload.new as any;
           
-          // Only update if multi_input or input_schema changed
-          if (newData.multi_input !== undefined) {
-            setMultiInput(newData.multi_input);
-          }
-          
-          if (newData.input_schema !== undefined) {
-            setInputSchema(parseInputSchema(newData.input_schema));
+          if (newData.example_inputs !== undefined) {
+            const examples = newData.example_inputs as Record<string, any> | null;
+            setExampleInputs(examples);
+            
+            if (examples) {
+              const schema = inferInputSchema(examples);
+              setInferredSchema(schema);
+            }
           }
         })
         .subscribe();
@@ -108,83 +138,9 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
     }
   }, [chatId]);
 
-  const updateMultiInput = async (value: boolean) => {
-    if (!chatId) return;
-    
-    try {
-      setIsSaving(true);
-      
-      const { error } = await supabase
-        .from('chats')
-        .update({ multi_input: value })
-        .eq('id', chatId);
-        
-      if (error) {
-        console.error('Error updating input mode:', error);
-        toast({
-          title: "Error updating input mode",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: `${value ? 'Tabular' : 'Single'} input mode enabled`,
-          description: `You can now use ${value ? 'multiple rows of' : 'a single set of'} inputs.`
-        });
-        
-        // Update local state immediately for a responsive UI
-        setMultiInput(value);
-      }
-    } catch (error) {
-      console.error('Error in updateMultiInput:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const updateInputSchema = async (schema: InputField[]) => {
-    if (!chatId) return;
-    
-    try {
-      setIsSaving(true);
-      
-      // Need to cast InputField[] to Json for the Supabase client
-      const schemaJson = schema as unknown as Json;
-      
-      const { error } = await supabase
-        .from('chats')
-        .update({ input_schema: schemaJson })
-        .eq('id', chatId);
-        
-      if (error) {
-        console.error('Error updating input schema:', error);
-        toast({
-          title: "Error updating input schema",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Input schema updated",
-          description: "The input fields have been updated successfully."
-        });
-        
-        // Update local state immediately for a responsive UI
-        setInputSchema(schema);
-      }
-    } catch (error) {
-      console.error('Error in updateInputSchema:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return {
-    multiInput,
-    inputSchema,
+    exampleInputs,
+    inferredSchema,
     isLoading,
-    isSaving,
-    updateMultiInput,
-    updateInputSchema
   };
 };
