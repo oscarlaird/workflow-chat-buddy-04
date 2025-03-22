@@ -11,6 +11,7 @@ import ScreenRecordingDisplay from "./ScreenRecordingDisplay";
 import ExtensionAlert from "./ExtensionAlert";
 import EmptyMessageList from "./EmptyMessageList";
 import RecordingButton from "./RecordingButton";
+import CodeRunMessage from "./CodeRunMessage";
 
 interface MessageListProps {
   messages: Message[];
@@ -113,6 +114,18 @@ export const MessageList = ({
               <ScreenRecordingDisplay 
                 message={message} 
                 duration={hasScreenRecording(message) ? screenRecordings[message.id]?.duration : undefined}
+              />
+            </div>
+          );
+        }
+        
+        // Code Run Messages - special handling
+        if (message.code_run) {
+          return (
+            <div key={message.id} className="flex justify-start">
+              <CodeRunMessage 
+                message={message} 
+                isStreaming={streamingMessageIds.has(message.id)} 
               />
             </div>
           );

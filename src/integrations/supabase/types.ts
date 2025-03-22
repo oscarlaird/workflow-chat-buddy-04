@@ -100,6 +100,7 @@ export type Database = {
         Row: {
           chat_id: string
           code_output: string | null
+          code_output_error: string | null
           code_run: boolean
           content: string
           created_at: string | null
@@ -117,6 +118,7 @@ export type Database = {
         Insert: {
           chat_id: string
           code_output?: string | null
+          code_output_error?: string | null
           code_run?: boolean
           content: string
           created_at?: string | null
@@ -134,6 +136,7 @@ export type Database = {
         Update: {
           chat_id?: string
           code_output?: string | null
+          code_output_error?: string | null
           code_run?: boolean
           content?: string
           created_at?: string | null

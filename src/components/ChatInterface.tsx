@@ -1,3 +1,4 @@
+
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -219,14 +220,13 @@ export const ChatInterface = forwardRef(({
     };
   }, [conversationId, processSpawnWindowMessage]);
 
-  const updateMessageContent = useCallback((messageId: string, newContent: string, functionName: string | null = null, isStreaming: boolean = false) => {
+  const updateMessageContent = useCallback((messageId: string, updatedMessage: any, isStreaming: boolean = false) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => 
         msg.id === messageId 
           ? { 
               ...msg, 
-              content: newContent,
-              ...(functionName !== undefined ? { function_name: functionName } : {})
+              ...updatedMessage
             } 
           : msg
       )
@@ -280,7 +280,11 @@ export const ChatInterface = forwardRef(({
               username: newMessage.username,
               function_name: newMessage.function_name,
               workflow_step_id: newMessage.workflow_step_id,
-              run_id: newMessage.run_id
+              run_id: newMessage.run_id,
+              code_run: newMessage.code_run,
+              code_output: newMessage.code_output,
+              code_output_error: newMessage.code_output_error,
+              screenrecording_url: newMessage.screenrecording_url
             }
           ];
         });
@@ -297,10 +301,16 @@ export const ChatInterface = forwardRef(({
       }, (payload) => {
         const updatedMessage = payload.new;
         
+        const messageUpdate = {
+          content: updatedMessage.content,
+          function_name: updatedMessage.function_name,
+          code_output: updatedMessage.code_output,
+          code_output_error: updatedMessage.code_output_error
+        };
+        
         updateMessageContent(
           updatedMessage.id, 
-          updatedMessage.content, 
-          updatedMessage.function_name, 
+          messageUpdate, 
           updatedMessage.is_currently_streaming
         );
       })

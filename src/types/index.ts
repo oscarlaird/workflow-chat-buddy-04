@@ -9,6 +9,9 @@ export interface Message {
   run_id?: string;
   screenrecording_url?: string;
   chat_id?: string;
+  code_run?: boolean;
+  code_output?: string;
+  code_output_error?: string;
 }
 
 export interface Conversation {
