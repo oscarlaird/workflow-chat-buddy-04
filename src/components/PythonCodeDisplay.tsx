@@ -8,11 +8,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PythonCodeDisplayProps {
   chatId: string;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
+const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayProps) => {
   const [pythonCode, setPythonCode] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Function to fetch Python code
@@ -73,22 +74,13 @@ const PythonCodeDisplay = ({ chatId }: PythonCodeDisplayProps) => {
     };
   }, [chatId, isOpen]);
 
-  // Notify parent component when collapsible state changes
-  useEffect(() => {
-    // Broadcast the panel state to parent components
-    window.postMessage(
-      { type: 'PYTHON_CODE_PANEL_STATE', isOpen },
-      '*'
-    );
-  }, [isOpen]);
-
   if (!chatId) return null;
 
   return (
     <div className="border-t border-gray-200 dark:border-gray-800 h-full flex flex-col">
       <Collapsible 
         open={isOpen} 
-        onOpenChange={setIsOpen} 
+        onOpenChange={onOpenChange} 
         className="w-full h-full flex flex-col"
       >
         <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">

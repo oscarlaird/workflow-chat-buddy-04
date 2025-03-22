@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -111,23 +110,14 @@ const WorkflowPanel = ({
     }
   };
 
-  // Listen for Python code panel open/close state changes
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'PYTHON_CODE_PANEL_STATE') {
-        setIsCodePanelOpen(event.data.isOpen);
-      }
-    };
+  // Handle toggling of Python code panel
+  const handlePythonPanelToggle = (open: boolean) => {
+    setIsCodePanelOpen(open);
+  };
 
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
-
-  // Prepare layout sizes
-  const workflowPanelSize = isCodePanelOpen ? 100 - codePanelSize : 100;
-  const pythonPanelSize = isCodePanelOpen ? codePanelSize : 0;
+  // Calculate panel sizes based on open state
+  const workflowPanelSize = isCodePanelOpen ? 60 : 100;
+  const pythonPanelSize = isCodePanelOpen ? 40 : 0;
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-4">
@@ -186,15 +176,15 @@ const WorkflowPanel = ({
             <ResizablePanel 
               defaultSize={pythonPanelSize} 
               minSize={isCodePanelOpen ? 10 : 0}
-              className={`transition-all duration-200 ${isCodePanelOpen ? "flex-grow" : ""}`}
-              style={{
-                height: isCodePanelOpen ? undefined : "40px",
-                overflow: "hidden"
-              }}
+              className="transition-all duration-200"
             >
-              <PythonCodeDisplay 
-                chatId={chatId} 
-              />
+              <div className={`h-full ${isCodePanelOpen ? "" : "h-10 overflow-hidden"}`}>
+                <PythonCodeDisplay 
+                  chatId={chatId}
+                  isOpen={isCodePanelOpen}
+                  onOpenChange={handlePythonPanelToggle}
+                />
+              </div>
             </ResizablePanel>
           </>
         )}
