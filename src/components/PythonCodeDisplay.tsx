@@ -16,24 +16,29 @@ const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayPr
   const [pythonCode, setPythonCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to fetch Python code
+  // Function to fetch Python code from messages table
   const fetchPythonCode = async () => {
     if (!chatId) return;
     
     setIsLoading(true);
     try {
+      // Fetch the latest non-null script from messages table
       const { data, error } = await supabase
-        .from('chats')
+        .from('messages')
         .select('script')
-        .eq('id', chatId)
-        .single();
+        .eq('chat_id', chatId)
+        .not('script', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1);
         
       if (error) {
         console.error('Error fetching Python code:', error);
         return;
       }
       
-      setPythonCode(data.script);
+      if (data && data.length > 0) {
+        setPythonCode(data[0].script);
+      }
     } catch (err) {
       console.error('Exception when fetching Python code:', err);
     } finally {
@@ -45,21 +50,37 @@ const PythonCodeDisplay = ({ chatId, isOpen, onOpenChange }: PythonCodeDisplayPr
     // Fetch Python code on initial load
     fetchPythonCode();
     
-    // Subscribe to real-time updates to the 'script' field for this chat
+    // Subscribe to real-time updates to the messages with scripts for this chat
     const channel = supabase
-      .channel('script-updates')
+      .channel('script-messages-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId} AND script=is.not.null`
+        },
+        (payload) => {
+          console.log('New message with script:', payload);
+          // Update the pythonCode state when a new message with script is added
+          if (payload.new && 'script' in payload.new && payload.new.script) {
+            setPythonCode(payload.new.script);
+          }
+        }
+      )
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'chats',
-          filter: `id=eq.${chatId}`
+          table: 'messages',
+          filter: `chat_id=eq.${chatId} AND script=is.not.null`
         },
         (payload) => {
-          console.log('Script updated:', payload);
-          // If the component is already rendered, update the pythonCode state
-          if (payload.new && 'script' in payload.new) {
+          console.log('Message with script updated:', payload);
+          // Update the pythonCode state when a message with script is updated
+          if (payload.new && 'script' in payload.new && payload.new.script) {
             setPythonCode(payload.new.script);
           }
         }

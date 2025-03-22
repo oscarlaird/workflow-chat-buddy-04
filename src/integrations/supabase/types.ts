@@ -112,6 +112,8 @@ export type Database = {
           role: string
           run_id: string | null
           screenrecording_url: string | null
+          script: string | null
+          steps: Json | null
           username: string
           workflow_step_id: string | null
         }
@@ -133,6 +135,8 @@ export type Database = {
           role: string
           run_id?: string | null
           screenrecording_url?: string | null
+          script?: string | null
+          steps?: Json | null
           username: string
           workflow_step_id?: string | null
         }
@@ -154,6 +158,8 @@ export type Database = {
           role?: string
           run_id?: string | null
           screenrecording_url?: string | null
+          script?: string | null
+          steps?: Json | null
           username?: string
           workflow_step_id?: string | null
         }

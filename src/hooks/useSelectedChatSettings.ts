@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -79,11 +80,15 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
 
       try {
         setIsLoading(true);
+        
+        // Get the latest message with non-null example_inputs for this chat
         const { data, error } = await supabase
-          .from('chats')
+          .from('messages')
           .select('example_inputs')
-          .eq('id', chatId)
-          .single();
+          .eq('chat_id', chatId)
+          .not('example_inputs', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         if (error) {
           console.error('Error fetching chat settings:', error);
@@ -92,14 +97,18 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
             description: error.message,
             variant: "destructive"
           });
-        } else if (data) {
-          const examples = data.example_inputs as Record<string, any> | null;
+        } else if (data && data.length > 0) {
+          const examples = data[0].example_inputs as Record<string, any> | null;
           setExampleInputs(examples);
           
           if (examples) {
             const schema = inferInputSchema(examples);
             setInferredSchema(schema);
           }
+        } else {
+          // No example inputs found
+          setExampleInputs(null);
+          setInferredSchema([]);
         }
       } catch (error) {
         console.error('Error in fetchChatSettings:', error);
@@ -110,19 +119,37 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
 
     fetchChatSettings();
 
-    // Set up real-time subscription for the specific chat
+    // Set up real-time subscription for messages with example_inputs for this chat
     if (chatId) {
       const channel = supabase
-        .channel(`chat-settings-${chatId}`)
+        .channel(`chat-messages-settings-${chatId}`)
         .on('postgres_changes', {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
-          table: 'chats',
-          filter: `id=eq.${chatId}`,
+          table: 'messages',
+          filter: `chat_id=eq.${chatId} AND example_inputs=is.not.null`,
         }, (payload) => {
           const newData = payload.new as any;
           
-          if (newData.example_inputs !== undefined) {
+          if (newData.example_inputs) {
+            const examples = newData.example_inputs as Record<string, any> | null;
+            setExampleInputs(examples);
+            
+            if (examples) {
+              const schema = inferInputSchema(examples);
+              setInferredSchema(schema);
+            }
+          }
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId} AND example_inputs=is.not.null`,
+        }, (payload) => {
+          const newData = payload.new as any;
+          
+          if (newData.example_inputs) {
             const examples = newData.example_inputs as Record<string, any> | null;
             setExampleInputs(examples);
             
