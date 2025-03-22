@@ -70,7 +70,13 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
         }`}>
           {message.content && (
             <div className="mb-2 text-sm">
-              <strong>Command:</strong> {message.content}
+              <strong>Command:</strong> {message.content || "Executing workflow..."}
+            </div>
+          )}
+          
+          {!message.content && (
+            <div className="mb-2 text-sm">
+              <strong>Command:</strong> Executing workflow...
             </div>
           )}
           
