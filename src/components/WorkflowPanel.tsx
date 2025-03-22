@@ -9,6 +9,7 @@ import { useWorkflowSteps } from "@/hooks/useWorkflowSteps";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "sonner";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface WorkflowPanelProps {
   chatId: string;
@@ -128,17 +129,25 @@ const WorkflowPanel = ({
           isRunning={isRunning}
         />
       )}
-      <div className="flex-grow overflow-y-auto p-4">
-        {workflowSteps && workflowSteps.map((step, index) => (
-          <WorkflowStep
-            key={step.id}
-            step={step}
-            index={index}
-            isDeleting={false}
-          />
-        ))}
-      </div>
-      {chatId && <PythonCodeDisplay chatId={chatId} />}
+      <ResizablePanelGroup direction="vertical" className="flex-grow">
+        <ResizablePanel defaultSize={80} minSize={20} className="overflow-y-auto">
+          <div className="p-4">
+            {workflowSteps && workflowSteps.map((step, index) => (
+              <WorkflowStep
+                key={step.id}
+                step={step}
+                index={index}
+                isDeleting={false}
+              />
+            ))}
+          </div>
+        </ResizablePanel>
+        {chatId && (
+          <>
+            <PythonCodeDisplay chatId={chatId} />
+          </>
+        )}
+      </ResizablePanelGroup>
     </div>
   );
 };
