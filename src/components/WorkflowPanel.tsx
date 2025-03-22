@@ -66,24 +66,26 @@ const WorkflowPanel = ({
         // Continue anyway as this is not a critical error
       }
 
-      // Store input values as a run message
-      const inputPayload = { values: inputValues };
-      const { data: messageData, error: runMessageError } = await supabase
-        .from('run_messages')
-        .insert({
-          run_id: runId,
-          type: RunMessageType.INPUTS,
-          payload: inputPayload,
-          chat_id: chatId,
-          username: 'current_user',
-          sender_type: RunMessageSenderType.DASHBOARD,
-          display_text: 'Workflow input values'
-        })
-        .select();
-        
-      if (runMessageError) {
-        console.error('Error storing input values:', runMessageError);
-        toast.error('Failed to store workflow inputs');
+      // Store input values as a run message (only if there are any inputs)
+      if (Object.keys(inputValues).length > 0) {
+        const inputPayload = { values: inputValues };
+        const { data: messageData, error: runMessageError } = await supabase
+          .from('run_messages')
+          .insert({
+            run_id: runId,
+            type: RunMessageType.INPUTS,
+            payload: inputPayload,
+            chat_id: chatId,
+            username: 'current_user',
+            sender_type: RunMessageSenderType.DASHBOARD,
+            display_text: 'Workflow input values'
+          })
+          .select();
+          
+        if (runMessageError) {
+          console.error('Error storing input values:', runMessageError);
+          toast.error('Failed to store workflow inputs');
+        }
       }
       
       toast.success("Workflow started");

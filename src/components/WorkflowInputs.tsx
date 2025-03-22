@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Upload, AlertCircle } from "lucide-react";
 import { InputField, InputValues } from "@/types";
@@ -250,7 +251,7 @@ export const WorkflowInputs = ({
         {showRunButton && (
           <button
             onClick={handleRunWorkflow}
-            disabled={disabled || isRunning || inferredSchema.length === 0}
+            disabled={disabled || isRunning}
             className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
           >
             {isRunning ? (
