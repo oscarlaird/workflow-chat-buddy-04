@@ -141,14 +141,20 @@ const WorkflowPanel = ({
       <ResizablePanelGroup direction="vertical" className="flex-grow">
         <ResizablePanel defaultSize={60} minSize={20}>
           <div className="h-full overflow-y-auto p-4">
-            {workflowSteps && workflowSteps.map((step, index) => (
-              <WorkflowStep
-                key={step.id}
-                step={step}
-                index={index}
-                isDeleting={false}
-              />
-            ))}
+            {workflowSteps && workflowSteps.length > 0 ? (
+              workflowSteps.map((step, index) => (
+                <WorkflowStep
+                  key={step.id}
+                  step={step}
+                  index={index}
+                  isDeleting={false}
+                />
+              ))
+            ) : (
+              <div className="text-gray-500 text-center p-4">
+                No workflow steps available for this chat.
+              </div>
+            )}
           </div>
         </ResizablePanel>
         

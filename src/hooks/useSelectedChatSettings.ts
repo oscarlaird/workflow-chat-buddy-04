@@ -124,33 +124,16 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
       const channel = supabase
         .channel(`chat-messages-settings-${chatId}`)
         .on('postgres_changes', {
-          event: 'INSERT',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'messages',
-          filter: `chat_id=eq.${chatId} AND example_inputs=is.not.null`,
+          filter: `chat_id=eq.${chatId}`,
         }, (payload) => {
-          const newData = payload.new as any;
-          
-          if (newData.example_inputs) {
-            const examples = newData.example_inputs as Record<string, any> | null;
-            setExampleInputs(examples);
+          // Only process if the message has example_inputs
+          if (payload.new && 'example_inputs' in payload.new && payload.new.example_inputs) {
+            console.log('Message with example_inputs updated:', payload.new);
             
-            if (examples) {
-              const schema = inferInputSchema(examples);
-              setInferredSchema(schema);
-            }
-          }
-        })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `chat_id=eq.${chatId} AND example_inputs=is.not.null`,
-        }, (payload) => {
-          const newData = payload.new as any;
-          
-          if (newData.example_inputs) {
-            const examples = newData.example_inputs as Record<string, any> | null;
+            const examples = payload.new.example_inputs as Record<string, any> | null;
             setExampleInputs(examples);
             
             if (examples) {
