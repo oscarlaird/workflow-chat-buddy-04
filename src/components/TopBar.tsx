@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import UserIndicator from "./UserIndicator";
@@ -9,9 +9,10 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface TopBarProps {
   username?: string;
+  children?: ReactNode;
 }
 
-const TopBar = ({ username = "User" }: TopBarProps) => {
+const TopBar = ({ username = "User", children }: TopBarProps) => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -32,6 +33,7 @@ const TopBar = ({ username = "User" }: TopBarProps) => {
   return (
     <div className="h-14 bg-background border-b border-border flex items-center justify-between px-4">
       <div className="flex items-center">
+        {children}
         <h1 className="text-lg font-semibold mr-2">Workflow Chat</h1>
         <VersionDisplay />
       </div>

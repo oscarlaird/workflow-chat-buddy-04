@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
 import ChatHistory from "../components/ChatHistory";
@@ -7,6 +7,9 @@ import WorkflowPanel from "../components/WorkflowPanel";
 import TopBar from "../components/TopBar";
 import { Chat } from "@/types";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { PanelLeft } from "lucide-react";
+import { MotionDiv } from "@/lib/transitions";
 
 interface IndexProps {
   selectedConversationId: string;
@@ -37,6 +40,7 @@ export const Index: React.FC<IndexProps> = ({
 }) => {
   const navigate = useNavigate();
   const chatInterfaceRef = React.useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleSendMessage = (message: string) => {
     // We can keep this minimal log as it's useful for potential debugging
@@ -49,26 +53,50 @@ export const Index: React.FC<IndexProps> = ({
     console.log("Running workflow for conversation:", selectedConversationId);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
-      <TopBar username="Demo User" />
+      <TopBar username="Demo User">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleSidebar} 
+          className="mr-2"
+          aria-label="Toggle sidebar"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </Button>
+      </TopBar>
       
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-1/4 min-w-[300px] max-w-md border-r border-gray-200 dark:border-gray-800">
-          <ChatHistory
-            selectedConversationId={selectedConversationId}
-            onSelectConversation={onSelectConversation}
-            onNewConversation={onNewConversation}
-            chats={chats}
-            exampleChats={exampleChats}
-            systemExampleChats={systemExampleChats}
-            isLoading={isLoading}
-            onCreateChat={onCreateChat}
-            onDeleteChat={onDeleteChat}
-            onDuplicateChat={onDuplicateChat}
-            onRenameChat={onRenameChat}
-          />
-        </div>
+        <MotionDiv
+          className="border-r border-gray-200 dark:border-gray-800 bg-background z-20"
+          initial={{ width: "300px" }}
+          animate={{ 
+            width: isSidebarOpen ? "300px" : "0px",
+            opacity: isSidebarOpen ? 1 : 0
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          {isSidebarOpen && (
+            <ChatHistory
+              selectedConversationId={selectedConversationId}
+              onSelectConversation={onSelectConversation}
+              onNewConversation={onNewConversation}
+              chats={chats}
+              exampleChats={exampleChats}
+              systemExampleChats={systemExampleChats}
+              isLoading={isLoading}
+              onCreateChat={onCreateChat}
+              onDeleteChat={onDeleteChat}
+              onDuplicateChat={onDuplicateChat}
+              onRenameChat={onRenameChat}
+            />
+          )}
+        </MotionDiv>
         
         {selectedConversationId ? (
           <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -89,7 +117,7 @@ export const Index: React.FC<IndexProps> = ({
             </ResizablePanel>
           </ResizablePanelGroup>
         ) : (
-          <div className="h-full flex items-center justify-center">
+          <div className="h-full flex items-center justify-center flex-1">
             <div className="max-w-md text-center p-8">
               <h1 className="text-2xl font-bold mb-4">Welcome to Workflow Chat</h1>
               <p className="text-muted-foreground mb-6">
