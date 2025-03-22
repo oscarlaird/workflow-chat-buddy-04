@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Upload, AlertCircle } from "lucide-react";
 import { InputField, InputValues } from "@/types";
@@ -80,6 +79,10 @@ export const WorkflowInputs = ({
         else if (field.type === 'bool') {
           initialValues[field.field_name] = false;
         }
+        else if (field.type === 'table') {
+          // For table type, initialize with an empty array
+          initialValues[field.field_name] = [];
+        }
       });
       
       setInputValues(initialValues);
@@ -147,7 +150,7 @@ export const WorkflowInputs = ({
     }
   };
 
-  const handleInputChange = (name: string, value: string | number | boolean) => {
+  const handleInputChange = (name: string, value: string | number | boolean | Array<any>) => {
     setInputValues(prev => ({
       ...prev,
       [name]: value

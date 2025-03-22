@@ -72,7 +72,7 @@ export interface Chat {
 
 // Add InputValues interface to be more consistent across the app
 export interface InputValues {
-  [key: string]: string | number | boolean;
+  [key: string]: string | number | boolean | Array<any>;
 }
 
 // Updated InputField interface with expanded type options
@@ -80,7 +80,8 @@ export interface InputField {
   field_name: string;
   type: 'string' | 'number' | 'integer' | 'bool' | 'person' | 'email' | 'date' | 
         'year' | 'state' | 'country' | 'phone' | 'address' | 'url' | 
-        'currency' | 'percentage' | 'zip_code';
+        'currency' | 'percentage' | 'zip_code' | 'table';
+  columns?: string[]; // Column fields for table type
 }
 
 // Updated Run interface with both dashboard_id, chat_id and username

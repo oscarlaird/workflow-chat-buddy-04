@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -10,6 +9,9 @@ export const inferFieldType = (fieldName: string, value: any): InputField['type'
   if (value === null || value === undefined) return 'string';
   
   if (typeof value === 'boolean') return 'bool';
+  
+  // Check for array/table type
+  if (Array.isArray(value)) return 'table';
   
   if (typeof value === 'number') {
     // Check if it's an integer

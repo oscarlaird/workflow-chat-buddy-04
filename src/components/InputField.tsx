@@ -29,8 +29,17 @@ import {
   Check,
   X,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Table
 } from "lucide-react";
+import {
+  Table as UITable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 const states = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", 
@@ -86,8 +95,58 @@ export const InputFieldIcon: React.FC<{ type: InputFieldType['type'], className?
     case 'number':
     case 'integer':
       return <Hash {...iconProps} />;
+    case 'table':
+      return <Table {...iconProps} />;
     default:
       return null;
+  }
+};
+
+// This component renders individual cell inputs in table rows
+const TableCellInput: React.FC<{
+  fieldName: string;
+  fieldType: string;
+  value: any;
+  onChange: (value: any) => void;
+}> = ({ fieldName, fieldType, value, onChange }) => {
+  // Infer the appropriate input type based on the field name and value
+  const inferredType = fieldType === 'auto' 
+    ? typeof value === 'boolean' 
+      ? 'bool' 
+      : typeof value === 'number' 
+        ? 'number' 
+        : 'string'
+    : fieldType;
+  
+  switch (inferredType) {
+    case 'bool':
+      return (
+        <div className="flex justify-center">
+          <Checkbox
+            checked={Boolean(value)}
+            onCheckedChange={(checked) => onChange(!!checked)}
+          />
+        </div>
+      );
+    case 'number':
+    case 'integer':
+      return (
+        <Input
+          type="number"
+          value={value || ''}
+          onChange={(e) => onChange(inferredType === 'integer' ? parseInt(e.target.value) : parseFloat(e.target.value))}
+          className="w-full"
+        />
+      );
+    default:
+      return (
+        <Input
+          type="text"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full"
+        />
+      );
   }
 };
 
@@ -116,6 +175,70 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
   const showError = isTouched && !validation.isValid;
 
   switch (field.type) {
+    case 'table':
+      // Ensure value is an array
+      const tableData = Array.isArray(value) ? value : [];
+      
+      // If there's no data, show an empty state
+      if (tableData.length === 0) {
+        return (
+          <div className="border rounded-md p-4 text-center text-muted-foreground">
+            No data available
+          </div>
+        );
+      }
+      
+      // Get column headers from the first row
+      const firstRow = tableData[0];
+      const columns = Object.keys(firstRow);
+      
+      const handleTableCellChange = (rowIndex: number, columnName: string, cellValue: any) => {
+        const updatedData = [...tableData];
+        updatedData[rowIndex] = {
+          ...updatedData[rowIndex],
+          [columnName]: cellValue
+        };
+        handleChange(updatedData);
+      };
+      
+      return (
+        <div className="border rounded-md overflow-hidden">
+          <UITable>
+            <TableHeader>
+              <TableRow>
+                {columns.map(column => (
+                  <TableHead key={column} className="px-4 py-2 text-left">
+                    {formatFieldName(column)}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tableData.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {columns.map(column => {
+                    // Infer type based on the value
+                    const cellType = typeof row[column];
+                    const fieldType = cellType === 'boolean' ? 'bool' : cellType === 'number' ? 'number' : 'string';
+                    
+                    return (
+                      <TableCell key={`${rowIndex}-${column}`} className="px-4 py-2">
+                        <TableCellInput
+                          fieldName={column}
+                          fieldType={fieldType}
+                          value={row[column]}
+                          onChange={(newValue) => handleTableCellChange(rowIndex, column, newValue)}
+                        />
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableBody>
+          </UITable>
+        </div>
+      );
+
     case 'bool':
       return (
         <div className="flex items-center space-x-2">
