@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -103,6 +104,7 @@ export const useChats = () => {
 
     fetchChats();
 
+    // Set up the realtime subscription with more specific update triggers
     const channel = supabase
       .channel('chats-channel')
       .on('postgres_changes', {
@@ -132,6 +134,7 @@ export const useChats = () => {
         const oldData = payload.old as Record<string, any>;
         const newData = payload.new as Record<string, any>;
         
+        // Identify which fields have changed
         const changedFields = Object.keys(oldData).filter(key => {
           if (key === 'input_schema') {
             return JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]);
@@ -139,8 +142,10 @@ export const useChats = () => {
           return oldData[key] !== newData[key];
         });
         
+        // Only refresh if title or fields relevant to the chat list have changed
+        // Explicitly ignore 'script' updates
         const relevantFields = changedFields.filter(field => 
-          !['multi_input', 'input_schema'].includes(field)
+          field === 'title' || field === 'is_example' || field === 'multi_input'
         );
         
         if (relevantFields.length > 0) {
