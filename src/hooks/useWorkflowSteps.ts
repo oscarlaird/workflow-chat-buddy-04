@@ -50,31 +50,32 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
 
         if (messageData && messageData.length > 0 && messageData[0].steps) {
           // Transform the steps object into an array of workflow steps
-          const stepsObject = messageData[0].steps as Record<string, {
-            description: string;
-            example_input?: Record<string, any>;
-            example_output?: Record<string, any>;
-          }>;
+          const stepsObject = messageData[0].steps;
           
           // Safely convert steps object to array with defensive check
-          if (stepsObject && typeof stepsObject === 'object') {
-            const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
-              id: `${chatId}-step-${index}`,
-              chat_id: chatId,
-              title: formatFieldName(key), // Format the title
-              description: stepData.description || "No description available",
-              step_number: index + 1,
-              status: "waiting", // Default status
-              exampleInput: stepData.example_input || null,
-              exampleOutput: stepData.example_output || null,
-              code: null
-            }));
-
-            setWorkflowSteps(transformedSteps);
+          const transformedSteps: WorkflowStep[] = [];
+          
+          if (stepsObject && typeof stepsObject === 'object' && !Array.isArray(stepsObject)) {
+            Object.entries(stepsObject).forEach(([key, stepData], index) => {
+              if (stepData && typeof stepData === 'object') {
+                transformedSteps.push({
+                  id: `${chatId}-step-${index}`,
+                  chat_id: chatId,
+                  title: formatFieldName(key), // Format the title
+                  description: (stepData as any).description || "No description available",
+                  step_number: index + 1,
+                  status: "waiting", // Default status
+                  exampleInput: (stepData as any).example_input || null,
+                  exampleOutput: (stepData as any).example_output || null,
+                  code: null
+                });
+              }
+            });
           } else {
             console.error('Steps data is not a valid object:', stepsObject);
-            setWorkflowSteps([]);
           }
+          
+          setWorkflowSteps(transformedSteps);
         } else {
           // No steps found
           setWorkflowSteps([]);
@@ -103,26 +104,26 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
         if (payload.new && 'steps' in payload.new && payload.new.steps) {
           console.log('Message with steps updated:', payload.new);
           
-          const stepsObject = payload.new.steps as Record<string, {
-            description: string;
-            example_input?: Record<string, any>;
-            example_output?: Record<string, any>;
-          }>;
+          const stepsObject = payload.new.steps;
+          const transformedSteps: WorkflowStep[] = [];
           
-          // Safely convert steps object to array with defensive check
-          if (stepsObject && typeof stepsObject === 'object') {
-            const transformedSteps: WorkflowStep[] = Object.entries(stepsObject).map(([key, stepData], index) => ({
-              id: `${chatId}-step-${index}`,
-              chat_id: chatId,
-              title: formatFieldName(key), // Format the title
-              description: stepData.description || "No description available",
-              step_number: index + 1,
-              status: "waiting", // Default status
-              exampleInput: stepData.example_input || null,
-              exampleOutput: stepData.example_output || null,
-              code: null
-            }));
-
+          if (stepsObject && typeof stepsObject === 'object' && !Array.isArray(stepsObject)) {
+            Object.entries(stepsObject).forEach(([key, stepData], index) => {
+              if (stepData && typeof stepData === 'object') {
+                transformedSteps.push({
+                  id: `${chatId}-step-${index}`,
+                  chat_id: chatId,
+                  title: formatFieldName(key), // Format the title
+                  description: (stepData as any).description || "No description available",
+                  step_number: index + 1,
+                  status: "waiting", // Default status
+                  exampleInput: (stepData as any).example_input || null,
+                  exampleOutput: (stepData as any).example_output || null,
+                  code: null
+                });
+              }
+            });
+            
             setWorkflowSteps(transformedSteps);
           } else {
             console.error('Steps data in subscription is not a valid object:', stepsObject);
