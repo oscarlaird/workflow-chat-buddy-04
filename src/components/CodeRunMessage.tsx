@@ -5,6 +5,8 @@ import { Message } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import CodeBlock from "@/components/CodeBlock";
 import DataTable from "@/components/DataTable";
+import CodeRunEventItem from "./CodeRunEventItem";
+import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -14,6 +16,11 @@ interface CodeRunMessageProps {
 const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const [expanded, setExpanded] = useState(true);
   const [tablesExpanded, setTablesExpanded] = useState(true);
+  const [eventsExpanded, setEventsExpanded] = useState(true);
+  
+  const { getEventsForMessage } = useCodeRunEvents(message.chat_id || "");
+  const events = getEventsForMessage(message.id);
+  const hasEvents = events.length > 0;
   
   // Determine the code execution status
   const getExecutionStatus = () => {
@@ -96,6 +103,31 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             <strong>Command:</strong> {message.content || "Executing workflow..."}
           </div>
           
+          {/* Code Run Events section */}
+          {hasEvents && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEventsExpanded(!eventsExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
+              >
+                {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <span>Function Calls {eventsExpanded ? "▾" : "▸"}</span>
+                <span className="text-xs text-muted-foreground">({events.length})</span>
+              </button>
+              
+              {eventsExpanded && (
+                <div className="space-y-1 mt-2">
+                  {events.map((event) => (
+                    <CodeRunEventItem key={event.id} event={event} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
           {message.code_output && (
             <div className="mt-3">
               <div className="text-xs text-muted-foreground mb-1">Output:</div>
@@ -142,7 +174,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             </div>
           )}
           
-          {!message.code_output && !message.code_output_error && !hasTableData && status === 'running' && (
+          {!message.code_output && !message.code_output_error && !hasTableData && !hasEvents && status === 'running' && (
             <div className="py-2 text-sm text-muted-foreground italic">
               Executing code, please wait...
             </div>

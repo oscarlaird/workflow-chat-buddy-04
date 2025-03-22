@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Message, RunMessage, RunMessageType, RunMessageSenderType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "@/components/ui/use-toast";
+import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -28,6 +29,9 @@ export const ChatInterface = forwardRef(({
     currentRunId,
     setCurrentRunId
   } = useConversations({ conversationId });
+  
+  // Initialize code run events hook
+  const codeRunEventsData = useCodeRunEvents(conversationId);
   
   const [localMessageIds, setLocalMessageIds] = useState<Set<string>>(new Set());
   const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(new Set());
@@ -413,6 +417,7 @@ export const ChatInterface = forwardRef(({
             runMessages={runMessages}
             onStopRun={handleStopRun}
             forceExtensionInstalled={forceExtensionInstalled}
+            codeRunEventsData={codeRunEventsData}
           />
         )}
       </div>

@@ -12,6 +12,7 @@ import ExtensionAlert from "./ExtensionAlert";
 import EmptyMessageList from "./EmptyMessageList";
 import RecordingButton from "./RecordingButton";
 import CodeRunMessage from "./CodeRunMessage";
+import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface MessageListProps {
   messages: Message[];
@@ -23,6 +24,7 @@ interface MessageListProps {
   runMessages?: any[];
   onStopRun?: (runId: string) => void;
   forceExtensionInstalled?: boolean;
+  codeRunEventsData?: ReturnType<typeof useCodeRunEvents>;
 }
 
 export const MessageList = ({ 
@@ -34,6 +36,8 @@ export const MessageList = ({
   streamingMessageIds = new Set(),
   runMessages = [],
   forceExtensionInstalled = false,
+  codeRunEventsData,
+  onStopRun
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
