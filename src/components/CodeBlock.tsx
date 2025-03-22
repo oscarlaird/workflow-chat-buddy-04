@@ -4,7 +4,6 @@ import { Copy, CheckCircle } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus, vs } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useTheme } from "next-themes";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface CodeBlockProps {
   code: string;
@@ -27,7 +26,7 @@ const CodeBlock = ({ code, language = "javascript" }: CodeBlockProps) => {
 
   return (
     <div className="relative group">
-      <ScrollArea className="max-h-[400px] w-full rounded-md" type="always">
+      <div className="max-h-[400px] w-full rounded-md overflow-y-scroll">
         <SyntaxHighlighter
           language={language}
           style={isDark ? vscDarkPlus : vs}
@@ -38,16 +37,13 @@ const CodeBlock = ({ code, language = "javascript" }: CodeBlockProps) => {
             borderRadius: '0.375rem',
             background: isDark ? '#0f1629' : '#f8f9fc',
             maxWidth: '100%',
-            overflowX: 'visible',
-            overflowY: 'visible'
           }}
           wrapLines={true}
           wrapLongLines={true}
         >
           {code}
         </SyntaxHighlighter>
-        <ScrollBar orientation="vertical" />
-      </ScrollArea>
+      </div>
       
       <button
         onClick={handleCopy}
