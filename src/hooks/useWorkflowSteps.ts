@@ -60,7 +60,6 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
               if (stepData && typeof stepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
-                  chat_id: chatId,
                   title: formatFieldName(key), // Format the title
                   description: (stepData as any).description || "No description available",
                   step_number: index + 1,
@@ -112,7 +111,6 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
               if (stepData && typeof stepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
-                  chat_id: chatId,
                   title: formatFieldName(key), // Format the title
                   description: (stepData as any).description || "No description available",
                   step_number: index + 1,
