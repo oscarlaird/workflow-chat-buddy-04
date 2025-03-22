@@ -65,7 +65,7 @@ export const NewChatDialog = ({
     try {
       const newChatId = uuidv4();
       
-      // Get full chat details including input_schema
+      // Get full chat details
       const { data: chatDetails, error: chatDetailsError } = await supabase
         .from('chats')
         .select('*')
@@ -92,15 +92,13 @@ export const NewChatDialog = ({
         
       if (workflowStepsError) throw workflowStepsError;
       
-      // Prepare new chat with input_schema from the example
+      // Prepare new chat
       const chatInsert = {
         id: newChatId,
         title: exampleChat.title,
         created_at: new Date().toISOString(),
         is_example: false,
-        username: 'current_user',
-        input_schema: chatDetails.input_schema, // Copy the input_schema from the example
-        multi_input: chatDetails.multi_input || false // Copy the multi_input setting as well
+        username: 'current_user'
       };
       
       // Prepare messages

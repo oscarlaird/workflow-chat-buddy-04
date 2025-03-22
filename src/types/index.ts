@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -58,7 +59,7 @@ export interface TableData {
   [key: string]: any;
 }
 
-// Add Chat interface to be consistent across the app
+// Updated Chat interface without input_schema and multi_input
 export interface Chat {
   id: string;
   title: string;
@@ -66,8 +67,6 @@ export interface Chat {
   updated_at: string;
   is_example?: boolean;
   username?: string;
-  multi_input?: boolean;
-  input_schema?: InputField[];
 }
 
 // Add InputValues interface to be more consistent across the app

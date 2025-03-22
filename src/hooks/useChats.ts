@@ -3,28 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { v4 as uuidv4 } from 'uuid';
-import { Json } from "@/integrations/supabase/types";
-import { InputField, Chat } from "@/types";
-
-// Helper function to safely parse input_schema JSON from Supabase
-const parseInputSchema = (inputSchema: Json | null): InputField[] => {
-  if (!inputSchema) return [];
-  
-  if (Array.isArray(inputSchema)) {
-    return inputSchema.filter((item): item is any => {
-      if (typeof item !== 'object' || item === null) return false;
-      
-      return (
-        'field_name' in item && 
-        typeof item.field_name === 'string' &&
-        'type' in item && 
-        (item.type === 'string' || item.type === 'number' || item.type === 'bool')
-      );
-    }) as InputField[];
-  }
-  
-  return [];
-};
+import { Chat } from "@/types";
 
 export const useChats = () => {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -55,11 +34,7 @@ export const useChats = () => {
             variant: "destructive"
           });
         } else {
-          const parsedUserChats = userChats?.map(chat => ({
-            ...chat,
-            input_schema: parseInputSchema(chat.input_schema)
-          }));
-          setChats(parsedUserChats || []);
+          setChats(userChats || []);
         }
         
         const { data: userExamples, error: userExamplesError } = await supabase
@@ -72,11 +47,7 @@ export const useChats = () => {
         if (userExamplesError) {
           console.error('Error fetching user example chats:', userExamplesError);
         } else {
-          const parsedUserExamples = userExamples?.map(chat => ({
-            ...chat,
-            input_schema: parseInputSchema(chat.input_schema)
-          }));
-          setExampleChats(parsedUserExamples || []);
+          setExampleChats(userExamples || []);
         }
 
         const { data: systemExamples, error: systemExamplesError } = await supabase
@@ -89,11 +60,7 @@ export const useChats = () => {
         if (systemExamplesError) {
           console.error('Error fetching system example chats:', systemExamplesError);
         } else {
-          const parsedSystemExamples = systemExamples?.map(chat => ({
-            ...chat,
-            input_schema: parseInputSchema(chat.input_schema)
-          }));
-          setSystemExampleChats(parsedSystemExamples || []);
+          setSystemExampleChats(systemExamples || []);
         }
       } catch (error) {
         console.error('Error in fetchChats:', error);
@@ -135,17 +102,12 @@ export const useChats = () => {
         const newData = payload.new as Record<string, any>;
         
         // Identify which fields have changed
-        const changedFields = Object.keys(oldData).filter(key => {
-          if (key === 'input_schema') {
-            return JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]);
-          }
-          return oldData[key] !== newData[key];
-        });
+        const changedFields = Object.keys(oldData).filter(key => oldData[key] !== newData[key]);
         
         // Only refresh if title or fields relevant to the chat list have changed
         // Explicitly ignore 'script' updates
         const relevantFields = changedFields.filter(field => 
-          field === 'title' || field === 'is_example' || field === 'multi_input'
+          field === 'title' || field === 'is_example'
         );
         
         if (relevantFields.length > 0) {
@@ -172,8 +134,7 @@ export const useChats = () => {
           id: chatId,
           title,
           is_example: false,
-          username: 'current_user',
-          multi_input: false
+          username: 'current_user'
         });
 
       if (error) {
@@ -294,9 +255,7 @@ export const useChats = () => {
         title: duplicatedChatTitle,
         created_at: new Date().toISOString(),
         is_example: false,
-        username: currentUsername,
-        input_schema: chatDetails.input_schema,
-        multi_input: chatDetails.multi_input || false
+        username: currentUsername
       };
       
       let newMessages = [];

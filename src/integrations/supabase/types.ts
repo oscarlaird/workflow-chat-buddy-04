@@ -14,9 +14,7 @@ export type Database = {
           created_at: string | null
           example_inputs: Json | null
           id: string
-          input_schema: Json | null
           is_example: boolean | null
-          multi_input: boolean | null
           script: string | null
           title: string
           updated_at: string | null
@@ -26,9 +24,7 @@ export type Database = {
           created_at?: string | null
           example_inputs?: Json | null
           id: string
-          input_schema?: Json | null
           is_example?: boolean | null
-          multi_input?: boolean | null
           script?: string | null
           title: string
           updated_at?: string | null
@@ -38,9 +34,7 @@ export type Database = {
           created_at?: string | null
           example_inputs?: Json | null
           id?: string
-          input_schema?: Json | null
           is_example?: boolean | null
-          multi_input?: boolean | null
           script?: string | null
           title?: string
           updated_at?: string | null
@@ -109,6 +103,7 @@ export type Database = {
           code_run_success: boolean | null
           content: string
           created_at: string | null
+          example_inputs: Json | null
           from_template: boolean | null
           function_name: string | null
           id: string
@@ -129,6 +124,7 @@ export type Database = {
           code_run_success?: boolean | null
           content: string
           created_at?: string | null
+          example_inputs?: Json | null
           from_template?: boolean | null
           function_name?: string | null
           id?: string
@@ -149,6 +145,7 @@ export type Database = {
           code_run_success?: boolean | null
           content?: string
           created_at?: string | null
+          example_inputs?: Json | null
           from_template?: boolean | null
           function_name?: string | null
           id?: string
