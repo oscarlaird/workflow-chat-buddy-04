@@ -44,6 +44,7 @@ export type Database = {
           example_output: Json | null
           function_name: string | null
           id: string | null
+          message_id: string | null
         }
         Insert: {
           chat_id?: string | null
@@ -52,6 +53,7 @@ export type Database = {
           example_output?: Json | null
           function_name?: string | null
           id?: string | null
+          message_id?: string | null
         }
         Update: {
           chat_id?: string | null
@@ -60,6 +62,7 @@ export type Database = {
           example_output?: Json | null
           function_name?: string | null
           id?: string | null
+          message_id?: string | null
         }
         Relationships: [
           {
@@ -67,6 +70,13 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coderun_events_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
