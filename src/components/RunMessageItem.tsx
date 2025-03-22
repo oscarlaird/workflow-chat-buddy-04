@@ -142,10 +142,10 @@ const renderCurrentState = (currentState: any, isLast: boolean) => {
       
       {currentState.next_goal && (
         <div className={`flex items-start gap-1.5 ${isLast ? "animate-pulse" : ""}`}>
-          <Lightbulb className={`h-3.5 w-3.5 text-amber-500 mt-0.5 flex-shrink-0 ${isLast ? "animate-pulse" : ""}`} />
+          <Lightbulb className={`h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0 ${isLast ? "animate-pulse" : ""}`} />
           <div className="text-xs">
             <span className="font-medium text-amber-600 dark:text-amber-400">Next Goal:</span> 
-            <div className={`text-gray-800 dark:text-gray-200 font-medium p-1 rounded-sm ${isLast ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}>
+            <div className={`text-gray-800 dark:text-gray-200 font-medium p-2 rounded-md ${isLast ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 shadow-sm animate-pulse" : ""}`}>
               {currentState.next_goal}
             </div>
           </div>
@@ -231,14 +231,17 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
             {isBackendCommand && (
               <div className="mt-1">
                 {/* Action summary */}
-                <div className={`space-y-0.5 p-1 rounded-sm ${isLast && !hasDoneAction ? "bg-blue-50 dark:bg-blue-900/20 animate-pulse" : "bg-gray-50 dark:bg-gray-800/30"}`}>
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">Actions:</div>
+                <div className={`space-y-0.5 p-2 rounded-md ${isLast && !hasDoneAction ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 shadow-sm animate-pulse" : "bg-gray-50 dark:bg-gray-800/30"}`}>
+                  <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1 flex items-center gap-1">
+                    <Zap className={`h-3.5 w-3.5 ${isLast && !hasDoneAction ? "text-blue-500 animate-pulse" : "text-gray-500"}`} />
+                    <span>Actions{isLast && !hasDoneAction ? " (In Progress)" : ""}</span>
+                  </div>
                   {message.payload.action.map((actionObj: any, index: number) => {
                     const actionType = Object.keys(actionObj)[0];
                     return (
                       <div 
                         key={`${actionType}-${index}`} 
-                        className={`pl-2 mb-0.5 border-l-2 ${
+                        className={`pl-2 mb-1 border-l-2 ${
                           actionType === 'done' && actionObj.done.success 
                             ? "border-green-400 dark:border-green-600" 
                             : "border-gray-200 dark:border-gray-700"
@@ -250,7 +253,7 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
                   })}
                 </div>
                 
-                {/* Current state visualization */}
+                {/* Current state visualization with enhanced next goal */}
                 {message.payload.current_state && renderCurrentState(message.payload.current_state, isLast && !hasDoneAction)}
 
                 {/* Success alert for done action */}
