@@ -159,7 +159,7 @@ export const ChatInput = ({
 
   // Generate recording button classes based on state
   const getRecordingButtonClasses = () => {
-    let classes = "flex items-center gap-1.5 p-2 rounded-md transition-colors disabled:opacity-50";
+    let classes = "flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors disabled:opacity-50";
     
     if (isInExtension && isRecording) {
       // Recording active state
@@ -177,11 +177,13 @@ export const ChatInput = ({
     if (isRecording) {
       return {
         icon: <Square className="w-4 h-4" />,
+        text: "Stop Recording",
         ariaLabel: "Stop screen recording",
       };
     } else {
       return {
         icon: <Video className="w-4 h-4" />,
+        text: "Capture Screen",
         ariaLabel: "Capture your screen",
       };
     }
@@ -214,6 +216,7 @@ export const ChatInput = ({
             title={isRecording ? "Stop recording" : "Capture screen"}
           >
             {recordingButtonProps.icon}
+            <span className="text-xs font-medium">{recordingButtonProps.text}</span>
           </button>
           <button
             type="submit"
