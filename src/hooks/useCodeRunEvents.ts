@@ -71,18 +71,15 @@ export const useCodeRunEvents = (chatId: string) => {
     // Initial fetch
     fetchCodeRunEvents();
     
-    // Single channel for all coderun_events related to this chat
-    const channel = supabase
-      .channel(`chat-events:${chatId}`)
-      // Listen for changes to coderun_events
+    // Subscribe to changes in coderun_events
+    const codeRunEventsChannel = supabase
+      .channel(`coderun_events:${chatId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'coderun_events',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('CodeRunEvent change:', payload);
-        
         if (payload.eventType === 'INSERT') {
           setCodeRunEvents(prev => [payload.new as CodeRunEvent, ...prev]);
         } else if (payload.eventType === 'UPDATE') {
@@ -97,7 +94,11 @@ export const useCodeRunEvents = (chatId: string) => {
           );
         }
       })
-      // Listen for changes to browser_events related to this chat
+      .subscribe();
+      
+    // Subscribe to changes in browser_events
+    const browserEventsChannel = supabase
+      .channel(`browser_events:coderun:${chatId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -130,7 +131,8 @@ export const useCodeRunEvents = (chatId: string) => {
       .subscribe();
       
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(codeRunEventsChannel);
+      supabase.removeChannel(browserEventsChannel);
     };
   }, [chatId, fetchCodeRunEvents]);
 
@@ -144,7 +146,7 @@ export const useCodeRunEvents = (chatId: string) => {
     return browserEvents[codeRunEventId] || [];
   }, [browserEvents]);
 
-  // Get events for a specific message ID
+  // Get events for a specific message ID (adds the missing function)
   const getEventsForMessage = useCallback((messageId: string) => {
     return codeRunEvents.filter(event => event.message_id === messageId);
   }, [codeRunEvents]);

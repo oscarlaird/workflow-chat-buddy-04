@@ -200,6 +200,7 @@ export type Database = {
           code_run_success: boolean | null
           content: string
           created_at: string | null
+          example_inputs: Json | null
           from_template: boolean | null
           id: string
           role: string
@@ -218,6 +219,7 @@ export type Database = {
           code_run_success?: boolean | null
           content: string
           created_at?: string | null
+          example_inputs?: Json | null
           from_template?: boolean | null
           id?: string
           role: string
@@ -236,6 +238,7 @@ export type Database = {
           code_run_success?: boolean | null
           content?: string
           created_at?: string | null
+          example_inputs?: Json | null
           from_template?: boolean | null
           id?: string
           role?: string

@@ -1,10 +1,16 @@
 
 import React from "react";
 import { Separator } from "@/components/ui/separator";
-import { BrowserEvent, RunMessageSenderType } from "@/types";
 
 interface RunMessageItemProps {
-  message: BrowserEvent;
+  message: {
+    id: string;
+    type: string;
+    sender_type?: string;
+    created_at: string;
+    display_text?: string;
+    payload?: any;
+  };
   isLast?: boolean;
 }
 

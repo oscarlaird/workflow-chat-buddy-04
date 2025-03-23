@@ -8,29 +8,31 @@ import { Input } from "@/components/ui/input";
 import NewChatDialog from "./NewChatDialog";
 
 interface ChatHistoryProps {
+  selectedConversationId: string;
+  onSelectConversation: (conversationId: string) => void;
+  onNewConversation: () => void;
   chats: Chat[];
-  selectedChatId: string | null;
+  exampleChats: Chat[];
+  systemExampleChats: Chat[];
+  isLoading: boolean;
   onCreateChat: (title: string) => Promise<void>;
   onDeleteChat: (chatId: string) => Promise<void>;
   onDuplicateChat?: (chatId: string) => Promise<void>;
   onRenameChat?: (chatId: string, newTitle: string) => Promise<boolean>;
-  exampleChats?: Chat[];
-  systemExampleChats?: Chat[];
-  selectedConversationId?: string;
-  onSelectConversation?: (id: string) => void;
-  onNewConversation?: () => void;
-  isLoading?: boolean;
 }
 
-const ChatHistory = ({
+export const ChatHistory = ({
+  selectedConversationId,
+  onSelectConversation,
+  onNewConversation,
   chats,
-  selectedChatId,
+  exampleChats,
+  systemExampleChats,
+  isLoading,
   onCreateChat,
   onDeleteChat,
   onDuplicateChat,
-  onRenameChat,
-  exampleChats = [],
-  systemExampleChats = []
+  onRenameChat
 }: ChatHistoryProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreatingChat, setIsCreatingChat] = useState(false);
@@ -41,7 +43,7 @@ const ChatHistory = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  const allChats = [...chats, ...(exampleChats || [])];
+  const allChats = [...chats, ...exampleChats];
   const filteredChats = allChats.filter(
     chat => chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -78,6 +80,13 @@ const ChatHistory = ({
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this chat?")) {
       await onDeleteChat(chatId);
+      
+      if (selectedConversationId === chatId && allChats.length > 1) {
+        const otherChat = allChats.find(c => c.id !== chatId);
+        if (otherChat) {
+          onSelectConversation(otherChat.id);
+        }
+      }
     }
   };
 
@@ -185,7 +194,7 @@ const ChatHistory = ({
                     key={chat.id}
                     className={cn(
                       "group flex items-start gap-3 w-full p-3 text-left hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer",
-                      selectedChatId === chat.id && "bg-white dark:bg-gray-800"
+                      selectedConversationId === chat.id && "bg-white dark:bg-gray-800"
                     )}
                     onClick={() => {
                       if (editingChatId !== chat.id) {
@@ -296,7 +305,7 @@ const ChatHistory = ({
         isLoading={isCreatingChat}
         exampleChats={exampleChats}
         systemExampleChats={systemExampleChats}
-        onSelectExampleChat={() => {}}
+        onSelectExampleChat={onSelectConversation}
       />
     </div>
   );

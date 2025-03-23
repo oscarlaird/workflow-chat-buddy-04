@@ -50,18 +50,19 @@ export interface WorkflowStep {
   step_number: number;
   title: string;
   description?: string;
+  code?: string;
+  created_at?: string;
+  updated_at?: string;
+  status?: string;
   exampleInput?: Record<string, any>;
   exampleOutput?: Record<string, any>;
   requiresBrowser?: boolean;
-  originalKey?: string;
 }
 
 export interface Workflow {
   id: string;
   title: string;
   description?: string;
-  currentStep?: number;
-  totalSteps?: number;
   steps: WorkflowStep[];
 }
 
@@ -107,10 +108,7 @@ export interface RunMessage {
   content: string;
   role: string;
   created_at: string;
-  type: RunMessageType;
-  sender_type?: RunMessageSenderType;
-  display_text?: string;
-  payload?: any;
+  type?: string;
 }
 
 export enum RunMessageType {

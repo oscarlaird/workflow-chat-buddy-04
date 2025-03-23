@@ -1,138 +1,134 @@
 
-import React, { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import TopBar from "@/components/TopBar";
-import ChatHistory from "@/components/ChatHistory";
-import NewChatDialog from "@/components/NewChatDialog";
-import { Button } from "@/components/ui/button";
-import { MessageSquarePlusIcon, Loader2 } from "lucide-react";
-import { useChats } from "@/hooks/useChats";
+import React, { useState } from "react";
+import ChatInterface from "../components/ChatInterface";
+import ChatHistory from "../components/ChatHistory";
+import WorkflowPanel from "../components/WorkflowPanel";
+import TopBar from "../components/TopBar";
 import { Chat } from "@/types";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { PanelLeft } from "lucide-react";
+import { MotionDiv } from "@/lib/transitions";
 
 interface IndexProps {
-  selectedConversationId?: string;
-  onSelectConversation?: (id: string) => void;
-  onNewConversation?: () => void;
-  chats?: Chat[];
-  exampleChats?: Chat[];
-  systemExampleChats?: Chat[];
-  isLoading?: boolean;
-  onCreateChat?: (title: string) => Promise<string>;
-  onDeleteChat?: (chatId: string) => Promise<void>;
-  onDuplicateChat?: (chatId: string) => Promise<string | null>;
+  selectedConversationId: string;
+  onSelectConversation: (conversationId: string) => void;
+  onNewConversation: () => void;
+  chats: Chat[];
+  exampleChats: Chat[];
+  systemExampleChats: Chat[];
+  isLoading: boolean;
+  onCreateChat: (title: string) => Promise<void>;
+  onDeleteChat: (chatId: string) => Promise<void>;
+  onDuplicateChat: (chatId: string) => Promise<void>;
   onRenameChat?: (chatId: string, newTitle: string) => Promise<boolean>;
 }
 
-const Index: React.FC<IndexProps> = (props) => {
-  const navigate = useNavigate();
-  const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
-  const [isCreatingChat, setIsCreatingChat] = useState(false);
-  const { chats, isLoading: chatsLoading, createChat, renameChat, deleteChat, duplicateChat, exampleChats, systemExampleChats } = useChats();
+export const Index: React.FC<IndexProps> = ({
+  selectedConversationId,
+  onSelectConversation,
+  onNewConversation,
+  chats,
+  exampleChats,
+  systemExampleChats,
+  isLoading,
+  onCreateChat,
+  onDeleteChat,
+  onDuplicateChat,
+  onRenameChat
+}) => {
+  const chatInterfaceRef = React.useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Create a new chat with the given title
-  const createNewChat = async (title: string): Promise<void> => {
-    setIsCreatingChat(true);
-    try {
-      const newId = await createChat(title);
-      if (newId) {
-        navigate(`/conversation/${newId}`);
-      }
-    } catch (err) {
-      console.error('Exception in createChat:', err);
-    } finally {
-      setIsCreatingChat(false);
-    }
+  const handleSendMessage = (message: string) => {
+    console.log("Message sent from Index view:", message);
   };
 
-  // Handle new chat creation from the dialog
-  const handleCreateNewChat = async (title: string): Promise<void> => {
-    await createNewChat(title);
-    setIsNewChatDialogOpen(false);
+  const handleRunWorkflow = () => {
+    console.log("Running workflow for conversation:", selectedConversationId);
   };
 
-  const handleSelectExampleChat = (id: string) => {
-    navigate(`/conversation/${id}`);
-  };
-
-  // Handle chat selection
-  const handleSelectChat = (id: string) => {
-    navigate(`/conversation/${id}`);
-  };
-
-  const handleDeleteChatWrapper = async (chatId: string): Promise<void> => {
-    await deleteChat(chatId);
-  };
-
-  const handleDuplicateChatWrapper = async (chatId: string): Promise<void> => {
-    await duplicateChat(chatId);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <TopBar />
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
+      <TopBar username="Demo User">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={toggleSidebar} 
+          className="mr-2"
+          aria-label="Toggle sidebar"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </Button>
+      </TopBar>
+      
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-80 border-r bg-white dark:bg-gray-900 flex flex-col h-full">
-          <div className="p-4 border-b">
-            <Button 
-              onClick={() => setIsNewChatDialogOpen(true)} 
-              className="w-full"
-              variant="default"
-            >
-              <MessageSquarePlusIcon className="h-4 w-4 mr-2" />
-              New Chat
-            </Button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto">
-            {chatsLoading ? (
-              <div className="flex justify-center items-center h-32">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <ChatHistory 
-                chats={chats}
-                selectedChatId={null}
-                onCreateChat={createNewChat}
-                onDeleteChat={handleDeleteChatWrapper}
-                onDuplicateChat={handleDuplicateChatWrapper}
-                onRenameChat={renameChat}
-              />
-            )}
-          </div>
-        </div>
+        <MotionDiv
+          className="border-r border-gray-200 dark:border-gray-800 bg-background z-20"
+          initial={{ width: "300px" }}
+          animate={{ 
+            width: isSidebarOpen ? "300px" : "0px",
+            opacity: isSidebarOpen ? 1 : 0
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          {isSidebarOpen && (
+            <ChatHistory
+              selectedConversationId={selectedConversationId}
+              onSelectConversation={onSelectConversation}
+              onNewConversation={onNewConversation}
+              chats={chats}
+              exampleChats={exampleChats}
+              systemExampleChats={systemExampleChats}
+              isLoading={isLoading}
+              onCreateChat={onCreateChat}
+              onDeleteChat={onDeleteChat}
+              onDuplicateChat={onDuplicateChat}
+              onRenameChat={onRenameChat}
+            />
+          )}
+        </MotionDiv>
         
-        {/* Main content */}
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 flex items-center justify-center text-center p-8">
-            <div className="max-w-md space-y-6">
-              <h1 className="text-3xl font-bold tracking-tight">Welcome to the AI Assistant</h1>
-              <p className="text-muted-foreground">
-                Start a new conversation by selecting "New Chat" from the sidebar, 
-                or select an existing conversation to continue where you left off.
+        {selectedConversationId ? (
+          <ResizablePanelGroup direction="horizontal" className="flex-1">
+            <ResizablePanel defaultSize={70} minSize={30}>
+              <ChatInterface 
+                conversationId={selectedConversationId} 
+                onSendMessage={handleSendMessage}
+                ref={chatInterfaceRef}
+              />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={30} minSize={20}>
+              <WorkflowPanel 
+                chatId={selectedConversationId}
+                onRunWorkflow={handleRunWorkflow}
+                showRunButton={true}
+                showInputs={true}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div className="h-full flex items-center justify-center flex-1">
+            <div className="max-w-md text-center p-8">
+              <h1 className="text-2xl font-bold mb-4">Welcome to Workflow Chat</h1>
+              <p className="text-muted-foreground mb-6">
+                Create a new chat or select an existing one to start a conversation.
               </p>
-              <Button 
-                onClick={() => setIsNewChatDialogOpen(true)}
-                size="lg"
-                className="mt-4"
+              <button
+                onClick={() => onCreateChat("New Workflow")}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
               >
-                <MessageSquarePlusIcon className="h-4 w-4 mr-2" />
-                Start New Chat
-              </Button>
+                Create New Chat
+              </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
-      
-      <NewChatDialog 
-        open={isNewChatDialogOpen} 
-        onOpenChange={setIsNewChatDialogOpen} 
-        onCreateChat={handleCreateNewChat}
-        isLoading={isCreatingChat}
-        exampleChats={exampleChats}
-        systemExampleChats={systemExampleChats}
-        onSelectExampleChat={handleSelectExampleChat}
-      />
     </div>
   );
 };

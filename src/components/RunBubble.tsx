@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Run, BrowserEvent } from '@/types';
+import { Run, RunMessage } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import RunStatusBubble from './RunStatusBubble';
@@ -9,7 +9,7 @@ import RunMessageItem from './RunMessageItem';
 
 interface RunBubbleProps {
   run: Run;
-  messages: BrowserEvent[];
+  messages: RunMessage[];
   isLatestRun?: boolean;
 }
 
@@ -47,7 +47,7 @@ const RunBubble: React.FC<RunBubbleProps> = ({ run, messages, isLatestRun = true
             {messages.map((message, idx) => (
               <RunMessageItem 
                 key={message.id} 
-                message={message}
+                message={message} 
                 isLast={idx === messages.length - 1}
               />
             ))}

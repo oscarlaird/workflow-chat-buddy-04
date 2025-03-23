@@ -1,98 +1,57 @@
 
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import TopBar from "@/components/TopBar";
-import { supabase } from "@/integrations/supabase/client";
+import { useParams, useLocation } from "react-router-dom";
 import ChatInterface from "@/components/ChatInterface";
-import { useChats } from "@/hooks/useChats";
-import { FolderIcon, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
 
 const ConversationPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const [loading, setLoading] = useState(true);
-  const [chatExists, setChatExists] = useState(false);
-  const navigate = useNavigate();
-  const { refreshChats } = useChats();
+  const { id: urlParamId } = useParams();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const chatIdFromQuery = queryParams.get('chat_id');
+  
+  // Use URL parameter first, then fall back to query parameter
+  const conversationId = urlParamId || chatIdFromQuery || "";
+  
+  // Determine if the page is being accessed through the extension (via query param)
+  const isAccessedThroughExtension = Boolean(chatIdFromQuery);
+  
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const checkChat = async () => {
-      if (!id) {
-        setChatExists(false);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('chats')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (error || !data) {
-          console.error('Error fetching chat or chat not found:', error);
-          setChatExists(false);
-        } else {
-          setChatExists(true);
-        }
-      } catch (err) {
-        console.error('Error in checkChat:', err);
-        setChatExists(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkChat();
-  }, [id]);
-
-  const onSendMessage = () => {
-    refreshChats();
+  const handleSendMessage = (message: string) => {
+    // In a real app, would send message to API
+    console.log("Message sent in standalone view:", message);
   };
 
-  if (loading) {
+  if (!conversationId) {
     return (
-      <div className="flex flex-col h-screen">
-        <TopBar />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!chatExists || !id) {
-    return (
-      <div className="flex flex-col h-screen">
-        <TopBar />
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <div className="flex flex-col items-center text-center space-y-4 max-w-md mx-auto">
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full">
-              <FolderIcon className="h-10 w-10 text-slate-500" />
-            </div>
-            <h2 className="text-2xl font-bold">Chat not found</h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              The conversation you're looking for doesn't exist or has been deleted.
-            </p>
-            <Button
-              onClick={() => navigate('/')}
-              variant="default"
-              className="mt-4"
-            >
-              Go to Home
-            </Button>
-          </div>
+      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div className="text-center">
+          <h2 className="text-xl font-medium">No conversation ID provided</h2>
+          <p className="mt-2 text-muted-foreground">Please specify a conversation ID.</p>
+          <a href="/" className="mt-4 inline-block text-blue-500 hover:underline">
+            Return to Home
+          </a>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <TopBar conversationId={id} />
-      <div className="flex-1 overflow-hidden">
-        <ChatInterface conversationId={id} />
+    <div className="h-screen bg-gray-50 dark:bg-gray-950">
+      {!isAccessedThroughExtension && (
+        <div className="absolute top-4 right-4 z-10">
+          <ExtensionStatusIndicator />
+        </div>
+      )}
+      <div className="h-full p-4">
+        <div className="h-full glass-panel">
+          <ChatInterface
+            conversationId={conversationId}
+            onSendMessage={handleSendMessage}
+            forceExtensionInstalled={isAccessedThroughExtension}
+          />
+        </div>
       </div>
     </div>
   );

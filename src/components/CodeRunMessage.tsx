@@ -23,21 +23,20 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
   const [tablesExpanded, setTablesExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(false);
   const [errorExpanded, setErrorExpanded] = useState(false);
+  
+  // Track which type of events are expanded
   const [eventsExpanded, setEventsExpanded] = useState(true);
   
   // Use the parent's code run events data if provided, otherwise create our own
   const localCodeRunEvents = useCodeRunEvents(message.chat_id || "");
-  const { codeRunEvents, browserEvents, isLoading, getEventsForMessage, refreshCodeRunEvents } = codeRunEventsData || localCodeRunEvents;
+  const { codeRunEvents, browserEvents, isLoading } = codeRunEventsData || localCodeRunEvents;
   
   // Filter events for this message
-  const messageEvents = getEventsForMessage(message.id);
+  const messageEvents = codeRunEvents.filter(event => 
+    event.message_id === message.id
+  );
   
   const hasEvents = messageEvents.length > 0;
-  
-  // Filter and sort events by type (progress bars first, then function calls)
-  const progressEvents = messageEvents.filter(event => event.n_total !== null && event.n_progress !== null);
-  const functionEvents = messageEvents.filter(event => !(event.n_total !== null && event.n_progress !== null));
-  const sortedMessageEvents = [...progressEvents, ...functionEvents];
   
   // Determine the code execution status
   const getExecutionStatus = () => {
@@ -148,7 +147,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
               {eventsExpanded && (
                 <ScrollArea className="h-[calc(100vh*0.4)] rounded-md border" type="auto">
                   <div className="space-y-2 p-2">
-                    {sortedMessageEvents.map((event) => (
+                    {messageEvents.map((event) => (
                       <CodeRunEventItem
                         key={event.id}
                         event={event}

@@ -1,9 +1,9 @@
 
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import ChatInterface from "./components/ChatInterface";
-import Index from "./pages/Index";
+import { Index } from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ConversationPage from "./pages/ConversationPage";
 import WorkflowPage from "./pages/WorkflowPage";
@@ -41,7 +41,6 @@ function App() {
   const handleCreateChat = async (title: string) => {
     const chatId = await createChat(title);
     setSelectedConversationId(chatId);
-    return chatId;
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -61,7 +60,6 @@ function App() {
     if (newChatId) {
       setSelectedConversationId(newChatId);
     }
-    return newChatId;
   };
 
   const handleRenameChat = async (chatId: string, newTitle: string): Promise<boolean> => {
@@ -72,7 +70,24 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route
+            path="/"
+            element={
+              <Index
+                selectedConversationId={selectedConversationId || ""}
+                onSelectConversation={setSelectedConversationId}
+                onNewConversation={() => setSelectedConversationId(null)}
+                chats={chats}
+                exampleChats={exampleChats}
+                systemExampleChats={systemExampleChats}
+                isLoading={isLoading}
+                onCreateChat={handleCreateChat}
+                onDeleteChat={handleDeleteChat}
+                onDuplicateChat={handleDuplicateChat}
+                onRenameChat={handleRenameChat}
+              />
+            }
+          />
           <Route path="/chat/:id" element={<ConversationPage />} />
           {/* Add new route to handle conversation with query parameter */}
           <Route path="/conversation" element={<ConversationPage />} />

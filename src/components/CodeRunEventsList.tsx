@@ -44,21 +44,14 @@ const CodeRunEventsList: React.FC<CodeRunEventsListProps> = ({
     );
   }
 
-  // Filter and sort events by type (progress bars first, then function calls)
-  const progressEvents = codeRunEvents.filter(event => event.n_total !== null && event.n_progress !== null);
-  const functionEvents = codeRunEvents.filter(event => !(event.n_total !== null && event.n_progress !== null));
-  const sortedEvents = [...progressEvents, ...functionEvents];
-
   return (
-    <Card>
-      <ScrollArea style={{ maxHeight }} type="auto">
-        <div className="space-y-3 p-4">
-          {sortedEvents.map((event) => (
-            <CodeRunEventItem key={event.id} event={event} browserEvents={browserEvents[event.id] || []} />
-          ))}
-        </div>
-      </ScrollArea>
-    </Card>
+    <ScrollArea className={`max-h-[${maxHeight}]`} type="auto">
+      <div className="space-y-3 p-2">
+        {codeRunEvents.map((event) => (
+          <CodeRunEventItem key={event.id} event={event} browserEvents={browserEvents[event.id] || []} />
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
 

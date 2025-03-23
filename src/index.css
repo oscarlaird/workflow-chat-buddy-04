@@ -139,11 +139,35 @@
   }
   
   .workflow-step:before {
-    @apply content-[''] absolute left-0 top-1 w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 z-10;
+    @apply content-[''] absolute left-0 top-1 w-6 h-6 rounded-full border-2 z-10;
   }
   
   .workflow-step:after {
-    @apply content-[''] absolute left-3 top-7 w-[2px] h-[calc(100%-24px)] bg-gray-300 dark:bg-gray-600 z-0;
+    @apply content-[''] absolute left-3 top-7 w-[2px] h-[calc(100%-24px)] z-0;
+  }
+  
+  .workflow-step-complete:before {
+    @apply bg-workflow-step-complete border-workflow-step-complete;
+  }
+  
+  .workflow-step-complete:after {
+    @apply bg-workflow-step-complete;
+  }
+  
+  .workflow-step-active:before {
+    @apply bg-workflow-step-active border-workflow-step-active animate-pulse-soft;
+  }
+  
+  .workflow-step-active:after {
+    @apply bg-workflow-step-waiting;
+  }
+  
+  .workflow-step-waiting:before {
+    @apply bg-white dark:bg-gray-800 border-workflow-step-waiting;
+  }
+  
+  .workflow-step-waiting:after {
+    @apply bg-workflow-step-waiting;
   }
   
   .workflow-step:last-child:after {
@@ -156,6 +180,10 @@
     border-left: 3px solid rgba(148,163,184,0.5);
     transform-origin: center;
     animation: subtle-shake 1.2s ease-in-out forwards;
+  }
+  
+  .workflow-step-deleting:before {
+    @apply bg-slate-400/60 border-slate-400;
   }
 
   @keyframes subtle-shake {
