@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2, Play, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Table, Code, Terminal } from "lucide-react";
+import { Loader2, Play, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Table, Code, Terminal, BarChart } from "lucide-react";
 import { Message } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import CodeBlock from "@/components/CodeBlock";
@@ -23,7 +23,14 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   
   const { getEventsForMessage } = useCodeRunEvents(message.chat_id || "");
   const events = getEventsForMessage(message.id);
+  
+  // Separate events into function calls and progress updates
+  const functionCallEvents = events.filter(event => event.function_name !== null);
+  const progressBarEvents = events.filter(event => event.n_progress !== null && event.n_total !== null);
+  
   const hasEvents = events.length > 0;
+  const hasFunctionCalls = functionCallEvents.length > 0;
+  const hasProgressBars = progressBarEvents.length > 0;
   
   // Determine the code execution status
   const getExecutionStatus = () => {
@@ -91,7 +98,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
            'Preparing to Run Code'}
         </div>
         
-        {status === 'running' && (
+        {status === 'running' && !hasProgressBars && (
           <div className="ml-auto flex-1 max-w-32">
             <Progress value={isStreaming ? 70 : 100} className="h-2" />
           </div>
@@ -108,34 +115,66 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             <strong>Command:</strong> {message.content || "Executing workflow..."}
           </div>
           
-          {/* Code Run Events section - Always show the dropdown */}
-          <div className="mt-3 border-t pt-3">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setEventsExpanded(!eventsExpanded);
-              }}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
-            >
-              {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-              <span>Function Calls</span>
-              <span className="text-xs text-muted-foreground">({events.length})</span>
-            </button>
-            
-            {eventsExpanded && (
-              <div className="space-y-1 mt-2">
-                {events.length > 0 ? (
-                  events.map((event) => (
+          {/* Progress Bars section - Only show if there are progress events */}
+          {hasProgressBars && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEventsExpanded(!eventsExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
+              >
+                {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <BarChart className="w-4 h-4" />
+                <span>Progress Updates</span>
+                <span className="text-xs text-muted-foreground">({progressBarEvents.length})</span>
+              </button>
+              
+              {eventsExpanded && (
+                <div className="space-y-1 mt-2">
+                  {progressBarEvents.map((event) => (
                     <CodeRunEventItem key={event.id} event={event} />
-                  ))
-                ) : (
-                  <div className="text-sm text-muted-foreground italic px-2">
-                    No function calls recorded yet
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Function Calls section */}
+          {hasFunctionCalls && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEventsExpanded(!eventsExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
+              >
+                {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <Code className="w-4 h-4" />
+                <span>Function Calls</span>
+                <span className="text-xs text-muted-foreground">({functionCallEvents.length})</span>
+              </button>
+              
+              {eventsExpanded && (
+                <div className="space-y-1 mt-2">
+                  {functionCallEvents.map((event) => (
+                    <CodeRunEventItem key={event.id} event={event} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Show a message if no events */}
+          {!hasFunctionCalls && !hasProgressBars && (
+            <div className="mt-3 border-t pt-3">
+              <div className="text-sm text-muted-foreground italic px-2">
+                No function calls or progress updates recorded yet
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           {/* Code Output Section - Collapsible */}
           {hasOutput && (

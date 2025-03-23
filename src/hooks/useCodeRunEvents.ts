@@ -12,6 +12,7 @@ export interface CodeRunEvent {
   message_id: string | null;
   n_total: number | null;
   n_progress: number | null;
+  progress_title: string | null;
 }
 
 export const useCodeRunEvents = (chatId: string) => {

@@ -47,6 +47,7 @@ export type Database = {
           message_id: string | null
           n_progress: number | null
           n_total: number | null
+          progress_title: string | null
         }
         Insert: {
           chat_id?: string | null
@@ -58,6 +59,7 @@ export type Database = {
           message_id?: string | null
           n_progress?: number | null
           n_total?: number | null
+          progress_title?: string | null
         }
         Update: {
           chat_id?: string | null
@@ -69,6 +71,7 @@ export type Database = {
           message_id?: string | null
           n_progress?: number | null
           n_total?: number | null
+          progress_title?: string | null
         }
         Relationships: [
           {

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { CodeRunEvent } from "@/hooks/useCodeRunEvents";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Code, ChevronDown, ChevronRight } from "lucide-react";
+import { Code, ChevronDown, ChevronRight, BarChart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CodeBlock from "@/components/CodeBlock";
 import DataTable from "@/components/DataTable";
@@ -19,14 +19,15 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
   
   const hasInput = event.example_input && Object.keys(event.example_input).length > 0;
   const hasOutput = event.example_output !== null;
-  const hasProgress = event.n_total !== null && event.n_progress !== null;
+  const isProgressBar = event.n_total !== null && event.n_progress !== null;
+  const isFunctionCall = event.function_name !== null;
   
   const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString();
   };
   
   const calculateProgressPercentage = () => {
-    if (!hasProgress) return 0;
+    if (!isProgressBar) return 0;
     return Math.min(100, Math.round((event.n_progress! / event.n_total!) * 100));
   };
   
@@ -56,6 +57,35 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
     return <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">{String(output)}</div>;
   };
   
+  // Different display for progress bars vs function calls
+  if (isProgressBar) {
+    return (
+      <Card className="mb-2 overflow-hidden border-dashed">
+        <CardHeader className="p-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart className="h-4 w-4 text-blue-500" />
+              <div className="font-medium text-sm">
+                {event.progress_title || "Progress"}
+              </div>
+              <Badge variant="outline" className="text-xs py-0 h-5">
+                {formatTime(event.created_at)}
+              </Badge>
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span>{event.progress_title || "Progress"}</span>
+              <span>{calculateProgressPercentage()}%</span>
+            </div>
+            <Progress value={calculateProgressPercentage()} className="h-1.5" />
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+  
+  // Function call display (same as before with minor adjustments)
   return (
     <Card className="mb-2 overflow-hidden border-dashed">
       <CardHeader className="p-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
@@ -77,16 +107,6 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
       
       {expanded && (
         <CardContent className="p-2 pt-0">
-          {hasProgress && (
-            <div className="mt-2 mb-3">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span>Progress</span>
-                <span>{calculateProgressPercentage()}%</span>
-              </div>
-              <Progress value={calculateProgressPercentage()} className="h-1.5" />
-            </div>
-          )}
-          
           {hasInput && (
             <div className="mt-3">
               <button
@@ -132,7 +152,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
             </div>
           )}
           
-          {!hasInput && !hasOutput && !hasProgress && (
+          {!hasInput && !hasOutput && (
             <div className="text-xs text-muted-foreground italic">
               No input or output data available
             </div>
