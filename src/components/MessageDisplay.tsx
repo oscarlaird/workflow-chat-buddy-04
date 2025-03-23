@@ -11,8 +11,6 @@ interface MessageDisplayProps {
   isExtensionInstalled: boolean;
   pendingMessageIds: Set<string>;
   streamingMessages: Set<string>;
-  runMessages: any[];
-  onStopRun: (runId: string) => void;
   forceExtensionInstalled: boolean;
   codeRunEventsData?: ReturnType<typeof useCodeRunEvents>;
 }
@@ -24,8 +22,6 @@ export const MessageDisplay = ({
   isExtensionInstalled,
   pendingMessageIds,
   streamingMessages,
-  runMessages,
-  onStopRun,
   forceExtensionInstalled = false,
   codeRunEventsData
 }: MessageDisplayProps) => {
@@ -61,8 +57,6 @@ export const MessageDisplay = ({
       isExtensionInstalled={isExtensionInstalled}
       pendingMessageIds={pendingMessageIds}
       streamingMessageIds={streamingMessages}
-      runMessages={runMessages}
-      onStopRun={onStopRun}
       forceExtensionInstalled={forceExtensionInstalled}
       codeRunEventsData={effectiveCodeRunEventsData}
     />

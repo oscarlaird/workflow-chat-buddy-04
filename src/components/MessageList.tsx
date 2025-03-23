@@ -1,7 +1,7 @@
+
 import { useRef, useEffect } from "react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
-import RunMessage from "./RunMessage";
 import UserMessage from "./UserMessage";
 import FunctionMessage from "./FunctionMessage";
 import WorkflowStepMessage from "./WorkflowStepMessage";
@@ -20,8 +20,6 @@ interface MessageListProps {
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
   streamingMessageIds?: Set<string>;
-  runMessages?: any[];
-  onStopRun?: (runId: string) => void;
   forceExtensionInstalled?: boolean;
   codeRunEventsData?: ReturnType<typeof useCodeRunEvents>;
 }
@@ -33,10 +31,8 @@ export const MessageList = ({
   isExtensionInstalled,
   pendingMessageIds = new Set(),
   streamingMessageIds = new Set(),
-  runMessages = [],
   forceExtensionInstalled = false,
-  codeRunEventsData,
-  onStopRun
+  codeRunEventsData
 }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -49,29 +45,6 @@ export const MessageList = ({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Find the latest run ID among all messages
-  const getLatestRunId = () => {
-    const runMessages = messages.filter(msg => msg.run_id);
-    if (runMessages.length === 0) return null;
-    
-    // Sort by message index in the array (most recent will be last)
-    return runMessages[runMessages.length - 1].run_id;
-  };
-
-  const latestRunId = getLatestRunId();
-
-  // Check if any run message is of type spawn_window for this run
-  const shouldShowExtensionAlert = (runId: string) => {
-    if (effectiveIsExtensionInstalled) return false;
-    
-    const hasSpawnWindowMessage = runMessages.some(msg => 
-      msg.run_id === runId && 
-      msg.type === 'spawn_window'
-    );
-    
-    return hasSpawnWindowMessage;
   };
 
   if (messages.length === 0) {
@@ -94,7 +67,7 @@ export const MessageList = ({
         }
         
         // Check if this message is a code run message
-        if (message.code_run === true) {
+        if (message.type === "code_run") {
           return (
             <div key={message.id} className="flex justify-start">
               <CodeRunMessage 
@@ -106,25 +79,8 @@ export const MessageList = ({
           );
         }
         
-        // Check if this message is a run message
-        if (message.run_id) {
-          return (
-            <div key={message.id} className="space-y-4">
-              <RunMessage 
-                runId={message.run_id} 
-                isLatestRun={message.run_id === latestRunId} 
-              />
-              
-              {/* Extension Alert for Runs */}
-              {shouldShowExtensionAlert(message.run_id) && (
-                <ExtensionAlert runId={message.run_id} />
-              )}
-            </div>
-          );
-        }
-        
-        // Special handling for screen_recording function
-        if (message.function_name === "screen_recording") {
+        // Special handling for screen_recording type
+        if (message.type === "screen_recording" || message.function_name === "screen_recording") {
           return (
             <div key={message.id} className="flex justify-center">
               <ScreenRecordingDisplay 
@@ -160,7 +116,7 @@ export const MessageList = ({
             </div>
             
             {/* Screen Recording indicator for other message types */}
-            {hasScreenRecording(message) && message.function_name !== "screen_recording" && (
+            {hasScreenRecording(message) && message.type !== "screen_recording" && message.function_name !== "screen_recording" && (
               <ScreenRecordingMessage 
                 messageId={message.id} 
                 screenRecordings={screenRecordings} 

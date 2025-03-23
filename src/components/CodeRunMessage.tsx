@@ -92,7 +92,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
           status === 'success' ? 'border-l-2 border-green-500' : ''
         }`}>
           <div className="mb-2 text-sm">
-            <strong>Command:</strong> {message.content || "Executing workflow..."}
+            <strong>Command:</strong> {message.content || "Executing code..."}
           </div>
           
           {/* Events Section */}

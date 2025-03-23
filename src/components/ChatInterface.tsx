@@ -1,11 +1,10 @@
+
 import { useConversations } from "@/hooks/useConversations";
-import { forwardRef, useImperativeHandle, useEffect } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
-import { useRunMessages } from "@/hooks/useRunMessages";
 import { useMessageManager } from "@/hooks/useMessageManager";
 import useMessageListener from "@/hooks/useMessageListener";
 import useExtensionStatus from "@/hooks/useExtensionStatus";
-import useRunEvents from "@/hooks/useRunEvents";
 import MessageDisplay from "@/components/MessageDisplay";
 import MessageInputSection from "@/components/MessageInputSection";
 
@@ -26,20 +25,11 @@ export const ChatInterface = forwardRef(({
     isLoading, 
     setIsLoading,
     hasScreenRecording,
-    setMessages,
-    currentRunId,
-    setCurrentRunId
+    setMessages
   } = useConversations({ conversationId });
   
-  // Initialize code run events hook
+  // Initialize code run events hook for the entire chat
   const codeRunEventsData = useCodeRunEvents(conversationId);
-  
-  // Initialize run messages hook
-  const { 
-    runMessages, 
-    processSpawnWindowMessage, 
-    handleStopRun 
-  } = useRunMessages(conversationId);
   
   // Initialize message manager hook
   const {
@@ -49,22 +39,18 @@ export const ChatInterface = forwardRef(({
     setStreamingMessages,
     updateMessageContent,
     handleSubmit,
+    handleCodeRun,
     setPendingMessageIds
   } = useMessageManager(
     conversationId,
     setIsLoading,
     setMessages,
-    currentRunId,
-    setCurrentRunId,
     onSendMessage
   );
   
   // Initialize extension status hook
   const { isExtensionInstalled } = useExtensionStatus(forceExtensionInstalled);
   
-  // Setup workflow run events listener
-  useRunEvents(conversationId, setCurrentRunId);
-
   // Setup message listener
   useMessageListener(
     conversationId,
@@ -75,19 +61,10 @@ export const ChatInterface = forwardRef(({
     setStreamingMessages
   );
 
-  // Process spawn window messages when they arrive
-  useEffect(() => {
-    // Check for any spawn_window messages that need processing
-    runMessages.forEach(message => {
-      if (message.type === 'spawn_window') {
-        processSpawnWindowMessage(message, isExtensionInstalled);
-      }
-    });
-  }, [runMessages, isExtensionInstalled, processSpawnWindowMessage]);
-
-  // Expose the handleSubmit method to the parent component
+  // Expose the handleSubmit and handleCodeRun methods to the parent component
   useImperativeHandle(ref, () => ({
-    handleSubmit: (inputValue: string) => handleSubmit(inputValue)
+    handleSubmit: (inputValue: string) => handleSubmit(inputValue),
+    handleCodeRun: (codeContent: string) => handleCodeRun(codeContent)
   }));
 
   return (
@@ -100,8 +77,6 @@ export const ChatInterface = forwardRef(({
           isExtensionInstalled={isExtensionInstalled}
           pendingMessageIds={pendingMessageIds}
           streamingMessages={streamingMessages}
-          runMessages={runMessages}
-          onStopRun={handleStopRun}
           forceExtensionInstalled={forceExtensionInstalled}
           codeRunEventsData={codeRunEventsData}
         />
@@ -111,6 +86,7 @@ export const ChatInterface = forwardRef(({
         conversationId={conversationId}
         isLoading={isLoading}
         onSendMessage={handleSubmit}
+        onCodeRun={handleCodeRun}
       />
     </div>
   );

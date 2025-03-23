@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -20,7 +21,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   const [screenRecordings, setScreenRecordings] = useState<Record<string, ScreenRecording>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [chatId] = useState(() => conversationId || uuidv4());
-  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
   const [keyframes, setKeyframes] = useState<Record<string, Keyframe[]>>({});
 
   useEffect(() => {
@@ -32,19 +32,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
       setScreenRecordings({});
       setKeyframes({});
     }
-  }, [conversationId]);
-
-  useEffect(() => {
-    // Listen for workflow run created events
-    const handleWorkflowRunCreated = (event: MessageEvent) => {
-      if (event.data && event.data.type === "WORKFLOW_RUN_CREATED" && event.data.chatId === conversationId) {
-        console.log("Setting current run ID to:", event.data.runId);
-        setCurrentRunId(event.data.runId);
-      }
-    };
-
-    window.addEventListener("message", handleWorkflowRunCreated);
-    return () => window.removeEventListener("message", handleWorkflowRunCreated);
   }, [conversationId]);
 
   // Load keyframes from Supabase
@@ -119,10 +106,9 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           username: msg.username,
           function_name: msg.function_name,
           workflow_step_id: msg.workflow_step_id,
-          run_id: msg.run_id,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
-          code_run: msg.code_run,
+          type: msg.type,
           code_output: msg.code_output,
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,
@@ -183,8 +169,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
     chatId,
     hasScreenRecording: (message: Message) => message.id in screenRecordings,
     setMessages,
-    currentRunId,
-    setCurrentRunId,
     keyframes
   };
 };

@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      browser_events: {
+        Row: {
+          chat_id: string | null
+          coderun_event_id: string | null
+          created_at: string
+          display_text: string | null
+          id: string
+          payload: Json | null
+          sender_type: Database["public"]["Enums"]["run_message_sender_type"]
+          type: Database["public"]["Enums"]["run_message_type"]
+          username: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          coderun_event_id?: string | null
+          created_at?: string
+          display_text?: string | null
+          id?: string
+          payload?: Json | null
+          sender_type?: Database["public"]["Enums"]["run_message_sender_type"]
+          type: Database["public"]["Enums"]["run_message_type"]
+          username?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          coderun_event_id?: string | null
+          created_at?: string
+          display_text?: string | null
+          id?: string
+          payload?: Json | null
+          sender_type?: Database["public"]["Enums"]["run_message_sender_type"]
+          type?: Database["public"]["Enums"]["run_message_type"]
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "browser_events_coderun_event_id_fkey"
+            columns: ["coderun_event_id"]
+            isOneToOne: false
+            referencedRelation: "coderun_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chats: {
         Row: {
           created_at: string | null
@@ -153,217 +197,61 @@ export type Database = {
           code_output: string | null
           code_output_error: string | null
           code_output_tables: Json | null
-          code_run: boolean
           code_run_success: boolean | null
           content: string
           created_at: string | null
           example_inputs: Json | null
           from_template: boolean | null
-          function_name: string | null
           id: string
-          is_currently_streaming: boolean | null
-          needs_code_revision: boolean
-          requires_text_reply: boolean
           role: string
-          run_id: string | null
           screenrecording_url: string | null
           script: string | null
           steps: Json | null
+          text_is_currently_streaming: boolean | null
+          type: Database["public"]["Enums"]["message_type"]
           username: string
-          workflow_step_id: string | null
         }
         Insert: {
           chat_id: string
           code_output?: string | null
           code_output_error?: string | null
           code_output_tables?: Json | null
-          code_run?: boolean
           code_run_success?: boolean | null
           content: string
           created_at?: string | null
           example_inputs?: Json | null
           from_template?: boolean | null
-          function_name?: string | null
           id?: string
-          is_currently_streaming?: boolean | null
-          needs_code_revision?: boolean
-          requires_text_reply?: boolean
           role: string
-          run_id?: string | null
           screenrecording_url?: string | null
           script?: string | null
           steps?: Json | null
+          text_is_currently_streaming?: boolean | null
+          type?: Database["public"]["Enums"]["message_type"]
           username: string
-          workflow_step_id?: string | null
         }
         Update: {
           chat_id?: string
           code_output?: string | null
           code_output_error?: string | null
           code_output_tables?: Json | null
-          code_run?: boolean
           code_run_success?: boolean | null
           content?: string
           created_at?: string | null
           example_inputs?: Json | null
           from_template?: boolean | null
-          function_name?: string | null
           id?: string
-          is_currently_streaming?: boolean | null
-          needs_code_revision?: boolean
-          requires_text_reply?: boolean
           role?: string
-          run_id?: string | null
           screenrecording_url?: string | null
           script?: string | null
           steps?: Json | null
+          text_is_currently_streaming?: boolean | null
+          type?: Database["public"]["Enums"]["message_type"]
           username?: string
-          workflow_step_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_messages_workflow_step"
-            columns: ["workflow_step_id"]
-            isOneToOne: false
-            referencedRelation: "workflow_steps"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      run_messages: {
-        Row: {
-          chat_id: string | null
-          created_at: string
-          display_text: string | null
-          id: string
-          payload: Json | null
-          run_id: string
-          sender_type: Database["public"]["Enums"]["run_message_sender_type"]
-          type: Database["public"]["Enums"]["run_message_type"]
-          username: string | null
-        }
-        Insert: {
-          chat_id?: string | null
-          created_at?: string
-          display_text?: string | null
-          id?: string
-          payload?: Json | null
-          run_id: string
-          sender_type?: Database["public"]["Enums"]["run_message_sender_type"]
-          type: Database["public"]["Enums"]["run_message_type"]
-          username?: string | null
-        }
-        Update: {
-          chat_id?: string | null
-          created_at?: string
-          display_text?: string | null
-          id?: string
-          payload?: Json | null
-          run_id?: string
-          sender_type?: Database["public"]["Enums"]["run_message_sender_type"]
-          type?: Database["public"]["Enums"]["run_message_type"]
-          username?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "run_messages_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      runs: {
-        Row: {
-          chat_id: string
-          created_at: string
-          dashboard_id: string
-          id: string
-          in_progress: boolean
-          status: string
-          updated_at: string
-          username: string | null
-        }
-        Insert: {
-          chat_id?: string
-          created_at?: string
-          dashboard_id: string
-          id?: string
-          in_progress?: boolean
-          status?: string
-          updated_at?: string
-          username?: string | null
-        }
-        Update: {
-          chat_id?: string
-          created_at?: string
-          dashboard_id?: string
-          id?: string
-          in_progress?: boolean
-          status?: string
-          updated_at?: string
-          username?: string | null
-        }
-        Relationships: []
-      }
-      workflow_steps: {
-        Row: {
-          chat_id: string
-          code: string | null
-          created_at: string | null
-          description: string
-          example_data: Json | null
-          id: string
-          screenshots: Json | null
-          status: string
-          step_number: number
-          title: string
-          username: string
-        }
-        Insert: {
-          chat_id: string
-          code?: string | null
-          created_at?: string | null
-          description: string
-          example_data?: Json | null
-          id?: string
-          screenshots?: Json | null
-          status: string
-          step_number: number
-          title: string
-          username?: string
-        }
-        Update: {
-          chat_id?: string
-          code?: string | null
-          created_at?: string | null
-          description?: string
-          example_data?: Json | null
-          id?: string
-          screenshots?: Json | null
-          status?: string
-          step_number?: number
-          title?: string
-          username?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_workflow_steps_chat_id"
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
@@ -384,6 +272,7 @@ export type Database = {
       }
     }
     Enums: {
+      message_type: "text_message" | "code_run" | "screen_recording"
       run_message_sender_type: "dashboard" | "backend" | "extension"
       run_message_type:
         | "inputs"

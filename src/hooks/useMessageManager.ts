@@ -8,8 +8,6 @@ export const useMessageManager = (
   conversationId: string,
   setIsLoading: (isLoading: boolean) => void,
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void,
-  currentRunId: string | null,
-  setCurrentRunId: (runId: string | null) => void,
   onSendMessage: (message: string) => void
 ) => {
   const [localMessageIds, setLocalMessageIds] = useState<Set<string>>(new Set());
@@ -55,7 +53,8 @@ export const useMessageManager = (
         id: messageId,
         role: 'user',
         content: inputValue,
-        username: 'current_user'
+        username: 'current_user',
+        type: 'text_message'
       };
       
       setMessages(prev => [...prev, optimisticMessage]);
@@ -66,13 +65,9 @@ export const useMessageManager = (
         role: 'user',
         content: inputValue,
         username: 'current_user',
-        is_currently_streaming: false
+        text_is_currently_streaming: false,
+        type: 'text_message'
       };
-      
-      // Add run_id if available
-      if (currentRunId) {
-        messageData.run_id = currentRunId;
-      }
       
       await supabase
         .from('messages')
@@ -84,20 +79,70 @@ export const useMessageManager = (
         username: 'current_user'
       };
       
-      if (currentRunId) {
-        functionParams.runId = currentRunId;
-      }
-      
       await supabase.functions.invoke('respond-to-message', {
         body: functionParams
       });
       
       onSendMessage(inputValue);
-      
-      // Reset the current run ID after sending
-      setCurrentRunId(null);
     } catch (err) {
       console.error('Exception when processing message:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Function to handle code run creation
+  const handleCodeRun = async (codeContent: string) => {
+    if (!codeContent.trim() || !conversationId) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const messageId = uuidv4();
+      
+      setLocalMessageIds(prev => new Set(prev).add(messageId));
+      setPendingMessageIds(prev => new Set(prev).add(messageId));
+      
+      const optimisticMessage: Message = {
+        id: messageId,
+        role: 'user',
+        content: codeContent,
+        username: 'current_user',
+        type: 'code_run'
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      
+      const messageData: any = {
+        id: messageId,
+        chat_id: conversationId,
+        role: 'user',
+        content: codeContent,
+        username: 'current_user',
+        text_is_currently_streaming: false,
+        type: 'code_run'
+      };
+      
+      await supabase
+        .from('messages')
+        .insert(messageData);
+      
+      // Invoke the function with conversation ID and code run specific parameters
+      const functionParams: any = { 
+        conversationId,
+        username: 'current_user',
+        messageId: messageId,
+        isCodeRun: true,
+        codeContent: codeContent
+      };
+      
+      await supabase.functions.invoke('respond-to-message', {
+        body: functionParams
+      });
+      
+      onSendMessage(codeContent);
+    } catch (err) {
+      console.error('Exception when processing code run:', err);
     } finally {
       setIsLoading(false);
     }
@@ -107,9 +152,10 @@ export const useMessageManager = (
     localMessageIds,
     pendingMessageIds,
     streamingMessages,
-    setStreamingMessages, // Make sure to export this setter
+    setStreamingMessages,
     updateMessageContent,
     handleSubmit,
+    handleCodeRun,
     setPendingMessageIds
   };
 };

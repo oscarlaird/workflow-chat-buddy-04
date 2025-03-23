@@ -1,15 +1,15 @@
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   username?: string;
-  is_currently_streaming?: boolean;
+  text_is_currently_streaming?: boolean;
   function_name?: string;
   workflow_step_id?: string;
-  run_id?: string;
   screenrecording_url?: string;
   chat_id?: string;
-  code_run?: boolean;
+  type: "text_message" | "screen_recording" | "code_run";
   code_output?: string;
   code_output_error?: string;
   code_run_success?: boolean;
@@ -85,16 +85,17 @@ export interface InputField {
   columns?: string[]; // Column fields for table type
 }
 
-// Updated Run interface with both dashboard_id, chat_id and username
-export interface Run {
+// Updated interface for browser events
+export interface BrowserEvent {
   id: string;
-  dashboard_id: string;
-  chat_id: string;
-  status: string;
-  in_progress: boolean;
+  coderun_event_id: string;
+  type: string;
+  sender_type: string;
+  display_text?: string;
   created_at: string;
-  updated_at: string;
   username?: string;
+  chat_id?: string;
+  payload?: any;
 }
 
 // Add Keyframe interface for screen recording keyframes
@@ -105,37 +106,6 @@ export interface Keyframe {
   url: string;
   tab_title: string;
   timestamp: string;
-}
-
-// Define enum types to match our database enums
-export enum RunMessageType {
-  INPUTS = 'inputs',
-  SPAWN_WINDOW = 'spawn_window',
-  LAUNCH_EXTENSION = 'launch_extension',
-  EXTENSION_LOADED = 'extension_loaded',
-  COMMAND = 'command',
-  RESULT = 'result',
-  RATIONALE = 'rationale',
-  CLOSE_EXTENSION = 'close_extension',
-  ABORT = 'abort'
-}
-
-export enum RunMessageSenderType {
-  DASHBOARD = 'dashboard',
-  BACKEND = 'backend',
-  EXTENSION = 'extension'
-}
-
-export interface RunMessage {
-  id: string;
-  run_id: string;
-  type: RunMessageType;
-  payload: any;
-  created_at: string;
-  chat_id?: string;
-  username?: string;
-  sender_type: RunMessageSenderType;
-  display_text?: string;
 }
 
 // Add recording status enum
