@@ -13,61 +13,61 @@ export const useChats = () => {
   const currentUsername = 'current_user'; // The current user's username
   const systemUsername = 'system'; // The system username for examples
   
-  useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        setIsLoading(true);
+  const fetchChats = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: userChats, error: userChatsError } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('is_example', false)
+        .eq('username', currentUsername)
+        .order('created_at', { ascending: false });
         
-        const { data: userChats, error: userChatsError } = await supabase
-          .from('chats')
-          .select('*')
-          .eq('is_example', false)
-          .eq('username', currentUsername)
-          .order('created_at', { ascending: false });
-          
-        if (userChatsError) {
-          console.error('Error fetching user chats:', userChatsError);
-          toast({
-            title: "Error loading chats",
-            description: userChatsError.message,
-            variant: "destructive"
-          });
-        } else {
-          setChats(userChats || []);
-        }
-        
-        const { data: userExamples, error: userExamplesError } = await supabase
-          .from('chats')
-          .select('*')
-          .eq('is_example', true)
-          .eq('username', currentUsername)
-          .order('created_at', { ascending: false });
-          
-        if (userExamplesError) {
-          console.error('Error fetching user example chats:', userExamplesError);
-        } else {
-          setExampleChats(userExamples || []);
-        }
-
-        const { data: systemExamples, error: systemExamplesError } = await supabase
-          .from('chats')
-          .select('*')
-          .eq('is_example', true)
-          .eq('username', systemUsername)
-          .order('created_at', { ascending: false });
-          
-        if (systemExamplesError) {
-          console.error('Error fetching system example chats:', systemExamplesError);
-        } else {
-          setSystemExampleChats(systemExamples || []);
-        }
-      } catch (error) {
-        console.error('Error in fetchChats:', error);
-      } finally {
-        setIsLoading(false);
+      if (userChatsError) {
+        console.error('Error fetching user chats:', userChatsError);
+        toast({
+          title: "Error loading chats",
+          description: userChatsError.message,
+          variant: "destructive"
+        });
+      } else {
+        setChats(userChats || []);
       }
-    };
+      
+      const { data: userExamples, error: userExamplesError } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('is_example', true)
+        .eq('username', currentUsername)
+        .order('created_at', { ascending: false });
+        
+      if (userExamplesError) {
+        console.error('Error fetching user example chats:', userExamplesError);
+      } else {
+        setExampleChats(userExamples || []);
+      }
 
+      const { data: systemExamples, error: systemExamplesError } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('is_example', true)
+        .eq('username', systemUsername)
+        .order('created_at', { ascending: false });
+        
+      if (systemExamplesError) {
+        console.error('Error fetching system example chats:', systemExamplesError);
+      } else {
+        setSystemExampleChats(systemExamples || []);
+      }
+    } catch (error) {
+      console.error('Error in fetchChats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchChats();
 
     // Set up the realtime subscription with more specific update triggers
@@ -307,6 +307,10 @@ export const useChats = () => {
     }
   };
 
+  const refreshChats = () => {
+    fetchChats();
+  };
+
   return {
     chats,
     exampleChats,
@@ -315,6 +319,7 @@ export const useChats = () => {
     createChat,
     deleteChat,
     renameChat,
-    duplicateChat
+    duplicateChat,
+    refreshChats
   };
 };

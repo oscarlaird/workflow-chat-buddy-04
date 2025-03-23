@@ -92,7 +92,7 @@ const ConversationPage = () => {
     <div className="flex flex-col h-screen">
       <TopBar conversationId={id} />
       <div className="flex-1 overflow-hidden">
-        <ChatInterface />
+        <ChatInterface conversationId={id} />
       </div>
     </div>
   );

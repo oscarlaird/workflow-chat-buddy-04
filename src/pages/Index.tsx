@@ -1,59 +1,53 @@
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/TopBar";
-import { supabase } from "@/integrations/supabase/client";
-import ChatInterface from "@/components/ChatInterface";
-import { useChats } from "@/hooks/useChats";
+import ChatHistory from "@/components/ChatHistory";
 import NewChatDialog from "@/components/NewChatDialog";
-import { v4 as uuidv4 } from 'uuid';
 import { Button } from "@/components/ui/button";
 import { MessageSquarePlusIcon, Loader2 } from "lucide-react";
-import ChatHistory from "@/components/ChatHistory";
-import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
+import { useChats } from "@/hooks/useChats";
+import { Chat } from "@/types";
 
-const Index = () => {
+interface IndexProps {
+  selectedConversationId?: string;
+  onSelectConversation?: (id: string) => void;
+  onNewConversation?: () => void;
+  chats?: Chat[];
+  exampleChats?: Chat[];
+  systemExampleChats?: Chat[];
+  isLoading?: boolean;
+  onCreateChat?: (title: string) => Promise<string>;
+  onDeleteChat?: (chatId: string) => Promise<void>;
+  onDuplicateChat?: (chatId: string) => Promise<string | null>;
+  onRenameChat?: (chatId: string, newTitle: string) => Promise<boolean>;
+}
+
+const Index: React.FC<IndexProps> = (props) => {
   const navigate = useNavigate();
-  const [chatId, setChatId] = useState<string | null>(null);
-  const [isCreatingChat, setIsCreatingChat] = useState(false);
-  const [createChatSuccess, setCreateChatSuccess] = useState(false);
-  const [createChatError, setCreateChatError] = useState<string | null>(null);
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
-  const chatInterfaceRef = useRef(null);
-  const selectedChatSettings = useSelectedChatSettings();
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
   const { chats, isLoading: chatsLoading, createChat, renameChat, deleteChat, duplicateChat, exampleChats, systemExampleChats } = useChats();
 
   // Create a new chat with the given title
-  const createNewChat = async (title: string, isExample: boolean = false) => {
+  const createNewChat = async (title: string): Promise<void> => {
     setIsCreatingChat(true);
-    setCreateChatError(null);
-    
     try {
       const newId = await createChat(title);
       if (newId) {
-        setCreateChatSuccess(true);
-        setChatId(newId);
-        return newId;
-      } else {
-        setCreateChatError('Failed to create chat');
-        return null;
+        navigate(`/conversation/${newId}`);
       }
     } catch (err) {
       console.error('Exception in createChat:', err);
-      setCreateChatError('An unexpected error occurred');
-      return null;
     } finally {
       setIsCreatingChat(false);
     }
   };
 
   // Handle new chat creation from the dialog
-  const handleCreateNewChat = async (title: string) => {
-    const newChatId = await createNewChat(title);
-    if (newChatId) {
-      setChatId(newChatId);
-      navigate(`/conversation/${newChatId}`);
-    }
+  const handleCreateNewChat = async (title: string): Promise<void> => {
+    await createNewChat(title);
+    setIsNewChatDialogOpen(false);
   };
 
   const handleSelectExampleChat = (id: string) => {
@@ -63,6 +57,14 @@ const Index = () => {
   // Handle chat selection
   const handleSelectChat = (id: string) => {
     navigate(`/conversation/${id}`);
+  };
+
+  const handleDeleteChatWrapper = async (chatId: string): Promise<void> => {
+    await deleteChat(chatId);
+  };
+
+  const handleDuplicateChatWrapper = async (chatId: string): Promise<void> => {
+    await duplicateChat(chatId);
   };
 
   return (
@@ -92,8 +94,8 @@ const Index = () => {
                 chats={chats}
                 selectedChatId={null}
                 onCreateChat={createNewChat}
-                onDeleteChat={deleteChat}
-                onDuplicateChat={duplicateChat}
+                onDeleteChat={handleDeleteChatWrapper}
+                onDuplicateChat={handleDuplicateChatWrapper}
                 onRenameChat={renameChat}
               />
             )}
@@ -135,4 +137,4 @@ const Index = () => {
   );
 };
 
-export default Index; // Default export instead of named export
+export default Index;

@@ -10,9 +10,10 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 interface TopBarProps {
   username?: string;
   children?: ReactNode;
+  conversationId?: string;
 }
 
-const TopBar = ({ username = "User", children }: TopBarProps) => {
+const TopBar = ({ username = "User", children, conversationId }: TopBarProps) => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
