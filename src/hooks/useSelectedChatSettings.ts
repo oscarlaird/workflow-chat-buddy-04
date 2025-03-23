@@ -61,20 +61,39 @@ export const inferInputSchema = (exampleInputs: Record<string, any> | null): Inp
 
 // Extract example_output from the first step in steps
 const extractExampleInputFromSteps = (steps: Json): Record<string, any> | null => {
-  // Check if steps is null, not an object, or an empty object
-  if (!steps || typeof steps !== 'object' || Array.isArray(steps) || Object.keys(steps).length === 0) {
+  // Check if steps is null or not a valid data structure
+  if (!steps) {
     return null;
   }
 
-  // Find the first step with example_output
-  const firstStepKey = Object.keys(steps)[0];
-  const firstStep = steps[firstStepKey] as Record<string, any>;
+  // Handle steps as an array
+  if (Array.isArray(steps) && steps.length > 0) {
+    const firstStep = steps[0];
+    
+    // Check if the first step has example_output
+    if (firstStep && typeof firstStep === 'object' && 'example_output' in firstStep && firstStep.example_output) {
+      const exampleOutput = firstStep.example_output;
+      
+      // Ensure the example_output is an object
+      if (typeof exampleOutput === 'object' && !Array.isArray(exampleOutput)) {
+        return exampleOutput as Record<string, any>;
+      }
+    }
+    return null;
+  }
   
-  if (firstStep && typeof firstStep === 'object' && 'example_output' in firstStep && firstStep.example_output) {
-    // Ensure the example_output is an object
-    const exampleOutput = firstStep.example_output;
-    if (typeof exampleOutput === 'object' && !Array.isArray(exampleOutput)) {
-      return exampleOutput as Record<string, any>;
+  // Handle steps as an object (backward compatibility)
+  if (typeof steps === 'object' && !Array.isArray(steps) && Object.keys(steps).length > 0) {
+    // Find the first step with example_output
+    const firstStepKey = Object.keys(steps)[0];
+    const firstStep = steps[firstStepKey] as Record<string, any>;
+    
+    if (firstStep && typeof firstStep === 'object' && 'example_output' in firstStep && firstStep.example_output) {
+      // Ensure the example_output is an object
+      const exampleOutput = firstStep.example_output;
+      if (typeof exampleOutput === 'object' && !Array.isArray(exampleOutput)) {
+        return exampleOutput as Record<string, any>;
+      }
     }
   }
   

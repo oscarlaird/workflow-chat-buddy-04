@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
@@ -48,15 +49,37 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
         }
 
         if (messageData && messageData.length > 0 && messageData[0].steps) {
-          // Transform the steps object into an array of workflow steps
-          const stepsObject = messageData[0].steps;
+          const stepsData = messageData[0].steps;
           
-          // Safely convert steps object to array with defensive check
-          const transformedSteps: WorkflowStep[] = [];
-          
-          if (stepsObject && typeof stepsObject === 'object' && !Array.isArray(stepsObject)) {
+          // Handle steps as an array
+          if (Array.isArray(stepsData)) {
+            // Transform the steps array into an array of workflow steps
+            const transformedSteps: WorkflowStep[] = stepsData.map((stepData, index) => {
+              if (stepData && typeof stepData === 'object') {
+                return {
+                  id: `${chatId}-step-${index}`,
+                  title: stepData.function_name ? formatFieldName(stepData.function_name) : `Step ${index + 1}`,
+                  description: stepData.description || "No description available",
+                  step_number: index + 1,
+                  status: "waiting",
+                  exampleInput: stepData.example_input || null,
+                  exampleOutput: stepData.example_output || null,
+                  requiresBrowser: Boolean(stepData.requires_browser),
+                  code: null,
+                  originalKey: index.toString() // Store the index to maintain order reference
+                };
+              }
+              return null;
+            }).filter(Boolean) as WorkflowStep[];
+            
+            setWorkflowSteps(transformedSteps);
+          } 
+          // Handle steps as an object (backward compatibility)
+          else if (typeof stepsData === 'object' && !Array.isArray(stepsData)) {
             // Create an array from the object entries and preserve original order
-            Object.entries(stepsObject).forEach(([key, stepData], index) => {
+            const transformedSteps: WorkflowStep[] = [];
+            
+            Object.entries(stepsData).forEach(([key, stepData], index) => {
               if (stepData && typeof stepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
@@ -73,12 +96,11 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
               }
             });
             
-            // We don't need to sort the steps - we keep them in the exact order they appeared in the JSON
             setWorkflowSteps(transformedSteps);
           } else {
-            console.error('Steps data is not a valid object:', stepsObject);
+            console.error('Steps data is not a valid array or object:', stepsData);
+            setWorkflowSteps([]);
           }
-          
         } else {
           // No steps found
           setWorkflowSteps([]);
@@ -107,12 +129,36 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
         if (payload.new && 'steps' in payload.new && payload.new.steps) {
           console.log('Message with steps updated:', payload.new);
           
-          const stepsObject = payload.new.steps;
-          const transformedSteps: WorkflowStep[] = [];
+          const stepsData = payload.new.steps;
           
-          if (stepsObject && typeof stepsObject === 'object' && !Array.isArray(stepsObject)) {
-            // Create an array from the object entries and preserve original order
-            Object.entries(stepsObject).forEach(([key, stepData], index) => {
+          // Handle steps as an array
+          if (Array.isArray(stepsData)) {
+            // Transform the steps array into an array of workflow steps
+            const transformedSteps: WorkflowStep[] = stepsData.map((stepData, index) => {
+              if (stepData && typeof stepData === 'object') {
+                return {
+                  id: `${chatId}-step-${index}`,
+                  title: stepData.function_name ? formatFieldName(stepData.function_name) : `Step ${index + 1}`,
+                  description: stepData.description || "No description available",
+                  step_number: index + 1,
+                  status: "waiting",
+                  exampleInput: stepData.example_input || null,
+                  exampleOutput: stepData.example_output || null,
+                  requiresBrowser: Boolean(stepData.requires_browser),
+                  code: null,
+                  originalKey: index.toString() // Store the index to maintain order reference
+                };
+              }
+              return null;
+            }).filter(Boolean) as WorkflowStep[];
+            
+            setWorkflowSteps(transformedSteps);
+          }
+          // Handle steps as an object (backward compatibility)
+          else if (typeof stepsData === 'object' && !Array.isArray(stepsData)) {
+            const transformedSteps: WorkflowStep[] = [];
+            
+            Object.entries(stepsData).forEach(([key, stepData], index) => {
               if (stepData && typeof stepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
@@ -129,10 +175,9 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
               }
             });
             
-            // Keep original JSON object order
             setWorkflowSteps(transformedSteps);
           } else {
-            console.error('Steps data in subscription is not a valid object:', stepsObject);
+            console.error('Steps data in subscription is not a valid array or object:', stepsData);
             setWorkflowSteps([]);
           }
         }
