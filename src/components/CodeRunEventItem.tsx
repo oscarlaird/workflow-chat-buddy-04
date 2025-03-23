@@ -28,6 +28,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
   
   const calculateProgressPercentage = () => {
     if (!isProgressBar) return 0;
+    if (event.n_total === 0) return 100; // Prevent division by zero
     return Math.min(100, Math.round((event.n_progress! / event.n_total!) * 100));
   };
   
@@ -59,6 +60,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
   
   // Different display for progress bars vs function calls
   if (isProgressBar) {
+    const progressPercent = calculateProgressPercentage();
     return (
       <Card className="mb-2 overflow-hidden border-dashed">
         <CardHeader className="p-2">
@@ -76,16 +78,16 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
           <div className="mt-2">
             <div className="flex items-center justify-between text-xs mb-1">
               <span>{event.progress_title || "Progress"}</span>
-              <span>{calculateProgressPercentage()}%</span>
+              <span>{progressPercent}%</span>
             </div>
-            <Progress value={calculateProgressPercentage()} className="h-1.5" />
+            <Progress value={progressPercent} className="h-1.5" />
           </div>
         </CardHeader>
       </Card>
     );
   }
   
-  // Function call display (same as before with minor adjustments)
+  // Function call display
   return (
     <Card className="mb-2 overflow-hidden border-dashed">
       <CardHeader className="p-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>

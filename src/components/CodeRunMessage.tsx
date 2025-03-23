@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Play, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Table, Code, Terminal, BarChart } from "lucide-react";
 import { Message } from "@/types";
 import { Progress } from "@/components/ui/progress";
@@ -67,6 +67,10 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const hasOutput = !!message.code_output;
   const hasError = !!message.code_output_error;
   
+  // Track which type of events are expanded
+  const [functionCallsExpanded, setFunctionCallsExpanded] = useState(true);
+  const [progressBarsExpanded, setProgressBarsExpanded] = useState(true);
+  
   return (
     <div className="max-w-[80%] w-full space-y-2">
       {/* Status header */}
@@ -122,17 +126,17 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setEventsExpanded(!eventsExpanded);
+                  setProgressBarsExpanded(!progressBarsExpanded);
                 }}
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
               >
-                {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {progressBarsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 <BarChart className="w-4 h-4" />
                 <span>Progress Updates</span>
                 <span className="text-xs text-muted-foreground">({progressBarEvents.length})</span>
               </button>
               
-              {eventsExpanded && (
+              {progressBarsExpanded && (
                 <div className="space-y-1 mt-2">
                   {progressBarEvents.map((event) => (
                     <CodeRunEventItem key={event.id} event={event} />
@@ -148,17 +152,17 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setEventsExpanded(!eventsExpanded);
+                  setFunctionCallsExpanded(!functionCallsExpanded);
                 }}
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
               >
-                {eventsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {functionCallsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 <Code className="w-4 h-4" />
                 <span>Function Calls</span>
                 <span className="text-xs text-muted-foreground">({functionCallEvents.length})</span>
               </button>
               
-              {eventsExpanded && (
+              {functionCallsExpanded && (
                 <div className="space-y-1 mt-2">
                   {functionCallEvents.map((event) => (
                     <CodeRunEventItem key={event.id} event={event} />

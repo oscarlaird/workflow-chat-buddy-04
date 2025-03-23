@@ -65,47 +65,75 @@ export const useCodeRunEvents = (chatId: string) => {
     
     fetchCodeRunEvents();
     
+    // Create a more specific channel name with the chat ID
     const channel = supabase
-      .channel(`coderun_events:${chatId}`)
+      .channel(`coderun_events_${chatId}`)
       .on('postgres_changes', {
-        event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+        event: 'INSERT', 
         schema: 'public',
         table: 'coderun_events',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-          // Handle new code run event or update
-          const newEvent = payload.new as CodeRunEvent;
-          
-          if (newEvent.message_id) {
-            setCodeRunEvents(prev => {
-              const updated = { ...prev };
-              
-              if (!updated[newEvent.message_id!]) {
-                updated[newEvent.message_id!] = [];
+        // Handle new code run event
+        const newEvent = payload.new as CodeRunEvent;
+        
+        if (newEvent.message_id) {
+          setCodeRunEvents(prev => {
+            const updated = { ...prev };
+            
+            if (!updated[newEvent.message_id!]) {
+              updated[newEvent.message_id!] = [];
+            }
+            
+            // Add the new event if it doesn't exist
+            if (!updated[newEvent.message_id!].some(event => event.id === newEvent.id)) {
+              updated[newEvent.message_id!] = [...updated[newEvent.message_id!], newEvent];
+            }
+            
+            return updated;
+          });
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'coderun_events',
+        filter: `chat_id=eq.${chatId}`
+      }, (payload) => {
+        // Handle updated code run event
+        const updatedEvent = payload.new as CodeRunEvent;
+        const oldEvent = payload.old as CodeRunEvent;
+        
+        if (updatedEvent.message_id) {
+          setCodeRunEvents(prev => {
+            const updated = { ...prev };
+            
+            if (!updated[updatedEvent.message_id!]) {
+              return prev; // Message ID doesn't exist in our state
+            }
+            
+            // For progress updates, only update if the new progress is higher
+            if (updatedEvent.n_progress !== null && oldEvent.n_progress !== null) {
+              // Skip the update if the new progress is lower (prevent race condition)
+              if (updatedEvent.n_progress < oldEvent.n_progress) {
+                console.log('Skipping update due to race condition:', updatedEvent);
+                return prev;
               }
-              
-              // For inserts, add the new event if it doesn't exist
-              if (payload.eventType === 'INSERT' && 
-                  !updated[newEvent.message_id!].some(event => event.id === newEvent.id)) {
-                updated[newEvent.message_id!] = [...updated[newEvent.message_id!], newEvent];
-              }
-              
-              // For updates, replace the existing event
-              if (payload.eventType === 'UPDATE') {
-                updated[newEvent.message_id!] = updated[newEvent.message_id!].map(event => 
-                  event.id === newEvent.id ? newEvent : event
-                );
-              }
-              
-              return updated;
-            });
-          }
+            }
+            
+            // Update the existing event
+            updated[updatedEvent.message_id!] = updated[updatedEvent.message_id!].map(event => 
+              event.id === updatedEvent.id ? updatedEvent : event
+            );
+            
+            return updated;
+          });
         }
       })
       .subscribe();
       
     return () => {
+      console.log('Removing channel for code run events');
       supabase.removeChannel(channel);
     };
   }, [chatId]);
