@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import ChatInterface from "./components/ChatInterface";
-import { Index } from "./pages/Index";
+import Index from "./pages/Index"; // Changed from { Index }
 import NotFound from "./pages/NotFound";
 import ConversationPage from "./pages/ConversationPage";
 import WorkflowPage from "./pages/WorkflowPage";

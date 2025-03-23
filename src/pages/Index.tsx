@@ -21,34 +21,23 @@ const Index = () => {
   const [isNewChatDialogOpen, setIsNewChatDialogOpen] = useState(false);
   const chatInterfaceRef = useRef(null);
   const selectedChatSettings = useSelectedChatSettings();
-  const { chats, isLoading: chatsLoading, refreshChats } = useChats();
+  const { chats, isLoading: chatsLoading, createChat, renameChat, deleteChat, duplicateChat, exampleChats, systemExampleChats } = useChats();
 
   // Create a new chat with the given title
-  const createChat = async (title: string, isExample: boolean = false) => {
+  const createNewChat = async (title: string, isExample: boolean = false) => {
     setIsCreatingChat(true);
     setCreateChatError(null);
     
     try {
-      const newId = uuidv4();
-      const { error } = await supabase
-        .from('chats')
-        .insert([
-          { 
-            id: newId, 
-            title, 
-            is_example: isExample
-          }
-        ]);
-
-      if (error) {
-        console.error('Error creating chat:', error);
-        setCreateChatError(error.message);
+      const newId = await createChat(title);
+      if (newId) {
+        setCreateChatSuccess(true);
+        setChatId(newId);
+        return newId;
+      } else {
+        setCreateChatError('Failed to create chat');
         return null;
       }
-
-      setCreateChatSuccess(true);
-      refreshChats();
-      return newId;
     } catch (err) {
       console.error('Exception in createChat:', err);
       setCreateChatError('An unexpected error occurred');
@@ -60,15 +49,15 @@ const Index = () => {
 
   // Handle new chat creation from the dialog
   const handleCreateNewChat = async (title: string) => {
-    const newChatId = await createChat(title);
+    const newChatId = await createNewChat(title);
     if (newChatId) {
       setChatId(newChatId);
       navigate(`/conversation/${newChatId}`);
     }
   };
 
-  const onSendMessage = () => {
-    refreshChats();
+  const handleSelectExampleChat = (id: string) => {
+    navigate(`/conversation/${id}`);
   };
 
   // Handle chat selection
@@ -100,9 +89,12 @@ const Index = () => {
               </div>
             ) : (
               <ChatHistory 
-                chats={chats} 
-                onSelectChat={handleSelectChat}
+                chats={chats}
                 selectedChatId={null}
+                onCreateChat={createNewChat}
+                onDeleteChat={deleteChat}
+                onDuplicateChat={duplicateChat}
+                onRenameChat={renameChat}
               />
             )}
           </div>
@@ -135,9 +127,12 @@ const Index = () => {
         onOpenChange={setIsNewChatDialogOpen} 
         onCreateChat={handleCreateNewChat}
         isLoading={isCreatingChat}
+        exampleChats={exampleChats}
+        systemExampleChats={systemExampleChats}
+        onSelectExampleChat={handleSelectExampleChat}
       />
     </div>
   );
 };
 
-export default Index;
+export default Index; // Default export instead of named export

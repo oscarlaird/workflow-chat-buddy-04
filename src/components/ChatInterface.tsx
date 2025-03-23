@@ -8,13 +8,19 @@ import useMessageListener from "@/hooks/useMessageListener";
 import { useMessageManager } from "@/hooks/useMessageManager";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
-const ChatInterface = () => {
-  const { id: conversationId } = useParams<{ id: string }>();
+interface ChatInterfaceProps {
+  conversationId?: string;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ conversationId: propConversationId }) => {
+  const { id: paramConversationId } = useParams<{ id: string }>();
+  const conversationId = propConversationId || paramConversationId || "";
+  
   const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
   const [forceExtensionInstalled, setForceExtensionInstalled] = useState(false);
 
   const { messages, isLoading, error, setIsLoading, setMessages } = useConversations(conversationId);
-  const codeRunEventsData = useCodeRunEvents(conversationId || "");
+  const codeRunEventsData = useCodeRunEvents(conversationId);
 
   useEffect(() => {
     // Simulate checking if the extension is installed
@@ -39,14 +45,14 @@ const ChatInterface = () => {
     handleCodeRun,
     setPendingMessageIds
   } = useMessageManager(
-    conversationId || "",
+    conversationId,
     setIsLoading,
     setMessages,
     onSendMessage
   );
 
   useMessageListener(
-    conversationId || "",
+    conversationId,
     setMessages,
     localMessageIds,
     setPendingMessageIds,
@@ -82,7 +88,7 @@ const ChatInterface = () => {
       </div>
       <div className="border-t p-4">
         <MessageInputSection
-          conversationId={conversationId || ""}
+          conversationId={conversationId}
           isLoading={isLoading}
           onSendMessage={handleInputSubmit}
           onCodeRun={handleRunCode}
