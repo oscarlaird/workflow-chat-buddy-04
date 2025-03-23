@@ -39,7 +39,6 @@ export const ChatInterface = forwardRef(({
     setStreamingMessages,
     updateMessageContent,
     handleSubmit,
-    handleCodeRun,
     setPendingMessageIds
   } = useMessageManager(
     conversationId,
@@ -61,10 +60,9 @@ export const ChatInterface = forwardRef(({
     setStreamingMessages
   );
 
-  // Expose the handleSubmit and handleCodeRun methods to the parent component
+  // Expose the handleSubmit method to the parent component
   useImperativeHandle(ref, () => ({
-    handleSubmit: (inputValue: string) => handleSubmit(inputValue),
-    handleCodeRun: (codeContent: string) => handleCodeRun(codeContent)
+    handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
 
   return (
@@ -86,7 +84,6 @@ export const ChatInterface = forwardRef(({
         conversationId={conversationId}
         isLoading={isLoading}
         onSendMessage={handleSubmit}
-        onCodeRun={handleCodeRun}
       />
     </div>
   );
