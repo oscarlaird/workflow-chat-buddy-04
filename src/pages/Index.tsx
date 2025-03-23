@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
 import ChatHistory from "../components/ChatHistory";
 import WorkflowPanel from "../components/WorkflowPanel";
@@ -38,18 +37,14 @@ export const Index: React.FC<IndexProps> = ({
   onDuplicateChat,
   onRenameChat
 }) => {
-  const navigate = useNavigate();
   const chatInterfaceRef = React.useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleSendMessage = (message: string) => {
-    // We can keep this minimal log as it's useful for potential debugging
     console.log("Message sent from Index view:", message);
   };
 
-  // This function is called when the run button is clicked
   const handleRunWorkflow = () => {
-    // Keep minimal logging for this important function
     console.log("Running workflow for conversation:", selectedConversationId);
   };
 
