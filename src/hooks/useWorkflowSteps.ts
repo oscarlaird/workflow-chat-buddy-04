@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkflowStep } from "@/types";
@@ -56,26 +55,30 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           const transformedSteps: WorkflowStep[] = [];
           
           if (stepsObject && typeof stepsObject === 'object' && !Array.isArray(stepsObject)) {
+            // Create an array from the object entries and preserve original order
             Object.entries(stepsObject).forEach(([key, stepData], index) => {
               if (stepData && typeof stepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
                   title: formatFieldName(key), // Format the title
                   description: (stepData as any).description || "No description available",
-                  step_number: index + 1,
+                  step_number: index + 1, // We preserve the original order with index
                   status: "waiting", // Default status
                   exampleInput: (stepData as any).example_input || null,
                   exampleOutput: (stepData as any).example_output || null,
                   requiresBrowser: Boolean((stepData as any).requires_browser),
-                  code: null
+                  code: null,
+                  originalKey: key // Store the original key to maintain order reference
                 });
               }
             });
+            
+            // We don't need to sort the steps - we keep them in the exact order they appeared in the JSON
+            setWorkflowSteps(transformedSteps);
           } else {
             console.error('Steps data is not a valid object:', stepsObject);
           }
           
-          setWorkflowSteps(transformedSteps);
         } else {
           // No steps found
           setWorkflowSteps([]);
@@ -108,22 +111,25 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           const transformedSteps: WorkflowStep[] = [];
           
           if (stepsObject && typeof stepsObject === 'object' && !Array.isArray(stepsObject)) {
+            // Create an array from the object entries and preserve original order
             Object.entries(stepsObject).forEach(([key, stepData], index) => {
               if (stepData && typeof stepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
                   title: formatFieldName(key), // Format the title
                   description: (stepData as any).description || "No description available",
-                  step_number: index + 1,
+                  step_number: index + 1, // We preserve the original order with index
                   status: "waiting", // Default status
                   exampleInput: (stepData as any).example_input || null,
                   exampleOutput: (stepData as any).example_output || null,
                   requiresBrowser: Boolean((stepData as any).requires_browser),
-                  code: null
+                  code: null,
+                  originalKey: key // Store the original key to maintain order reference
                 });
               }
             });
             
+            // Keep original JSON object order
             setWorkflowSteps(transformedSteps);
           } else {
             console.error('Steps data in subscription is not a valid object:', stepsObject);

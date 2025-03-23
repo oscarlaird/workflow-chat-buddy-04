@@ -40,6 +40,7 @@ export interface WorkflowStep {
   exampleOutput?: any | null;
   step_number: number;
   requiresBrowser?: boolean;
+  originalKey?: string; // Added to maintain reference to original order
 }
 
 export interface Workflow {
