@@ -157,6 +157,7 @@ const WorkflowPanel = ({
           disabled={isRunning}
           showRunButton={showRunButton}
           isRunning={isRunning}
+          isRebuilding={isRebuilding} // Pass isRebuilding to WorkflowInputs
         />
       )}
       

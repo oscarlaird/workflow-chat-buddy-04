@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash, Upload, AlertCircle } from "lucide-react";
+import { Plus, Trash, Upload, AlertCircle, RefreshCw } from "lucide-react";
 import { InputField, InputValues } from "@/types";
 import { useSelectedChatSettings } from "@/hooks/useSelectedChatSettings";
 import { TypedInputField, InputFieldIcon } from "@/components/InputField";
@@ -23,6 +24,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface WorkflowInputsProps {
   chatId?: string;
@@ -30,6 +32,7 @@ interface WorkflowInputsProps {
   showRunButton?: boolean;
   onRunWorkflow?: () => void;
   isRunning?: boolean;
+  isRebuilding?: boolean; // Add isRebuilding prop
   onSubmit: (inputValues: InputValues) => void;
   disabled: boolean;
 }
@@ -40,6 +43,7 @@ export const WorkflowInputs = ({
   showRunButton = true,
   onRunWorkflow,
   isRunning = false,
+  isRebuilding = false, // Default to false
   onSubmit,
   disabled
 }: WorkflowInputsProps) => {
@@ -214,6 +218,16 @@ export const WorkflowInputs = ({
 
   return (
     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      {/* Debugging Rebuilding Status Banner */}
+      {isRebuilding && (
+        <Alert className="mb-4 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
+          <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+          <AlertDescription className="flex items-center font-medium">
+            Workflow is being rebuilt. Latest user message has requires_text_reply=true and script=null.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium">Workflow Inputs</h3>
         <div className="flex items-center gap-2">
