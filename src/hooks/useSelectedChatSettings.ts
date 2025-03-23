@@ -61,17 +61,22 @@ export const inferInputSchema = (exampleInputs: Record<string, any> | null): Inp
 };
 
 // Extract example_input from the first step in steps
-const extractExampleInputFromSteps = (steps: Record<string, any> | null): Record<string, any> | null => {
-  if (!steps || typeof steps !== 'object' || Object.keys(steps).length === 0) {
+const extractExampleInputFromSteps = (steps: Json): Record<string, any> | null => {
+  // Check if steps is null, not an object, or an empty object
+  if (!steps || typeof steps !== 'object' || Array.isArray(steps) || Object.keys(steps).length === 0) {
     return null;
   }
 
   // Find the first step with example_input
   const firstStepKey = Object.keys(steps)[0];
-  const firstStep = steps[firstStepKey];
+  const firstStep = steps[firstStepKey] as Record<string, any>;
   
-  if (firstStep && firstStep.example_input) {
-    return firstStep.example_input;
+  if (firstStep && typeof firstStep === 'object' && 'example_input' in firstStep && firstStep.example_input) {
+    // Ensure the example_input is an object
+    const exampleInput = firstStep.example_input;
+    if (typeof exampleInput === 'object' && !Array.isArray(exampleInput)) {
+      return exampleInput as Record<string, any>;
+    }
   }
   
   return null;
