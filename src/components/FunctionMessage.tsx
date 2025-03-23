@@ -8,9 +8,6 @@ interface FunctionMessageProps {
 }
 
 export const FunctionMessage = ({ message, isStreaming }: FunctionMessageProps) => {
-  // Since function_name is no longer available, we'll check message content or type
-  // to determine what type of function message this is
-  
   // We'll use message.content to determine what to display
   const getDisplayText = () => {
     if (!message.content) return "Function";
