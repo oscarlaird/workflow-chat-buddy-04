@@ -50,13 +50,15 @@ const CodeRunEventsList: React.FC<CodeRunEventsListProps> = ({
   const sortedEvents = [...progressEvents, ...functionEvents];
 
   return (
-    <ScrollArea className={`max-h-[${maxHeight}]`} type="auto">
-      <div className="space-y-3 p-2">
-        {sortedEvents.map((event) => (
-          <CodeRunEventItem key={event.id} event={event} browserEvents={browserEvents[event.id] || []} />
-        ))}
-      </div>
-    </ScrollArea>
+    <Card>
+      <ScrollArea style={{ maxHeight }} type="auto">
+        <div className="space-y-3 p-4">
+          {sortedEvents.map((event) => (
+            <CodeRunEventItem key={event.id} event={event} browserEvents={browserEvents[event.id] || []} />
+          ))}
+        </div>
+      </ScrollArea>
+    </Card>
   );
 };
 

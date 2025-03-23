@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2, ChevronDown, ChevronRight, AlertCircle, CheckCircle, Play } from "lucide-react";
 import { Message } from "@/types";
 import { Skeleton } from "./ui/skeleton";
@@ -11,7 +11,6 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import CodeRunEventItem from "./CodeRunEventItem";
 import { ScrollArea } from "./ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -25,42 +24,13 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
   const [outputExpanded, setOutputExpanded] = useState(false);
   const [errorExpanded, setErrorExpanded] = useState(false);
   const [eventsExpanded, setEventsExpanded] = useState(true);
-  const [localEvents, setLocalEvents] = useState<any[]>([]);
   
   // Use the parent's code run events data if provided, otherwise create our own
   const localCodeRunEvents = useCodeRunEvents(message.chat_id || "");
   const { codeRunEvents, browserEvents, isLoading, getEventsForMessage, refreshCodeRunEvents } = codeRunEventsData || localCodeRunEvents;
   
   // Filter events for this message
-  const messageEvents = codeRunEvents.filter(event => 
-    event.message_id === message.id
-  );
-
-  // Set up a real-time subscription for this specific message
-  useEffect(() => {
-    if (!message.id || !message.chat_id) return;
-    
-    // Initial events fetch
-    refreshCodeRunEvents();
-    
-    // Subscribe to new coderun_events for this specific message
-    const channel = supabase
-      .channel(`coderun_message:${message.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'coderun_events',
-        filter: `message_id=eq.${message.id}`
-      }, (payload) => {
-        console.log('New coderun event for message:', payload);
-        refreshCodeRunEvents();
-      })
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [message.id, message.chat_id, refreshCodeRunEvents]);
+  const messageEvents = getEventsForMessage(message.id);
   
   const hasEvents = messageEvents.length > 0;
   
