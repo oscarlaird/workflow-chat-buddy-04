@@ -16,17 +16,37 @@ interface WorkflowPanelProps {
   onRunWorkflow?: () => void;
   showRunButton?: boolean;
   showInputs?: boolean;
+  messages?: any[]; // Add messages prop
 }
 
 const WorkflowPanel = ({ 
   chatId, 
   onRunWorkflow, 
   showRunButton = true,
-  showInputs = true
+  showInputs = true,
+  messages = [] // Default to empty array
 }: WorkflowPanelProps) => {
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
   const [isRunning, setIsRunning] = useState(false);
   const [isCodePanelOpen, setIsCodePanelOpen] = useState(true);
+  const [isRebuilding, setIsRebuilding] = useState(false);
+
+  // Check if workflow is being rebuilt
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      // Get the most recent message
+      const latestMessage = messages[messages.length - 1];
+      
+      // Check if it requires a text reply but script is null
+      const rebuilding = latestMessage && 
+        latestMessage.requires_text_reply === true && 
+        latestMessage.script === null;
+      
+      setIsRebuilding(rebuilding);
+    } else {
+      setIsRebuilding(false);
+    }
+  }, [messages]);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
@@ -171,6 +191,14 @@ const WorkflowPanel = ({
           </>
         )}
       </ResizablePanelGroup>
+      
+      {/* Rebuilding Workflow Indicator */}
+      {isRebuilding && (
+        <div className="border-t border-gray-200 dark:border-gray-800 p-3 flex items-center justify-center text-sm text-muted-foreground bg-muted/50">
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Rebuilding Workflow...
+        </div>
+      )}
     </div>
   );
 };

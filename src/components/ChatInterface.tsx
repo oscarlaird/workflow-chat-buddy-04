@@ -12,12 +12,14 @@ interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage: (message: string) => void;
   forceExtensionInstalled?: boolean;
+  onMessagesUpdate?: (messages: any[]) => void; // Add callback for messages
 }
 
 export const ChatInterface = forwardRef(({
   conversationId,
   onSendMessage,
-  forceExtensionInstalled = false
+  forceExtensionInstalled = false,
+  onMessagesUpdate
 }: ChatInterfaceProps, ref) => {
   const { 
     messages,
@@ -45,6 +47,13 @@ export const ChatInterface = forwardRef(({
   useImperativeHandle(ref, () => ({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
+
+  // Send messages to parent component when they change
+  useEffect(() => {
+    if (onMessagesUpdate && messages) {
+      onMessagesUpdate(messages);
+    }
+  }, [messages, onMessagesUpdate]);
 
   useEffect(() => {
     setRunMessages([]);

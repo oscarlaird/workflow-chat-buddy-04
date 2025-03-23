@@ -41,6 +41,7 @@ export const Index: React.FC<IndexProps> = ({
   const navigate = useNavigate();
   const chatInterfaceRef = React.useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
 
   const handleSendMessage = (message: string) => {
     // We can keep this minimal log as it's useful for potential debugging
@@ -55,6 +56,11 @@ export const Index: React.FC<IndexProps> = ({
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+  
+  // Get messages from ChatInterface
+  const handleMessagesUpdate = (messages: any[]) => {
+    setChatMessages(messages);
   };
 
   return (
@@ -105,6 +111,7 @@ export const Index: React.FC<IndexProps> = ({
                 conversationId={selectedConversationId} 
                 onSendMessage={handleSendMessage}
                 ref={chatInterfaceRef}
+                onMessagesUpdate={handleMessagesUpdate}
               />
             </ResizablePanel>
             <ResizableHandle withHandle />
@@ -114,6 +121,7 @@ export const Index: React.FC<IndexProps> = ({
                 onRunWorkflow={handleRunWorkflow}
                 showRunButton={true}
                 showInputs={true}
+                messages={chatMessages}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
