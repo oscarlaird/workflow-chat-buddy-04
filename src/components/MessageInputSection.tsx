@@ -15,36 +15,6 @@ interface MessageInputSectionProps {
   setIsExtensionInstalled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-// Adding a minimal ChatInput component to fit the props we're passing
-const ChatInput: React.FC<{
-  messageValue: string;
-  setMessageValue: (value: string) => void;
-  onSendMessage: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-  disabled: boolean;
-}> = ({ messageValue, setMessageValue, onSendMessage, onKeyDown, disabled }) => {
-  return (
-    <div className="relative flex-1">
-      <textarea
-        value={messageValue}
-        onChange={(e) => setMessageValue(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={disabled ? "Select a chat to start..." : "Type your message..."}
-        className="w-full resize-none rounded-md border p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
-        rows={1}
-        disabled={disabled}
-      />
-      <button
-        onClick={onSendMessage}
-        disabled={!messageValue.trim() || disabled}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 bg-primary text-white disabled:opacity-50"
-      >
-        Send
-      </button>
-    </div>
-  );
-};
-
 const MessageInputSection: React.FC<MessageInputSectionProps> = ({
   messageValue,
   setMessageValue,
@@ -146,13 +116,24 @@ const MessageInputSection: React.FC<MessageInputSectionProps> = ({
           <Camera className="h-5 w-5" />
         </Button>
         
-        <ChatInput
-          messageValue={messageValue}
-          setMessageValue={setMessageValue}
-          onSendMessage={handleSendMessage}
-          onKeyDown={handleKeyDown}
-          disabled={isSubmitting}
-        />
+        <div className="relative flex-1">
+          <textarea
+            value={messageValue}
+            onChange={(e) => setMessageValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={isSubmitting ? "Sending..." : "Type your message..."}
+            className="w-full resize-none rounded-md border p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
+            rows={1}
+            disabled={isSubmitting}
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={(!messageValue.trim() && uploadedImages.length === 0) || isSubmitting}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 bg-primary text-white disabled:opacity-50"
+          >
+            Send
+          </button>
+        </div>
         
         <div className="flex-shrink-0">
           <ExtensionStatusIndicator 
