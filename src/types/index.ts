@@ -1,12 +1,9 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   username?: string;
   text_is_currently_streaming?: boolean;
-  function_name?: string;
-  workflow_step_id?: string;
   screenrecording_url?: string;
   chat_id?: string;
   type: "text_message" | "screen_recording" | "code_run";

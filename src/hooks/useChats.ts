@@ -258,13 +258,13 @@ export const useChats = () => {
             created_at: new Date().toISOString(),
             from_template: true,
             type: message.type || "text_message",
-            steps: message.steps
+            steps: message.steps,
+            code_output: message.code_output,
+            code_output_error: message.code_output_error,
+            code_run_success: message.code_run_success,
+            code_output_tables: message.code_output_tables,
+            screenrecording_url: message.screenrecording_url
           };
-          
-          // Only add function_name if it exists in the original message
-          if ('function_name' in message && message.function_name) {
-            newMsg.function_name = message.function_name;
-          }
           
           return newMsg;
         });

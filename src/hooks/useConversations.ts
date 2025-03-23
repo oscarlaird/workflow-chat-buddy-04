@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -104,9 +103,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           role: msg.role as "user" | "assistant",
           content: msg.content,
           username: msg.username,
-          // Safely handle optional properties that might not exist in the database response
-          function_name: 'function_name' in msg ? msg.function_name : undefined,
-          workflow_step_id: 'workflow_step_id' in msg ? msg.workflow_step_id : undefined,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
           type: (msg.type as "text_message" | "screen_recording" | "code_run") || "text_message",
@@ -114,7 +110,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,
           code_output_tables: msg.code_output_tables
-        }));
+        } as Message));
+        
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
       } else {
