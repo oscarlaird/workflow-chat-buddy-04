@@ -102,7 +102,6 @@ export const useCodeRunEvents = (chatId: string) => {
       }, (payload) => {
         // Handle updated code run event
         const updatedEvent = payload.new as CodeRunEvent;
-        const oldEvent = payload.old as CodeRunEvent;
         
         if (updatedEvent.message_id) {
           setCodeRunEvents(prev => {
@@ -110,15 +109,6 @@ export const useCodeRunEvents = (chatId: string) => {
             
             if (!updated[updatedEvent.message_id!]) {
               return prev; // Message ID doesn't exist in our state
-            }
-            
-            // For progress updates, only update if the new progress is higher
-            if (updatedEvent.n_progress !== null && oldEvent.n_progress !== null) {
-              // Skip the update if the new progress is lower (prevent race condition)
-              if (updatedEvent.n_progress < oldEvent.n_progress) {
-                console.log('Skipping update due to race condition:', updatedEvent);
-                return prev;
-              }
             }
             
             // Update the existing event
