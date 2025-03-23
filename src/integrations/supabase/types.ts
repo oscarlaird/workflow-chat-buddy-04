@@ -40,6 +40,7 @@ export type Database = {
         Row: {
           chat_id: string | null
           created_at: string
+          description: string | null
           example_input: Json | null
           example_output: Json | null
           function_name: string | null
@@ -48,10 +49,12 @@ export type Database = {
           n_progress: number | null
           n_total: number | null
           progress_title: string | null
+          requires_browser: boolean
         }
         Insert: {
           chat_id?: string | null
           created_at?: string
+          description?: string | null
           example_input?: Json | null
           example_output?: Json | null
           function_name?: string | null
@@ -60,10 +63,12 @@ export type Database = {
           n_progress?: number | null
           n_total?: number | null
           progress_title?: string | null
+          requires_browser?: boolean
         }
         Update: {
           chat_id?: string | null
           created_at?: string
+          description?: string | null
           example_input?: Json | null
           example_output?: Json | null
           function_name?: string | null
@@ -72,6 +77,7 @@ export type Database = {
           n_progress?: number | null
           n_total?: number | null
           progress_title?: string | null
+          requires_browser?: boolean
         }
         Relationships: [
           {

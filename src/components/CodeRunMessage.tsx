@@ -8,6 +8,7 @@ import DataTable from "@/components/DataTable";
 import CodeRunEventItem from "./CodeRunEventItem";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -21,7 +22,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const [outputExpanded, setOutputExpanded] = useState(false);
   const [errorExpanded, setErrorExpanded] = useState(false);
   
-  const { getEventsForMessage } = useCodeRunEvents(message.chat_id || "");
+  const { getEventsForMessage, isLoading } = useCodeRunEvents(message.chat_id || "");
   const events = getEventsForMessage(message.id);
   
   // Separate events into function calls and progress updates
@@ -167,8 +168,22 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             </div>
           )}
           
-          {/* Show a message if no events */}
-          {!hasFunctionCalls && !hasProgressBars && (
+          {/* Show loading state when fetching events */}
+          {isLoading && (
+            <div className="mt-3 border-t pt-3">
+              <div className="flex items-center gap-2 mb-3">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Loading events...</span>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+          )}
+          
+          {/* Show a message if no events and not loading */}
+          {!hasFunctionCalls && !hasProgressBars && !isLoading && (
             <div className="mt-3 border-t pt-3">
               <div className="text-sm text-muted-foreground italic px-2">
                 No function calls or progress updates recorded yet
@@ -254,7 +269,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             </div>
           )}
           
-          {!message.code_output && !message.code_output_error && !hasTableData && events.length === 0 && status === 'running' && (
+          {!message.code_output && !message.code_output_error && !hasTableData && events.length === 0 && status === 'running' && !isLoading && (
             <div className="py-2 text-sm text-muted-foreground italic">
               Executing code, please wait...
             </div>
