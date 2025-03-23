@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { RunMessage, RunMessageType, RunMessageSenderType } from "@/types";
+import { BrowserEvent, RunMessageSenderType } from "@/types";
 
 interface UseRunMessagesResult {
-  runMessages: RunMessage[];
+  browserEvents: BrowserEvent[];
   isLoading: boolean;
   error: string | null;
 }
@@ -12,75 +12,73 @@ interface UseRunMessagesResult {
 // Mock data since the database tables don't exist yet
 // This will be replaced with real database calls when tables are created
 export const useRunMessages = (chatId: string): UseRunMessagesResult => {
-  const [runMessages, setRunMessages] = useState<RunMessage[]>([]);
+  const [browserEvents, setBrowserEvents] = useState<BrowserEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // For now, use mock data instead of trying to fetch from non-existent tables
-    // This code will be updated when the proper tables are created in Supabase
-    const mockRunMessages: RunMessage[] = [
+    const mockBrowserEvents: BrowserEvent[] = [
       {
         id: "1",
-        run_id: "run1",
-        content: "Starting task...",
-        role: "system",
+        type: "navigate",
+        sender_type: RunMessageSenderType.EXTENSION,
+        display_text: "Navigating to page...",
         created_at: new Date().toISOString(),
-        type: RunMessageType.STATUS,
-        sender_type: RunMessageSenderType.SERVER
+        chat_id: chatId,
+        payload: { url: "https://example.com" }
       },
       {
         id: "2",
-        run_id: "run1",
-        content: "Task completed",
-        role: "system",
+        type: "click",
+        sender_type: RunMessageSenderType.EXTENSION,
+        display_text: "Clicked on button",
         created_at: new Date().toISOString(),
-        type: RunMessageType.COMPLETE,
-        sender_type: RunMessageSenderType.SERVER
+        chat_id: chatId,
+        payload: { selector: "#submit-button" }
       }
     ];
 
     // Simulate async loading
     setIsLoading(true);
     setTimeout(() => {
-      setRunMessages(mockRunMessages);
+      setBrowserEvents(mockBrowserEvents);
       setIsLoading(false);
     }, 500);
 
     // This function will be implemented properly when we have the actual tables
-    // const fetchRunMessages = async () => {
+    // const fetchBrowserEvents = async () => {
     //   try {
     //     setIsLoading(true);
     //     setError(null);
     //
-    //     // This is placeholder code - we'll replace it when the tables exist
-    //     // const { data, error } = await supabase
-    //     //   .from('run_messages')
-    //     //   .select('*')
-    //     //   .eq('chat_id', chatId)
-    //     //   .order('created_at', { ascending: true });
+    //     const { data, error } = await supabase
+    //       .from('browser_events')
+    //       .select('*')
+    //       .eq('chat_id', chatId)
+    //       .order('created_at', { ascending: true });
     //
     //     if (error) {
-    //       console.error('Error fetching run messages:', error);
+    //       console.error('Error fetching browser events:', error);
     //       setError(error.message);
     //       return;
     //     }
     //
     //     if (data) {
-    //       setRunMessages(data as RunMessage[]);
+    //       setBrowserEvents(data as BrowserEvent[]);
     //     } else {
-    //       setRunMessages([]);
+    //       setBrowserEvents([]);
     //     }
     //   } catch (err) {
-    //     console.error('Error in fetchRunMessages:', err);
-    //     setError('An unexpected error occurred while loading run messages');
+    //     console.error('Error in fetchBrowserEvents:', err);
+    //     setError('An unexpected error occurred while loading browser events');
     //   } finally {
     //     setIsLoading(false);
     //   }
     // };
     //
-    // fetchRunMessages();
+    // fetchBrowserEvents();
   }, [chatId]);
 
-  return { runMessages, isLoading, error };
+  return { browserEvents, isLoading, error };
 };

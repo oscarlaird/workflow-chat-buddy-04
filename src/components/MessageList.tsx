@@ -2,9 +2,7 @@
 import { useRef, useEffect } from "react";
 import { Message } from "@/types";
 import UserMessage from "./UserMessage";
-import ScreenRecordingMessage from "./ScreenRecordingMessage";
 import ScreenRecordingDisplay from "./ScreenRecordingDisplay";
-import ExtensionAlert from "./ExtensionAlert";
 import EmptyMessageList from "./EmptyMessageList";
 import RecordingButton from "./RecordingButton";
 import CodeRunMessage from "./CodeRunMessage";

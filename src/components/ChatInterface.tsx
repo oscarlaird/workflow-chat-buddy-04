@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import MessageDisplay from "./MessageDisplay";
@@ -32,6 +33,7 @@ const ChatInterface = () => {
     localMessageIds, 
     pendingMessageIds,
     streamingMessages,
+    setStreamingMessages,
     updateMessageContent,
     handleSubmit,
     handleCodeRun,
@@ -49,7 +51,7 @@ const ChatInterface = () => {
     localMessageIds,
     setPendingMessageIds,
     updateMessageContent,
-    streamingMessages
+    setStreamingMessages
   );
 
   const handleInputSubmit = useCallback(

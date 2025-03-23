@@ -1,17 +1,10 @@
 
 import React from "react";
 import { Separator } from "@/components/ui/separator";
-import { RunMessage } from "@/types";
+import { BrowserEvent, RunMessageSenderType } from "@/types";
 
 interface RunMessageItemProps {
-  message: RunMessage | {
-    id: string;
-    type: string;
-    sender_type?: string;
-    created_at: string;
-    display_text?: string;
-    payload?: any;
-  };
+  message: BrowserEvent;
   isLast?: boolean;
 }
 
@@ -39,7 +32,7 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
               </span>
             </div>
             
-            {'display_text' in message && message.display_text && (
+            {message.display_text && (
               <div className="mt-1 text-sm">
                 {message.display_text}
               </div>
