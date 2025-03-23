@@ -31,60 +31,42 @@ const WorkflowPanel = ({
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
       setIsRunning(true);
-      const runId = uuidv4();
       
-      // Create a new run
-      const { data: runData, error: runError } = await supabase
-        .from('runs')
-        .insert({
-          id: runId,
-          chat_id: chatId,
-          dashboard_id: 'web-dashboard',
-          in_progress: true,
-          status: 'running'
-        })
-        .select();
+      // Create a new code run message
+      const messageId = uuidv4();
       
-      if (runError) {
-        console.error('Error creating run:', runError);
-        toast.error('Failed to start workflow run');
-        return;
-      }
-
-      // Create a message with the run_id for the chat interface
+      // Create a message with code run type for the chat interface
       const { error: messageError } = await supabase
         .from('messages')
         .insert({
+          id: messageId,
           chat_id: chatId,
           role: 'assistant',
           content: 'Running workflow',
           username: 'current_user',
-          run_id: runId
+          type: 'code_run'
         });
 
       if (messageError) {
         console.error('Error creating run message:', messageError);
-        // Continue anyway as this is not a critical error
+        toast.error('Failed to start workflow run');
+        return;
       }
 
-      // Store input values as a run message (only if there are any inputs)
+      // Store input values as a code run event
       if (Object.keys(inputValues).length > 0) {
-        const inputPayload = { values: inputValues };
-        const { data: messageData, error: runMessageError } = await supabase
-          .from('run_messages')
+        const { error: eventError } = await supabase
+          .from('coderun_events')
           .insert({
-            run_id: runId,
-            type: RunMessageType.INPUTS,
-            payload: inputPayload,
             chat_id: chatId,
-            username: 'current_user',
-            sender_type: RunMessageSenderType.DASHBOARD,
-            display_text: 'Workflow input values'
-          })
-          .select();
+            message_id: messageId, 
+            function_name: 'workflow_inputs',
+            example_input: inputValues,
+            requires_browser: false
+          });
           
-        if (runMessageError) {
-          console.error('Error storing input values:', runMessageError);
+        if (eventError) {
+          console.error('Error storing input values:', eventError);
           toast.error('Failed to store workflow inputs');
         }
       }
@@ -95,10 +77,10 @@ const WorkflowPanel = ({
         onRunWorkflow();
       }
       
-      // Broadcast a workflow run created event to trigger the ChatInterface to set the current run ID
+      // Broadcast event to notify other components
       window.postMessage({
-        type: "WORKFLOW_RUN_CREATED", 
-        runId: runId,
+        type: "WORKFLOW_STARTED", 
+        messageId: messageId,
         chatId: chatId
       }, '*');
       

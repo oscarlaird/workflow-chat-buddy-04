@@ -102,14 +102,14 @@ export const useCodeRunEvents = (chatId: string) => {
     }
   };
 
-  // Set up real-time listener for new code run events
+  // Use a single channel for all coderun_events changes
   useEffect(() => {
     if (!chatId) return;
     
     fetchCodeRunEvents();
     
-    // Channel for coderun_events
-    const coderunChannel = supabase
+    // Unified channel for both coderun_events and browser_events
+    const channel = supabase
       .channel(`coderun_events_${chatId}`)
       .on('postgres_changes', {
         event: '*', 
@@ -148,26 +148,25 @@ export const useCodeRunEvents = (chatId: string) => {
               const updated = { ...prev };
               
               if (!updated[updatedEvent.message_id!]) {
-                return prev; // Message ID doesn't exist in our state
+                updated[updatedEvent.message_id!] = [];
               }
               
-              // Update the existing event
-              updated[updatedEvent.message_id!] = updated[updatedEvent.message_id!].map(event => 
-                event.id === updatedEvent.id ? updatedEvent : event
-              );
+              // Update the existing event or add if not found
+              const eventExists = updated[updatedEvent.message_id!].some(event => event.id === updatedEvent.id);
+              
+              if (eventExists) {
+                updated[updatedEvent.message_id!] = updated[updatedEvent.message_id!].map(event => 
+                  event.id === updatedEvent.id ? updatedEvent : event
+                );
+              } else {
+                updated[updatedEvent.message_id!].push(updatedEvent);
+              }
               
               return updated;
             });
           }
         }
       })
-      .subscribe((status) => {
-        console.log(`CodeRunEvents subscription status: ${status}`);
-      });
-      
-    // Channel for browser_events
-    const browserChannel = supabase
-      .channel('browser_events')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -176,42 +175,33 @@ export const useCodeRunEvents = (chatId: string) => {
       }, (payload) => {
         console.log('Browser event received:', payload);
         
-        if (payload.eventType === 'INSERT') {
-          // Handle new browser event
-          const newEvent = payload.new as BrowserEvent;
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          // Handle new/updated browser event
+          const event = payload.new as BrowserEvent;
           
-          if (newEvent.coderun_event_id) {
+          if (event.coderun_event_id) {
             setBrowserEvents(prev => {
               const updated = { ...prev };
               
-              if (!updated[newEvent.coderun_event_id]) {
-                updated[newEvent.coderun_event_id] = [];
+              if (!updated[event.coderun_event_id!]) {
+                updated[event.coderun_event_id!] = [];
               }
               
-              // Add the new event if it doesn't exist
-              if (!updated[newEvent.coderun_event_id].some(event => event.id === newEvent.id)) {
-                updated[newEvent.coderun_event_id] = [...updated[newEvent.coderun_event_id], newEvent];
+              // For insert, add if not exists
+              if (payload.eventType === 'INSERT') {
+                if (!updated[event.coderun_event_id!].some(e => e.id === event.id)) {
+                  updated[event.coderun_event_id!] = [...updated[event.coderun_event_id!], event];
+                }
+              } 
+              // For update, replace existing or add
+              else if (payload.eventType === 'UPDATE') {
+                const existingIndex = updated[event.coderun_event_id!].findIndex(e => e.id === event.id);
+                if (existingIndex >= 0) {
+                  updated[event.coderun_event_id!][existingIndex] = event;
+                } else {
+                  updated[event.coderun_event_id!].push(event);
+                }
               }
-              
-              return updated;
-            });
-          }
-        } else if (payload.eventType === 'UPDATE') {
-          // Handle updated browser event
-          const updatedEvent = payload.new as BrowserEvent;
-          
-          if (updatedEvent.coderun_event_id) {
-            setBrowserEvents(prev => {
-              const updated = { ...prev };
-              
-              if (!updated[updatedEvent.coderun_event_id]) {
-                return prev; // Code run event ID doesn't exist in our state
-              }
-              
-              // Update the existing event
-              updated[updatedEvent.coderun_event_id] = updated[updatedEvent.coderun_event_id].map(event => 
-                event.id === updatedEvent.id ? updatedEvent : event
-              );
               
               return updated;
             });
@@ -219,13 +209,12 @@ export const useCodeRunEvents = (chatId: string) => {
         }
       })
       .subscribe((status) => {
-        console.log(`BrowserEvents subscription status: ${status}`);
+        console.log(`CodeRunEvents and BrowserEvents subscription status: ${status}`);
       });
       
     return () => {
-      console.log('Removing channels for code run and browser events');
-      supabase.removeChannel(coderunChannel);
-      supabase.removeChannel(browserChannel);
+      console.log('Removing channel for code run and browser events');
+      supabase.removeChannel(channel);
     };
   }, [chatId]);
 

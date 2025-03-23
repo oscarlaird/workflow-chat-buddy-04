@@ -15,7 +15,7 @@ export const MessageInputSection = ({
   onSendMessage,
   onCodeRun
 }: MessageInputSectionProps) => {
-  const [showAI, setShowAI] = useState(false);
+  const [showCodeRunner, setShowCodeRunner] = useState(false);
   const [codeInput, setCodeInput] = useState("");
 
   const handleCodeSubmit = () => {
@@ -27,7 +27,7 @@ export const MessageInputSection = ({
   
   return (
     <div className="flex flex-col">
-      {showAI && (
+      {showCodeRunner && (
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
           <div className="flex flex-col space-y-2">
             <label htmlFor="code-input" className="text-sm font-medium">
@@ -43,7 +43,7 @@ export const MessageInputSection = ({
             <div className="flex justify-end space-x-2">
               <button
                 className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md text-sm"
-                onClick={() => setShowAI(false)}
+                onClick={() => setShowCodeRunner(false)}
               >
                 Cancel
               </button>
@@ -62,9 +62,9 @@ export const MessageInputSection = ({
       <div className="flex items-center border-t border-gray-200 dark:border-gray-700 p-2">
         <button
           className="text-xs px-2 py-1 mr-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md"
-          onClick={() => setShowAI(!showAI)}
+          onClick={() => setShowCodeRunner(!showCodeRunner)}
         >
-          {showAI ? "Hide Code Runner" : "Run Code"}
+          {showCodeRunner ? "Hide Code Runner" : "Run Code"}
         </button>
         <div className="flex-1">
           <ChatInput

@@ -114,3 +114,23 @@ export enum RecordingStatus {
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed'
 }
+
+// Enum for message sender type used in browser events
+export enum RunMessageSenderType {
+  DASHBOARD = 'dashboard',
+  BACKEND = 'backend',
+  EXTENSION = 'extension'
+}
+
+// Enum for message types used in browser events
+export enum RunMessageType {
+  INPUTS = 'inputs',
+  SPAWN_WINDOW = 'spawn_window',
+  LAUNCH_EXTENSION = 'launch_extension',
+  EXTENSION_LOADED = 'extension_loaded',
+  COMMAND = 'command',
+  RESULT = 'result',
+  RATIONALE = 'rationale',
+  CLOSE_EXTENSION = 'close_extension',
+  ABORT = 'abort'
+}

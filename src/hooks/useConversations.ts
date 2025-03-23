@@ -104,15 +104,15 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           role: msg.role as "user" | "assistant",
           content: msg.content,
           username: msg.username,
-          function_name: msg.function_name,
-          workflow_step_id: msg.workflow_step_id,
-          screenrecording_url: msg.screenrecording_url,
+          function_name: msg.function_name || undefined,
+          workflow_step_id: msg.workflow_step_id || undefined,
+          screenrecording_url: msg.screenrecording_url || undefined,
           chat_id: msg.chat_id,
           type: msg.type,
-          code_output: msg.code_output,
-          code_output_error: msg.code_output_error,
-          code_run_success: msg.code_run_success,
-          code_output_tables: msg.code_output_tables
+          code_output: msg.code_output || undefined,
+          code_output_error: msg.code_output_error || undefined,
+          code_run_success: msg.code_run_success !== undefined ? msg.code_run_success : undefined,
+          code_output_tables: msg.code_output_tables || undefined
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
