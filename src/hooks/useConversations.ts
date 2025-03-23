@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -103,9 +104,9 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           role: msg.role as "user" | "assistant",
           content: msg.content,
           username: msg.username,
-          // Safely access optional properties with optional chaining
-          function_name: msg.function_name,
-          workflow_step_id: msg.workflow_step_id,
+          // Safely handle optional properties that might not exist in the database response
+          function_name: 'function_name' in msg ? msg.function_name : undefined,
+          workflow_step_id: 'workflow_step_id' in msg ? msg.workflow_step_id : undefined,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
           type: (msg.type as "text_message" | "screen_recording" | "code_run") || "text_message",
@@ -129,7 +130,6 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
   };
 
   // Create virtual screen recordings based on message content
-  // This simulates screen recordings without needing a new database table
   const createVirtualScreenRecordings = useCallback((messages: Message[]) => {
     const recordings: Record<string, ScreenRecording> = {};
     

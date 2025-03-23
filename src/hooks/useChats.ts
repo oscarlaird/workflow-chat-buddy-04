@@ -248,18 +248,26 @@ export const useChats = () => {
       
       let newMessages = [];
       if (chatMessages && chatMessages.length > 0) {
-        newMessages = chatMessages.map(message => ({
-          id: uuidv4(),
-          chat_id: newChatId,
-          role: message.role,
-          content: message.content,
-          username: currentUsername,
-          created_at: new Date().toISOString(),
-          from_template: true,
-          function_name: message.function_name || undefined,
-          type: message.type || "text_message",
-          steps: message.steps
-        }));
+        newMessages = chatMessages.map(message => {
+          const newMsg: any = {
+            id: uuidv4(),
+            chat_id: newChatId,
+            role: message.role,
+            content: message.content,
+            username: currentUsername,
+            created_at: new Date().toISOString(),
+            from_template: true,
+            type: message.type || "text_message",
+            steps: message.steps
+          };
+          
+          // Only add function_name if it exists in the original message
+          if ('function_name' in message && message.function_name) {
+            newMsg.function_name = message.function_name;
+          }
+          
+          return newMsg;
+        });
       }
       
       const { error: chatError } = await supabase
