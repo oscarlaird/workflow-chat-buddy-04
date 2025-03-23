@@ -1,11 +1,8 @@
 
 import { useParams, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
 import ChatInterface from "@/components/ChatInterface";
 import { useToast } from "@/components/ui/use-toast";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
-import { Message } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 
 const ConversationPage = () => {
   const { id: urlParamId } = useParams();
@@ -20,60 +17,10 @@ const ConversationPage = () => {
   const isAccessedThroughExtension = Boolean(chatIdFromQuery);
   
   const { toast } = useToast();
-  const [latestUserMessage, setLatestUserMessage] = useState<Message | null>(null);
-
-  // Fetch the latest user message every second
-  useEffect(() => {
-    if (!conversationId) return;
-
-    const checkLatestUserMessage = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', conversationId)
-          .eq('role', 'user')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (error) {
-          console.error('Error fetching latest user message:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const message = data[0] as Message;
-          console.log("CONVERSATION PAGE - Latest user message:", message);
-          console.log("requires_text_reply:", message.requires_text_reply);
-          console.log("script:", message.script);
-          setLatestUserMessage(message);
-        }
-      } catch (err) {
-        console.error('Error in checkLatestUserMessage:', err);
-      }
-    };
-
-    // Initial check
-    checkLatestUserMessage();
-
-    // Set up polling
-    const intervalId = setInterval(checkLatestUserMessage, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [conversationId]);
 
   const handleSendMessage = (message: string) => {
     // In a real app, would send message to API
     console.log("Message sent in standalone view:", message);
-  };
-
-  const handleMessagesUpdated = (messages: Message[]) => {
-    // Find the latest user message
-    const userMessages = messages.filter(msg => msg.role === 'user');
-    if (userMessages.length > 0) {
-      const latestUserMsg = userMessages[userMessages.length - 1];
-      console.log("Messages updated - Latest user message id:", latestUserMsg.id);
-    }
   };
 
   if (!conversationId) {
@@ -103,7 +50,6 @@ const ConversationPage = () => {
             conversationId={conversationId}
             onSendMessage={handleSendMessage}
             forceExtensionInstalled={isAccessedThroughExtension}
-            onMessagesUpdated={handleMessagesUpdated}
           />
         </div>
       </div>

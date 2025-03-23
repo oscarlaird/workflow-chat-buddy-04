@@ -63,7 +63,6 @@ export const useCodeRunEvents = (chatId: string) => {
   useEffect(() => {
     if (!chatId) return;
     
-    console.log(`Setting up real-time listener for chat ${chatId}`);
     fetchCodeRunEvents();
     
     // Create a more specific channel name with the chat ID
@@ -75,7 +74,6 @@ export const useCodeRunEvents = (chatId: string) => {
         table: 'coderun_events',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('New code run event received:', payload.new);
         // Handle new code run event
         const newEvent = payload.new as CodeRunEvent;
         
@@ -102,7 +100,6 @@ export const useCodeRunEvents = (chatId: string) => {
         table: 'coderun_events',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        console.log('Updated code run event received:', payload.new);
         // Handle updated code run event
         const updatedEvent = payload.new as CodeRunEvent;
         
@@ -126,7 +123,7 @@ export const useCodeRunEvents = (chatId: string) => {
       .subscribe();
       
     return () => {
-      console.log(`Removing channel for code run events: coderun_events_${chatId}`);
+      console.log('Removing channel for code run events');
       supabase.removeChannel(channel);
     };
   }, [chatId]);

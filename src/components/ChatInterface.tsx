@@ -12,14 +12,12 @@ interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage: (message: string) => void;
   forceExtensionInstalled?: boolean;
-  onMessagesUpdated?: (messages: Message[]) => void;
 }
 
 export const ChatInterface = forwardRef(({
   conversationId,
   onSendMessage,
-  forceExtensionInstalled = false,
-  onMessagesUpdated
+  forceExtensionInstalled = false
 }: ChatInterfaceProps, ref) => {
   const { 
     messages,
@@ -43,56 +41,10 @@ export const ChatInterface = forwardRef(({
   
   const prevConversationIdRef = useRef<string | null>(null);
 
-  // Check latest user message every second
-  useEffect(() => {
-    if (!conversationId) return;
-    
-    const checkLatestUserMessage = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', conversationId)
-          .eq('role', 'user')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (error) {
-          console.error('Error fetching latest user message:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const latestMessage = data[0] as Message;
-          console.log("CHAT INTERFACE - Latest user message from polling:", latestMessage);
-          console.log("requires_text_reply:", latestMessage.requires_text_reply);
-          console.log("script:", latestMessage.script);
-        }
-      } catch (err) {
-        console.error('Error in checkLatestUserMessage:', err);
-      }
-    };
-    
-    // Initial check
-    checkLatestUserMessage();
-    
-    // Set up polling
-    const intervalId = setInterval(checkLatestUserMessage, 1000);
-    
-    return () => clearInterval(intervalId);
-  }, [conversationId]);
-
   // Expose the handleSubmit method to the parent component
   useImperativeHandle(ref, () => ({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
-
-  // Notify parent when messages update
-  useEffect(() => {
-    if (onMessagesUpdated && messages.length > 0) {
-      onMessagesUpdated(messages);
-    }
-  }, [messages, onMessagesUpdated]);
 
   useEffect(() => {
     setRunMessages([]);
@@ -271,20 +223,17 @@ export const ChatInterface = forwardRef(({
     };
   }, [conversationId, processSpawnWindowMessage]);
 
-  // We'll keep this function but simplify it to just update the local message state
   const updateMessageContent = useCallback((messageId: string, updatedMessage: any, isStreaming: boolean = false) => {
-    setMessages(prevMessages => {
-      const updatedMessages = prevMessages.map(msg => 
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
         msg.id === messageId 
           ? { 
               ...msg, 
               ...updatedMessage
             } 
           : msg
-      );
-      
-      return updatedMessages;
-    });
+      )
+    );
     
     if (isStreaming) {
       setStreamingMessages(prev => new Set(prev).add(messageId));
@@ -297,8 +246,87 @@ export const ChatInterface = forwardRef(({
     }
   }, [setMessages]);
 
-  // Instead of listening for changes, we'll use the useConversations hook's data
-  // and let our polling function handle checking the latest message
+  useEffect(() => {
+    if (!conversationId) return;
+    
+    const channel = supabase
+      .channel(`messages:${conversationId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `chat_id=eq.${conversationId}`
+      }, (payload) => {
+        const newMessage = payload.new;
+        
+        if (localMessageIds.has(newMessage.id)) {
+          setPendingMessageIds(prev => {
+            const updated = new Set(prev);
+            updated.delete(newMessage.id);
+            return updated;
+          });
+          
+          return;
+        }
+        
+        setMessages(prev => {
+          if (prev.some(msg => msg.id === newMessage.id)) {
+            return prev;
+          }
+          
+          return [
+            ...prev, 
+            {
+              id: newMessage.id,
+              role: newMessage.role,
+              content: newMessage.content,
+              username: newMessage.username,
+              function_name: newMessage.function_name,
+              workflow_step_id: newMessage.workflow_step_id,
+              run_id: newMessage.run_id,
+              code_run: newMessage.code_run,
+              code_output: newMessage.code_output,
+              code_output_error: newMessage.code_output_error,
+              screenrecording_url: newMessage.screenrecording_url,
+              code_output_tables: newMessage.code_output_tables
+            }
+          ];
+        });
+
+        if (newMessage.is_currently_streaming) {
+          setStreamingMessages(prev => new Set(prev).add(newMessage.id));
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `chat_id=eq.${conversationId}`
+      }, (payload) => {
+        const updatedMessage = payload.new;
+        
+        const messageUpdate = {
+          content: updatedMessage.content,
+          function_name: updatedMessage.function_name,
+          code_output: updatedMessage.code_output,
+          code_output_error: updatedMessage.code_output_error,
+          code_run: updatedMessage.code_run,
+          code_run_success: updatedMessage.code_run_success,
+          code_output_tables: updatedMessage.code_output_tables
+        };
+        
+        updateMessageContent(
+          updatedMessage.id, 
+          messageUpdate, 
+          updatedMessage.is_currently_streaming
+        );
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, setMessages, localMessageIds, updateMessageContent]);
 
   const handleSubmit = async (inputValue: string) => {
     if (!inputValue.trim() || !conversationId) return;
@@ -319,10 +347,7 @@ export const ChatInterface = forwardRef(({
         username: 'current_user'
       };
       
-      setMessages(prev => {
-        const newMessages = [...prev, optimisticMessage];
-        return newMessages;
-      });
+      setMessages(prev => [...prev, optimisticMessage]);
       
       const messageData: any = {
         id: messageId,
