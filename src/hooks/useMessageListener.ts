@@ -46,15 +46,13 @@ export const useMessageListener = (
               role: newMessage.role,
               content: newMessage.content,
               username: newMessage.username,
-              function_name: newMessage.function_name,
-              workflow_step_id: newMessage.workflow_step_id,
               screenrecording_url: newMessage.screenrecording_url,
-              type: newMessage.type,
+              type: newMessage.type || "text_message",
               code_output: newMessage.code_output,
               code_output_error: newMessage.code_output_error,
               code_run_success: newMessage.code_run_success,
               code_output_tables: newMessage.code_output_tables
-            }
+            } as Message
           ];
         });
 
@@ -72,7 +70,6 @@ export const useMessageListener = (
         
         const messageUpdate = {
           content: updatedMessage.content,
-          function_name: updatedMessage.function_name,
           code_output: updatedMessage.code_output,
           code_output_error: updatedMessage.code_output_error,
           code_run_success: updatedMessage.code_run_success,
