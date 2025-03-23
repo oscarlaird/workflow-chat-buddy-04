@@ -45,6 +45,7 @@ export const ChatInterface = forwardRef(({
     localMessageIds,
     pendingMessageIds,
     streamingMessages,
+    setStreamingMessages, // Add this line to correctly destructure the setter
     updateMessageContent,
     handleSubmit,
     setPendingMessageIds
@@ -197,7 +198,7 @@ export const ChatInterface = forwardRef(({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, setMessages, localMessageIds, updateMessageContent, setPendingMessageIds]);
+  }, [conversationId, setMessages, localMessageIds, updateMessageContent, setPendingMessageIds, setStreamingMessages]);
 
   return (
     <div className="flex flex-col h-full chat-interface">

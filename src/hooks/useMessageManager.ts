@@ -107,6 +107,7 @@ export const useMessageManager = (
     localMessageIds,
     pendingMessageIds,
     streamingMessages,
+    setStreamingMessages, // Make sure to export this setter
     updateMessageContent,
     handleSubmit,
     setPendingMessageIds
