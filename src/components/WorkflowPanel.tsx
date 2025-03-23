@@ -16,40 +16,17 @@ interface WorkflowPanelProps {
   onRunWorkflow?: () => void;
   showRunButton?: boolean;
   showInputs?: boolean;
-  messages?: any[]; // Add messages prop
 }
 
 const WorkflowPanel = ({ 
   chatId, 
   onRunWorkflow, 
   showRunButton = true,
-  showInputs = true,
-  messages = [] // Default to empty array
+  showInputs = true
 }: WorkflowPanelProps) => {
   const { workflowSteps, isLoading, error } = useWorkflowSteps(chatId);
   const [isRunning, setIsRunning] = useState(false);
   const [isCodePanelOpen, setIsCodePanelOpen] = useState(true);
-  const [isRebuilding, setIsRebuilding] = useState(false);
-
-  // Check if workflow is being rebuilt
-  useEffect(() => {
-    if (messages && messages.length > 0) {
-      // Find the most recent user message
-      const latestUserMessage = [...messages]
-        .reverse()
-        .find(msg => msg.role === 'user');
-      
-      // Check if it requires a text reply but script is null
-      const rebuilding = latestUserMessage && 
-        latestUserMessage.requires_text_reply === true && 
-        latestUserMessage.script === null;
-      
-      setIsRebuilding(rebuilding);
-      console.log("Is rebuilding?", rebuilding, "Latest user message:", latestUserMessage);
-    } else {
-      setIsRebuilding(false);
-    }
-  }, [messages]);
 
   const handleRunWorkflow = async (inputValues: InputValues) => {
     try {
@@ -158,7 +135,6 @@ const WorkflowPanel = ({
           disabled={isRunning}
           showRunButton={showRunButton}
           isRunning={isRunning}
-          isRebuilding={isRebuilding} // Pass isRebuilding to WorkflowInputs
         />
       )}
       

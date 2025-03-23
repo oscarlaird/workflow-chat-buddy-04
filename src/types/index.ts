@@ -14,8 +14,6 @@ export interface Message {
   code_output_error?: string;
   code_run_success?: boolean;
   code_output_tables?: any;
-  script?: string | null;
-  requires_text_reply?: boolean;
 }
 
 export interface Conversation {

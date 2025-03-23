@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -100,7 +99,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
       
       const { data, error } = await supabase
         .from('messages')
-        .select('*')  // This selects all fields including script and requires_text_reply
+        .select('*')
         .eq('chat_id', conversationId)
         .order('created_at', { ascending: true });
       
@@ -127,9 +126,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           code_output: msg.code_output,
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,
-          code_output_tables: msg.code_output_tables,
-          script: msg.script,
-          requires_text_reply: msg.requires_text_reply
+          code_output_tables: msg.code_output_tables
         }));
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);

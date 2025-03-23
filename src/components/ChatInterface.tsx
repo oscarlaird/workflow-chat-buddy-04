@@ -1,4 +1,3 @@
-
 import { useConversations } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/ChatInput";
@@ -13,14 +12,12 @@ interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage: (message: string) => void;
   forceExtensionInstalled?: boolean;
-  onMessagesUpdate?: (messages: Message[]) => void; // Ensure this is typed properly
 }
 
 export const ChatInterface = forwardRef(({
   conversationId,
   onSendMessage,
-  forceExtensionInstalled = false,
-  onMessagesUpdate
+  forceExtensionInstalled = false
 }: ChatInterfaceProps, ref) => {
   const { 
     messages,
@@ -30,8 +27,7 @@ export const ChatInterface = forwardRef(({
     hasScreenRecording,
     setMessages,
     currentRunId,
-    setCurrentRunId,
-    keyframes
+    setCurrentRunId
   } = useConversations({ conversationId });
   
   // Initialize code run events hook
@@ -49,14 +45,6 @@ export const ChatInterface = forwardRef(({
   useImperativeHandle(ref, () => ({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
-
-  // Send messages to parent component when they change
-  useEffect(() => {
-    if (onMessagesUpdate && messages) {
-      console.log("Sending updated messages to parent:", messages);
-      onMessagesUpdate(messages);
-    }
-  }, [messages, onMessagesUpdate]);
 
   useEffect(() => {
     setRunMessages([]);
