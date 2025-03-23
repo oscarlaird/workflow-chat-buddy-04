@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -152,15 +151,10 @@ const WorkflowPanel = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Add a highly visible rebuilding indicator at the top, regardless of showInputs */}
-      {isRebuilding && (
-        <Alert className="m-4 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          <AlertDescription className="flex items-center font-medium">
-            Rebuilding Workflow... (Latest user message has requires_text_reply=true and script=null)
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Simple debugging indicator - always visible */}
+      <div className="p-2 border-b border-gray-200 dark:border-gray-800 text-sm font-mono">
+        🔄 Rebuilding: {isRebuilding ? "true" : "false"}
+      </div>
       
       {showInputs && (
         <WorkflowInputs
@@ -206,14 +200,6 @@ const WorkflowPanel = ({
           </>
         )}
       </ResizablePanelGroup>
-      
-      {/* Rebuilding Workflow Indicator at the bottom as well */}
-      {isRebuilding && (
-        <div className="border-t border-gray-200 dark:border-gray-800 p-3 flex items-center justify-center text-sm text-muted-foreground bg-amber-50 dark:bg-amber-950/30">
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Rebuilding Workflow...
-        </div>
-      )}
     </div>
   );
 };
