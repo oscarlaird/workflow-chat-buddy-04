@@ -264,12 +264,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_get_replica_identity: {
-        Args: {
-          table_name: string
-        }
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
       message_type: "text_message" | "code_run" | "screen_recording"
