@@ -6,6 +6,7 @@ import { Code, ChevronDown, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CodeBlock from "@/components/CodeBlock";
 import DataTable from "@/components/DataTable";
+import { Progress } from "@/components/ui/progress";
 
 interface CodeRunEventItemProps {
   event: CodeRunEvent;
@@ -18,9 +19,15 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
   
   const hasInput = event.example_input && Object.keys(event.example_input).length > 0;
   const hasOutput = event.example_output !== null;
+  const hasProgress = event.n_total !== null && event.n_progress !== null;
   
   const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString();
+  };
+  
+  const calculateProgressPercentage = () => {
+    if (!hasProgress) return 0;
+    return Math.min(100, Math.round((event.n_progress! / event.n_total!) * 100));
   };
   
   const renderOutput = (output: any) => {
@@ -70,6 +77,16 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
       
       {expanded && (
         <CardContent className="p-2 pt-0">
+          {hasProgress && (
+            <div className="mt-2 mb-3">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span>Progress</span>
+                <span>{calculateProgressPercentage()}%</span>
+              </div>
+              <Progress value={calculateProgressPercentage()} className="h-1.5" />
+            </div>
+          )}
+          
           {hasInput && (
             <div className="mt-3">
               <button
@@ -115,7 +132,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
             </div>
           )}
           
-          {!hasInput && !hasOutput && (
+          {!hasInput && !hasOutput && !hasProgress && (
             <div className="text-xs text-muted-foreground italic">
               No input or output data available
             </div>

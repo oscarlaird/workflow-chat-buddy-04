@@ -10,6 +10,8 @@ export interface CodeRunEvent {
   example_input: any | null;
   example_output: any | null;
   message_id: string | null;
+  n_total: number | null;
+  n_progress: number | null;
 }
 
 export const useCodeRunEvents = (chatId: string) => {
@@ -65,29 +67,39 @@ export const useCodeRunEvents = (chatId: string) => {
     const channel = supabase
       .channel(`coderun_events:${chatId}`)
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
         schema: 'public',
         table: 'coderun_events',
         filter: `chat_id=eq.${chatId}`
       }, (payload) => {
-        // Handle new code run event
-        const newEvent = payload.new as CodeRunEvent;
-        
-        if (newEvent.message_id) {
-          setCodeRunEvents(prev => {
-            const updated = { ...prev };
-            
-            if (!updated[newEvent.message_id!]) {
-              updated[newEvent.message_id!] = [];
-            }
-            
-            // Check if the event already exists
-            if (!updated[newEvent.message_id!].some(event => event.id === newEvent.id)) {
-              updated[newEvent.message_id!] = [...updated[newEvent.message_id!], newEvent];
-            }
-            
-            return updated;
-          });
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          // Handle new code run event or update
+          const newEvent = payload.new as CodeRunEvent;
+          
+          if (newEvent.message_id) {
+            setCodeRunEvents(prev => {
+              const updated = { ...prev };
+              
+              if (!updated[newEvent.message_id!]) {
+                updated[newEvent.message_id!] = [];
+              }
+              
+              // For inserts, add the new event if it doesn't exist
+              if (payload.eventType === 'INSERT' && 
+                  !updated[newEvent.message_id!].some(event => event.id === newEvent.id)) {
+                updated[newEvent.message_id!] = [...updated[newEvent.message_id!], newEvent];
+              }
+              
+              // For updates, replace the existing event
+              if (payload.eventType === 'UPDATE') {
+                updated[newEvent.message_id!] = updated[newEvent.message_id!].map(event => 
+                  event.id === newEvent.id ? newEvent : event
+                );
+              }
+              
+              return updated;
+            });
+          }
         }
       })
       .subscribe();

@@ -45,6 +45,8 @@ export type Database = {
           function_name: string | null
           id: string
           message_id: string | null
+          n_progress: number | null
+          n_total: number | null
         }
         Insert: {
           chat_id?: string | null
@@ -54,6 +56,8 @@ export type Database = {
           function_name?: string | null
           id?: string
           message_id?: string | null
+          n_progress?: number | null
+          n_total?: number | null
         }
         Update: {
           chat_id?: string | null
@@ -63,6 +67,8 @@ export type Database = {
           function_name?: string | null
           id?: string
           message_id?: string | null
+          n_progress?: number | null
+          n_total?: number | null
         }
         Relationships: [
           {
