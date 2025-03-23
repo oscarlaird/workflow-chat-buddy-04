@@ -1,6 +1,5 @@
 
 import React, { useState, useRef } from "react";
-import ChatInput from "./ChatInput";
 import { Button } from "./ui/button";
 import { Camera, X } from "lucide-react";
 import ExtensionStatusIndicator from "./ExtensionStatusIndicator";
@@ -15,6 +14,36 @@ interface MessageInputSectionProps {
   isExtensionInstalled: boolean;
   setIsExtensionInstalled: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
+// Adding a minimal ChatInput component to fit the props we're passing
+const ChatInput: React.FC<{
+  messageValue: string;
+  setMessageValue: (value: string) => void;
+  onSendMessage: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+  disabled: boolean;
+}> = ({ messageValue, setMessageValue, onSendMessage, onKeyDown, disabled }) => {
+  return (
+    <div className="relative flex-1">
+      <textarea
+        value={messageValue}
+        onChange={(e) => setMessageValue(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder={disabled ? "Select a chat to start..." : "Type your message..."}
+        className="w-full resize-none rounded-md border p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
+        rows={1}
+        disabled={disabled}
+      />
+      <button
+        onClick={onSendMessage}
+        disabled={!messageValue.trim() || disabled}
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 bg-primary text-white disabled:opacity-50"
+      >
+        Send
+      </button>
+    </div>
+  );
+};
 
 const MessageInputSection: React.FC<MessageInputSectionProps> = ({
   messageValue,
@@ -102,9 +131,8 @@ const MessageInputSection: React.FC<MessageInputSectionProps> = ({
           ref={fileInputRef}
           accept="image/*"
           className="hidden"
-          onChange={(e) => {
+          onChange={() => {
             // This onChange is just a placeholder as the actual handler is in the parent component
-            // The file input change is handled by onFileInputChange in the parent
           }}
         />
         

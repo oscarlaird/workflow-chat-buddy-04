@@ -51,7 +51,16 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
       setUploadedImages
     } = useMessageManager(conversationId);
     
-    const { loadConversation, hasScreenRecording, screenRecordings } = useConversations();
+    // Fix: Pass conversationId to useConversations
+    const conversationsProps = { conversationId };
+    const { 
+      messages: conversationMessages, 
+      hasScreenRecording, 
+      screenRecordings, 
+      isLoading: conversationLoading,
+      setIsLoading: setConversationLoading
+    } = useConversations(conversationsProps);
+    
     const { isExtensionInstalled, setIsExtensionInstalled } = useExtensionStatus();
     const { runMessages, handleStopRun } = useRunMessages(conversationId);
     
@@ -76,9 +85,9 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
       const loadData = async () => {
         setIsLoading(true);
         try {
-          const conversationData = await loadConversation(conversationId);
-          if (conversationData) {
-            setMessages(conversationData.messages || []);
+          // Load conversation data and update messages if available
+          if (conversationMessages && conversationMessages.length > 0) {
+            setMessages(conversationMessages);
           }
         } catch (error) {
           console.error('Error loading conversation:', error);
@@ -95,7 +104,7 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
       if (conversationId) {
         loadData();
       }
-    }, [conversationId, loadConversation, setMessageValue]);
+    }, [conversationId, conversationMessages, setMessageValue]);
     
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
@@ -135,10 +144,6 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
       getMessages: () => messages
     }));
     
-    const handleStopRunWrapper = (runId: string) => {
-      handleStopRun(runId);
-    };
-    
     if (isLoading && messages.length === 0) {
       return (
         <div className="flex items-center justify-center h-full">
@@ -164,7 +169,7 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
             pendingMessageIds={pendingMessageIds}
             streamingMessages={streamingMessages}
             runMessages={runMessages}
-            onStopRun={handleStopRunWrapper}
+            onStopRun={handleStopRun}
             forceExtensionInstalled={forceExtensionInstalled}
             codeRunEventsData={codeRunEventsData}
           />
