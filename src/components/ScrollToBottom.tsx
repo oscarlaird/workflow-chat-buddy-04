@@ -1,46 +1,51 @@
 
-import React, { useEffect, useState } from "react";
-import { Button } from "./ui/button";
-import { ChevronDown } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { ArrowDown } from 'lucide-react';
 
-const ScrollToBottom = () => {
-  const [showButton, setShowButton] = useState(false);
+const ScrollToBottom: React.FC = () => {
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   useEffect(() => {
-    const messagesContainer = document.getElementById("messages-container");
-    
-    if (messagesContainer) {
-      const handleScroll = () => {
+    const handleScroll = () => {
+      const messagesContainer = document.getElementById('messages-container');
+      if (messagesContainer) {
         const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
-        const isScrolledUp = scrollHeight - scrollTop - clientHeight > 100;
-        setShowButton(isScrolledUp);
-      };
-      
-      messagesContainer.addEventListener("scroll", handleScroll);
-      return () => messagesContainer.removeEventListener("scroll", handleScroll);
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+        setShowScrollButton(!isAtBottom);
+      }
+    };
+
+    const messagesContainer = document.getElementById('messages-container');
+    if (messagesContainer) {
+      messagesContainer.addEventListener('scroll', handleScroll);
+      // Initial check
+      handleScroll();
     }
+
+    return () => {
+      if (messagesContainer) {
+        messagesContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
   }, []);
 
   const scrollToBottom = () => {
-    const messagesContainer = document.getElementById("messages-container");
+    const messagesContainer = document.getElementById('messages-container');
     if (messagesContainer) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
   };
 
-  if (!showButton) return null;
+  if (!showScrollButton) return null;
 
   return (
-    <div className="absolute bottom-24 right-4 z-10">
-      <Button 
-        size="sm" 
-        variant="secondary" 
-        className="rounded-full h-10 w-10 p-0 shadow-md"
-        onClick={scrollToBottom}
-      >
-        <ChevronDown className="h-5 w-5" />
-      </Button>
-    </div>
+    <button
+      onClick={scrollToBottom}
+      className="absolute bottom-20 right-8 rounded-full p-2 bg-primary text-white shadow-md hover:bg-primary/90 transition-opacity"
+      aria-label="Scroll to bottom"
+    >
+      <ArrowDown className="h-5 w-5" />
+    </button>
   );
 };
 
