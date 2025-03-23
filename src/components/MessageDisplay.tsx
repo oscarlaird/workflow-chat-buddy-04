@@ -14,7 +14,6 @@ interface MessageDisplayProps {
   runMessages: any[];
   onStopRun: (runId: string) => void;
   forceExtensionInstalled: boolean;
-  codeRunEventsData?: ReturnType<typeof useCodeRunEvents>;
 }
 
 export const MessageDisplay = ({
@@ -26,9 +25,14 @@ export const MessageDisplay = ({
   streamingMessages,
   runMessages,
   onStopRun,
-  forceExtensionInstalled = false,
-  codeRunEventsData
+  forceExtensionInstalled = false
 }: MessageDisplayProps) => {
+  // Get chat ID from the first message (all messages should be from the same chat)
+  const chatId = messages.length > 0 ? messages[0].chat_id : "";
+  
+  // Initialize code run events for this chat
+  const codeRunEventsData = useCodeRunEvents(chatId || "");
+
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
