@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import WorkflowStep from "./WorkflowStep";
@@ -9,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from "sonner";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface WorkflowPanelProps {
   chatId: string;
@@ -151,11 +151,6 @@ const WorkflowPanel = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Simple debugging indicator - always visible */}
-      <div className="p-2 border-b border-gray-200 dark:border-gray-800 text-sm font-mono">
-        🔄 Rebuilding: {isRebuilding ? "true" : "false"}
-      </div>
-      
       {showInputs && (
         <WorkflowInputs
           chatId={chatId}
