@@ -9,6 +9,7 @@ import CodeRunError from "./CodeRunError";
 import CodeRunTables from "./CodeRunTables";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
+import CodeRunEventItem from "./CodeRunEventItem";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -23,8 +24,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
   const [errorExpanded, setErrorExpanded] = useState(false);
   
   // Track which type of events are expanded
-  const [functionCallsExpanded, setFunctionCallsExpanded] = useState(true);
-  const [progressBarsExpanded, setProgressBarsExpanded] = useState(true);
+  const [eventsExpanded, setEventsExpanded] = useState(true);
   
   // Use the parent's code run events data if provided, otherwise create our own
   const localCodeRunEvents = useCodeRunEvents(message.chat_id || "");
@@ -35,13 +35,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
     event.message_id === message.id
   );
   
-  // Separate events into function calls and progress updates
-  const functionCallEvents = messageEvents.filter(event => event.function_name !== null);
-  const progressBarEvents = messageEvents.filter(event => event.n_progress !== null && event.n_total !== null);
-  
   const hasEvents = messageEvents.length > 0;
-  const hasFunctionCalls = functionCallEvents.length > 0;
-  const hasProgressBars = progressBarEvents.length > 0;
   
   // Determine the code execution status
   const getExecutionStatus = () => {
@@ -110,7 +104,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
           'Preparing to Run Code'}
         </div>
         
-        {status === 'running' && !hasProgressBars && (
+        {status === 'running' && messageEvents.length === 0 && (
           <div className="ml-auto flex-1 max-w-32">
             <Progress value={isStreaming ? 70 : 100} className="h-2" />
           </div>
@@ -138,73 +132,28 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
           {hasEvents && (
             <div className="mt-3 border-t pt-3">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium flex items-center gap-1.5">
+                <button
+                  onClick={() => setEventsExpanded(!eventsExpanded)}
+                  className="text-sm font-medium flex items-center gap-1.5"
+                >
+                  {eventsExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                   <span>Code Run Events</span>
                   {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
-                </div>
+                </button>
                 <Badge variant="outline">{messageEvents.length}</Badge>
               </div>
               
-              <div className="space-y-2">
-                {functionCallEvents.length > 0 && (
-                  <div className="space-y-1">
-                    <button 
-                      className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setFunctionCallsExpanded(!functionCallsExpanded)}
-                    >
-                      {functionCallsExpanded ? 
-                        <ChevronDown className="h-3.5 w-3.5" /> : 
-                        <ChevronRight className="h-3.5 w-3.5" />}
-                      Function Calls ({functionCallEvents.length})
-                    </button>
-                    
-                    {functionCallsExpanded && (
-                      <div className="pl-4 space-y-2">
-                        {functionCallEvents.map(event => (
-                          <div key={event.id} className="text-xs p-2 border rounded">
-                            <div className="font-medium">{event.function_name}</div>
-                            {event.description && (
-                              <div className="text-muted-foreground mt-1">{event.description}</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {progressBarEvents.length > 0 && (
-                  <div className="space-y-1">
-                    <button 
-                      className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setProgressBarsExpanded(!progressBarsExpanded)}
-                    >
-                      {progressBarsExpanded ? 
-                        <ChevronDown className="h-3.5 w-3.5" /> : 
-                        <ChevronRight className="h-3.5 w-3.5" />}
-                      Progress Updates ({progressBarEvents.length})
-                    </button>
-                    
-                    {progressBarsExpanded && (
-                      <div className="pl-4 space-y-2">
-                        {progressBarEvents.map(event => (
-                          <div key={event.id} className="text-xs p-2 border rounded">
-                            <div className="font-medium">{event.progress_title || "Progress"}</div>
-                            <div className="flex justify-between mt-1">
-                              <span>{event.n_progress} / {event.n_total}</span>
-                              <span>{Math.round((event.n_progress / event.n_total) * 100)}%</span>
-                            </div>
-                            <Progress 
-                              value={(event.n_progress / event.n_total) * 100} 
-                              className="h-1 mt-1" 
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              {eventsExpanded && (
+                <div className="space-y-2">
+                  {messageEvents.map((event) => (
+                    <CodeRunEventItem
+                      key={event.id}
+                      event={event}
+                      browserEvents={browserEvents[event.id] || []}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
           

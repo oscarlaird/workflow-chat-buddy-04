@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { BrowserEvent } from "@/types";
+import { BrowserEvent, CodeRunEvent } from "@/types";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Code, ChevronDown, ChevronRight, BarChart, Database, ArrowDownUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,10 +12,11 @@ import { InputFieldIcon } from "@/components/InputField";
 import { inferFieldType } from "@/hooks/useSelectedChatSettings";
 
 interface CodeRunEventItemProps {
-  event: any; // Use any for now to avoid complex type issues
+  event: CodeRunEvent;
+  browserEvents: BrowserEvent[];
 }
 
-const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
+const CodeRunEventItem = ({ event, browserEvents }: CodeRunEventItemProps) => {
   const [expanded, setExpanded] = useState(false);
   const [isInputExpanded, setIsInputExpanded] = useState(false);
   const [isOutputExpanded, setIsOutputExpanded] = useState(false);
@@ -144,7 +145,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
                 <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
                   {/* Enhanced input display similar to workflow */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(event.example_input).map(([fieldName, value]) => {
+                    {Object.entries(event.example_input || {}).map(([fieldName, value]) => {
                       const fieldType = inferFieldType(fieldName, value);
                       
                       return (
@@ -204,9 +205,22 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
             </div>
           )}
           
-          {!hasInput && !hasOutput && (
+          {browserEvents.length > 0 && (
+            <div className="mt-3 border-t pt-3">
+              <div className="text-sm font-medium mb-2">Browser Events</div>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {browserEvents.map((browserEvent) => (
+                  <div key={browserEvent.id} className="p-2 border rounded">
+                    {browserEvent.display_text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {!hasInput && !hasOutput && browserEvents.length === 0 && (
             <div className="text-xs text-muted-foreground italic">
-              No input or output data available
+              No input, output, or browser event data available
             </div>
           )}
         </CardContent>
