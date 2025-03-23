@@ -1,10 +1,9 @@
 
 import { useState } from "react";
-import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight, AlertCircle, CheckCircle, Play } from "lucide-react";
 import { Message } from "@/types";
 import { Skeleton } from "./ui/skeleton";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
-import CodeRunStatus from "./CodeRunStatus";
 import CodeRunOutput from "./CodeRunOutput";
 import CodeRunError from "./CodeRunError";
 import CodeRunTables from "./CodeRunTables";
@@ -78,16 +77,52 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
   const hasOutput = !!message.code_output;
   const hasError = !!message.code_output_error;
   
+  // Create a new status header that replaces the CodeRunStatus component
+  const renderStatusHeader = () => {
+    const statusClasses = 
+      status === 'error' 
+        ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' 
+        : status === 'success'
+          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+          : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+
+    return (
+      <div 
+        className={`flex items-center gap-2 px-4 py-3 rounded-t-lg cursor-pointer ${
+          expanded ? 'border-b border-border' : 'rounded-b-lg'
+        } ${statusClasses}`}
+        onClick={() => setExpanded(!expanded)}
+      >
+        {status === 'running' ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : status === 'error' ? (
+          <AlertCircle className="h-4 w-4" />
+        ) : status === 'success' ? (
+          <CheckCircle className="h-4 w-4" />
+        ) : (
+          <Play className="h-4 w-4" />
+        )}
+        
+        <div className="font-medium">
+          {status === 'running' ? 'Running Code...' : 
+          status === 'error' ? 'Code Execution Failed' : 
+          status === 'success' ? 'Code Execution Completed' : 
+          'Preparing to Run Code'}
+        </div>
+        
+        {status === 'running' && !hasProgressBars && (
+          <div className="ml-auto flex-1 max-w-32">
+            <Progress value={isStreaming ? 70 : 100} className="h-2" />
+          </div>
+        )}
+      </div>
+    );
+  };
+  
   return (
     <div className="max-w-[80%] w-full space-y-2">
       {/* Status header */}
-      <CodeRunStatus 
-        status={status} 
-        expanded={expanded} 
-        setExpanded={setExpanded}
-        hasProgressBars={hasProgressBars}
-        isStreaming={isStreaming}
-      />
+      {renderStatusHeader()}
       
       {/* Content area with output and errors */}
       {expanded && (
