@@ -16,6 +16,7 @@ import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage?: (message: string) => void;
+  forceExtensionInstalled?: boolean;
 }
 
 export interface ChatInterfaceHandle {
@@ -29,7 +30,7 @@ export interface ChatInterfaceHandle {
 }
 
 const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
-  ({ conversationId, onSendMessage }, ref) => {
+  ({ conversationId, onSendMessage, forceExtensionInstalled = false }, ref) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentRunId, setCurrentRunId] = useState<string | null>(null);
@@ -52,7 +53,7 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
     
     const { loadConversation, hasScreenRecording, screenRecordings } = useConversations();
     const { isExtensionInstalled, setIsExtensionInstalled } = useExtensionStatus();
-    const { runMessages, stopRun } = useRunMessages(currentRunId);
+    const { runMessages, handleStopRun } = useRunMessages(conversationId);
     
     // Initialize the useCodeRunEvents hook for this conversation
     const codeRunEventsData = useCodeRunEvents(conversationId);
@@ -94,7 +95,7 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
       if (conversationId) {
         loadData();
       }
-    }, [conversationId, loadConversation]);
+    }, [conversationId, loadConversation, setMessageValue]);
     
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
@@ -134,8 +135,8 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
       getMessages: () => messages
     }));
     
-    const handleStopRun = (runId: string) => {
-      stopRun(runId);
+    const handleStopRunWrapper = (runId: string) => {
+      handleStopRun(runId);
     };
     
     if (isLoading && messages.length === 0) {
@@ -145,6 +146,9 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
         </div>
       );
     }
+    
+    // Combine the prop with the hook value
+    const effectiveIsExtensionInstalled = isExtensionInstalled || forceExtensionInstalled;
     
     return (
       <div className="flex flex-col h-full relative">
@@ -156,12 +160,12 @@ const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
             messages={messages}
             hasScreenRecording={hasScreenRecording}
             screenRecordings={screenRecordings}
-            isExtensionInstalled={isExtensionInstalled}
+            isExtensionInstalled={effectiveIsExtensionInstalled}
             pendingMessageIds={pendingMessageIds}
             streamingMessages={streamingMessages}
             runMessages={runMessages}
-            onStopRun={handleStopRun}
-            forceExtensionInstalled={false}
+            onStopRun={handleStopRunWrapper}
+            forceExtensionInstalled={forceExtensionInstalled}
             codeRunEventsData={codeRunEventsData}
           />
         </div>
