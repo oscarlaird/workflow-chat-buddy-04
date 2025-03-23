@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -59,6 +60,12 @@ export const inferInputSchema = (exampleInputs: Record<string, any> | null): Inp
   }));
 };
 
+// Define a type for step data to avoid TypeScript errors
+interface StepData {
+  example_output?: Record<string, any> | null;
+  [key: string]: any; // Allow other properties
+}
+
 // Extract example_output from the first step in steps
 const extractExampleInputFromSteps = (steps: Json): Record<string, any> | null => {
   // Check if steps is null or not a valid data structure
@@ -68,7 +75,7 @@ const extractExampleInputFromSteps = (steps: Json): Record<string, any> | null =
 
   // Handle steps as an array
   if (Array.isArray(steps) && steps.length > 0) {
-    const firstStep = steps[0];
+    const firstStep = steps[0] as StepData;
     
     // Check if the first step has example_output
     if (firstStep && typeof firstStep === 'object' && 'example_output' in firstStep && firstStep.example_output) {
@@ -86,7 +93,7 @@ const extractExampleInputFromSteps = (steps: Json): Record<string, any> | null =
   if (typeof steps === 'object' && !Array.isArray(steps) && Object.keys(steps).length > 0) {
     // Find the first step with example_output
     const firstStepKey = Object.keys(steps)[0];
-    const firstStep = steps[firstStepKey] as Record<string, any>;
+    const firstStep = steps[firstStepKey] as StepData;
     
     if (firstStep && typeof firstStep === 'object' && 'example_output' in firstStep && firstStep.example_output) {
       // Ensure the example_output is an object

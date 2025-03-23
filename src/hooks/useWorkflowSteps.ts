@@ -11,6 +11,16 @@ interface UseWorkflowStepsResult {
   error: string | null;
 }
 
+// Define a type for step data to avoid TypeScript errors
+interface StepData {
+  function_name?: string;
+  description?: string;
+  example_input?: Record<string, any> | null;
+  example_output?: Record<string, any> | null;
+  requires_browser?: boolean;
+  [key: string]: any; // Allow other properties
+}
+
 export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,16 +65,19 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           if (Array.isArray(stepsData)) {
             // Transform the steps array into an array of workflow steps
             const transformedSteps: WorkflowStep[] = stepsData.map((stepData, index) => {
-              if (stepData && typeof stepData === 'object') {
+              // Type check and cast the step data
+              const typedStepData = stepData as StepData;
+              
+              if (typedStepData && typeof typedStepData === 'object') {
                 return {
                   id: `${chatId}-step-${index}`,
-                  title: stepData.function_name ? formatFieldName(stepData.function_name) : `Step ${index + 1}`,
-                  description: stepData.description || "No description available",
+                  title: typedStepData.function_name ? formatFieldName(typedStepData.function_name) : `Step ${index + 1}`,
+                  description: typedStepData.description || "No description available",
                   step_number: index + 1,
                   status: "waiting",
-                  exampleInput: stepData.example_input || null,
-                  exampleOutput: stepData.example_output || null,
-                  requiresBrowser: Boolean(stepData.requires_browser),
+                  exampleInput: typedStepData.example_input || null,
+                  exampleOutput: typedStepData.example_output || null,
+                  requiresBrowser: Boolean(typedStepData.requires_browser),
                   code: null,
                   originalKey: index.toString() // Store the index to maintain order reference
                 };
@@ -80,16 +93,19 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
             const transformedSteps: WorkflowStep[] = [];
             
             Object.entries(stepsData).forEach(([key, stepData], index) => {
-              if (stepData && typeof stepData === 'object') {
+              // Type check and cast the step data
+              const typedStepData = stepData as StepData;
+              
+              if (typedStepData && typeof typedStepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
                   title: formatFieldName(key), // Format the title
-                  description: (stepData as any).description || "No description available",
+                  description: typedStepData.description || "No description available",
                   step_number: index + 1, // We preserve the original order with index
                   status: "waiting", // Default status
-                  exampleInput: (stepData as any).example_input || null,
-                  exampleOutput: (stepData as any).example_output || null,
-                  requiresBrowser: Boolean((stepData as any).requires_browser),
+                  exampleInput: typedStepData.example_input || null,
+                  exampleOutput: typedStepData.example_output || null,
+                  requiresBrowser: Boolean(typedStepData.requires_browser),
                   code: null,
                   originalKey: key // Store the original key to maintain order reference
                 });
@@ -135,16 +151,19 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           if (Array.isArray(stepsData)) {
             // Transform the steps array into an array of workflow steps
             const transformedSteps: WorkflowStep[] = stepsData.map((stepData, index) => {
-              if (stepData && typeof stepData === 'object') {
+              // Type check and cast the step data
+              const typedStepData = stepData as StepData;
+              
+              if (typedStepData && typeof typedStepData === 'object') {
                 return {
                   id: `${chatId}-step-${index}`,
-                  title: stepData.function_name ? formatFieldName(stepData.function_name) : `Step ${index + 1}`,
-                  description: stepData.description || "No description available",
+                  title: typedStepData.function_name ? formatFieldName(typedStepData.function_name) : `Step ${index + 1}`,
+                  description: typedStepData.description || "No description available",
                   step_number: index + 1,
                   status: "waiting",
-                  exampleInput: stepData.example_input || null,
-                  exampleOutput: stepData.example_output || null,
-                  requiresBrowser: Boolean(stepData.requires_browser),
+                  exampleInput: typedStepData.example_input || null,
+                  exampleOutput: typedStepData.example_output || null,
+                  requiresBrowser: Boolean(typedStepData.requires_browser),
                   code: null,
                   originalKey: index.toString() // Store the index to maintain order reference
                 };
@@ -159,16 +178,19 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
             const transformedSteps: WorkflowStep[] = [];
             
             Object.entries(stepsData).forEach(([key, stepData], index) => {
-              if (stepData && typeof stepData === 'object') {
+              // Type check and cast the step data
+              const typedStepData = stepData as StepData;
+              
+              if (typedStepData && typeof typedStepData === 'object') {
                 transformedSteps.push({
                   id: `${chatId}-step-${index}`,
                   title: formatFieldName(key), // Format the title
-                  description: (stepData as any).description || "No description available",
+                  description: typedStepData.description || "No description available",
                   step_number: index + 1, // We preserve the original order with index
                   status: "waiting", // Default status
-                  exampleInput: (stepData as any).example_input || null,
-                  exampleOutput: (stepData as any).example_output || null,
-                  requiresBrowser: Boolean((stepData as any).requires_browser),
+                  exampleInput: typedStepData.example_input || null,
+                  exampleOutput: typedStepData.example_output || null,
+                  requiresBrowser: Boolean(typedStepData.requires_browser),
                   code: null,
                   originalKey: key // Store the original key to maintain order reference
                 });
