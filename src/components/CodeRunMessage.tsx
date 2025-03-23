@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Message } from "@/types";
 import { Skeleton } from "./ui/skeleton";
-import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
+import { CodeRunEvent } from "@/hooks/useCodeRunEvents";
 import CodeRunStatus from "./CodeRunStatus";
 import CodeRunOutput from "./CodeRunOutput";
 import CodeRunError from "./CodeRunError";
@@ -13,9 +13,10 @@ import CodeRunEventsList from "./CodeRunEventsList";
 interface CodeRunMessageProps {
   message: Message;
   isStreaming: boolean;
+  codeRunEvents?: CodeRunEvent[];
 }
 
-const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
+const CodeRunMessage = ({ message, isStreaming, codeRunEvents = [] }: CodeRunMessageProps) => {
   const [expanded, setExpanded] = useState(true);
   const [tablesExpanded, setTablesExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(false);
@@ -25,14 +26,11 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const [functionCallsExpanded, setFunctionCallsExpanded] = useState(true);
   const [progressBarsExpanded, setProgressBarsExpanded] = useState(true);
   
-  const { getEventsForMessage, isLoading } = useCodeRunEvents(message.chat_id || "");
-  const events = getEventsForMessage(message.id);
-  
   // Separate events into function calls and progress updates
-  const functionCallEvents = events.filter(event => event.function_name !== null);
-  const progressBarEvents = events.filter(event => event.n_progress !== null && event.n_total !== null);
+  const functionCallEvents = codeRunEvents.filter(event => event.function_name !== null);
+  const progressBarEvents = codeRunEvents.filter(event => event.n_progress !== null && event.n_total !== null);
   
-  const hasEvents = events.length > 0;
+  const hasEvents = codeRunEvents.length > 0;
   const hasFunctionCalls = functionCallEvents.length > 0;
   const hasProgressBars = progressBarEvents.length > 0;
   
@@ -93,7 +91,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
           
           {/* Events Section */}
           <CodeRunEventsList 
-            events={events}
+            events={codeRunEvents}
             hasFunctionCalls={hasFunctionCalls}
             hasProgressBars={hasProgressBars}
             functionCallEvents={functionCallEvents}
@@ -103,29 +101,6 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             setFunctionCallsExpanded={setFunctionCallsExpanded}
             setProgressBarsExpanded={setProgressBarsExpanded}
           />
-          
-          {/* Show loading state when fetching events */}
-          {isLoading && (
-            <div className="mt-3 border-t pt-3">
-              <div className="flex items-center gap-2 mb-3">
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Loading events...</span>
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
-            </div>
-          )}
-          
-          {/* Show a message if no events and not loading */}
-          {!hasFunctionCalls && !hasProgressBars && !isLoading && (
-            <div className="mt-3 border-t pt-3">
-              <div className="text-sm text-muted-foreground italic px-2">
-                No function calls or progress updates recorded yet
-              </div>
-            </div>
-          )}
           
           {/* Code Output Section */}
           <CodeRunOutput 
@@ -151,7 +126,7 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             setTablesExpanded={setTablesExpanded}
           />
           
-          {!message.code_output && !message.code_output_error && !hasTableData && events.length === 0 && status === 'running' && !isLoading && (
+          {!message.code_output && !message.code_output_error && !hasTableData && codeRunEvents.length === 0 && status === 'running' && (
             <div className="py-2 text-sm text-muted-foreground italic">
               Executing code, please wait...
             </div>

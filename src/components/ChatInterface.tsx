@@ -1,120 +1,188 @@
 
-import { useConversations } from "@/hooks/useConversations";
-import { forwardRef, useImperativeHandle, useEffect } from "react";
-import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
-import { useRunMessages } from "@/hooks/useRunMessages";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { Message } from "@/types";
+import ScrollToBottom from "./ScrollToBottom";
 import { useMessageManager } from "@/hooks/useMessageManager";
-import useMessageListener from "@/hooks/useMessageListener";
-import useExtensionStatus from "@/hooks/useExtensionStatus";
-import useRunEvents from "@/hooks/useRunEvents";
-import MessageDisplay from "@/components/MessageDisplay";
-import MessageInputSection from "@/components/MessageInputSection";
+import { useConversations } from "@/hooks/useConversations";
+import { useExtensionStatus } from "@/hooks/useExtensionStatus";
+import { useMessageListener } from "@/hooks/useMessageListener";
+import { useRunEvents } from "@/hooks/useRunEvents";
+import { useRunMessages } from "@/hooks/useRunMessages";
+import { Loader2 } from "lucide-react";
+import MessageInputSection from "./MessageInputSection";
+import MessageDisplay from "./MessageDisplay";
+import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface ChatInterfaceProps {
   conversationId: string;
-  onSendMessage: (message: string) => void;
-  forceExtensionInstalled?: boolean;
+  onSendMessage?: (message: string) => void;
 }
 
-export const ChatInterface = forwardRef(({
-  conversationId,
-  onSendMessage,
-  forceExtensionInstalled = false
-}: ChatInterfaceProps, ref) => {
-  const { 
-    messages,
-    screenRecordings,
-    isLoading, 
-    setIsLoading,
-    hasScreenRecording,
-    setMessages,
-    currentRunId,
-    setCurrentRunId
-  } = useConversations({ conversationId });
-  
-  // Initialize code run events hook
-  const codeRunEventsData = useCodeRunEvents(conversationId);
-  
-  // Initialize run messages hook
-  const { 
-    runMessages, 
-    processSpawnWindowMessage, 
-    handleStopRun 
-  } = useRunMessages(conversationId);
-  
-  // Initialize message manager hook
-  const {
-    localMessageIds,
-    pendingMessageIds,
-    streamingMessages,
-    setStreamingMessages,
-    updateMessageContent,
-    handleSubmit,
-    setPendingMessageIds
-  } = useMessageManager(
-    conversationId,
-    setIsLoading,
-    setMessages,
-    currentRunId,
-    setCurrentRunId,
-    onSendMessage
-  );
-  
-  // Initialize extension status hook
-  const { isExtensionInstalled } = useExtensionStatus(forceExtensionInstalled);
-  
-  // Setup workflow run events listener
-  useRunEvents(conversationId, setCurrentRunId);
+export interface ChatInterfaceHandle {
+  scrollToBottom: () => void;
+  handleFileUpload: (file: File) => void;
+  onFileInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  uploadFile: (file: File) => Promise<string | null>;
+  addUploadedImage: (url: string) => void;
+  handleRunWorkflow: () => void;
+  getMessages: () => Message[];
+}
 
-  // Setup message listener
-  useMessageListener(
-    conversationId,
-    setMessages,
-    localMessageIds,
-    setPendingMessageIds,
-    updateMessageContent,
-    setStreamingMessages
-  );
-
-  // Process spawn window messages when they arrive
-  useEffect(() => {
-    // Check for any spawn_window messages that need processing
-    runMessages.forEach(message => {
-      if (message.type === 'spawn_window') {
-        processSpawnWindowMessage(message, isExtensionInstalled);
+const ChatInterface = forwardRef<ChatInterfaceHandle, ChatInterfaceProps>(
+  ({ conversationId, onSendMessage }, ref) => {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const localMessageIds = useRef<Set<string>>(new Set()); // Track local message IDs
+    
+    const { 
+      messageValue, 
+      setMessageValue,
+      pendingMessageIds,
+      setPendingMessageIds,
+      sendMessage,
+      updateMessageContent,
+      streamingMessages,
+      setStreamingMessages,
+      uploadFile,
+      uploadedImages,
+      setUploadedImages
+    } = useMessageManager(conversationId);
+    
+    const { loadConversation, hasScreenRecording, screenRecordings } = useConversations();
+    const { isExtensionInstalled, setIsExtensionInstalled } = useExtensionStatus();
+    const { runMessages, stopRun } = useRunMessages(currentRunId);
+    
+    // Initialize the useCodeRunEvents hook for this conversation
+    const codeRunEventsData = useCodeRunEvents(conversationId);
+    
+    // Setup run events listener
+    useRunEvents(conversationId, setCurrentRunId);
+    
+    // Setup message listener
+    useMessageListener(
+      conversationId, 
+      setMessages, 
+      localMessageIds.current, 
+      setPendingMessageIds, 
+      updateMessageContent, 
+      setStreamingMessages
+    );
+    
+    // Load conversation on initial render
+    useEffect(() => {
+      const loadData = async () => {
+        setIsLoading(true);
+        try {
+          const conversationData = await loadConversation(conversationId);
+          if (conversationData) {
+            setMessages(conversationData.messages || []);
+          }
+        } catch (error) {
+          console.error('Error loading conversation:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      // Reset state when conversation ID changes
+      setMessages([]);
+      setMessageValue('');
+      setCurrentRunId(null);
+      
+      if (conversationId) {
+        loadData();
       }
-    });
-  }, [runMessages, isExtensionInstalled, processSpawnWindowMessage]);
-
-  // Expose the handleSubmit method to the parent component
-  useImperativeHandle(ref, () => ({
-    handleSubmit: (inputValue: string) => handleSubmit(inputValue)
-  }));
-
-  return (
-    <div className="flex flex-col h-full chat-interface">
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <MessageDisplay
-          messages={messages}
-          hasScreenRecording={hasScreenRecording}
-          screenRecordings={screenRecordings}
+    }, [conversationId, loadConversation]);
+    
+    // Expose methods via ref
+    useImperativeHandle(ref, () => ({
+      scrollToBottom: () => {
+        const messagesContainer = document.getElementById('messages-container');
+        if (messagesContainer) {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      },
+      handleFileUpload: () => {
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+        }
+      },
+      onFileInputChange: async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+          const file = files[0];
+          const imageUrl = await uploadFile(file);
+          if (imageUrl) {
+            setUploadedImages([...uploadedImages, imageUrl]);
+          }
+        }
+        // Clear the input so the same file can be uploaded again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      },
+      uploadFile,
+      addUploadedImage: (url: string) => {
+        setUploadedImages([...uploadedImages, url]);
+      },
+      handleRunWorkflow: () => {
+        console.log("Running workflow from ChatInterface");
+        // Implementation placeholder
+      },
+      getMessages: () => messages
+    }));
+    
+    const handleStopRun = (runId: string) => {
+      stopRun(runId);
+    };
+    
+    if (isLoading && messages.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="animate-spin h-8 w-8 text-primary" />
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex flex-col h-full relative">
+        <div
+          id="messages-container"
+          className="flex-1 overflow-y-auto px-4 py-6 space-y-6"
+        >
+          <MessageDisplay 
+            messages={messages}
+            hasScreenRecording={hasScreenRecording}
+            screenRecordings={screenRecordings}
+            isExtensionInstalled={isExtensionInstalled}
+            pendingMessageIds={pendingMessageIds}
+            streamingMessages={streamingMessages}
+            runMessages={runMessages}
+            onStopRun={handleStopRun}
+            forceExtensionInstalled={false}
+            codeRunEventsData={codeRunEventsData}
+          />
+        </div>
+        
+        <ScrollToBottom />
+        
+        <MessageInputSection 
+          messageValue={messageValue}
+          setMessageValue={setMessageValue}
+          sendMessage={sendMessage}
+          uploadedImages={uploadedImages}
+          setUploadedImages={setUploadedImages}
+          fileInputRef={fileInputRef}
           isExtensionInstalled={isExtensionInstalled}
-          pendingMessageIds={pendingMessageIds}
-          streamingMessages={streamingMessages}
-          runMessages={runMessages}
-          onStopRun={handleStopRun}
-          forceExtensionInstalled={forceExtensionInstalled}
-          codeRunEventsData={codeRunEventsData}
+          setIsExtensionInstalled={setIsExtensionInstalled}
         />
       </div>
+    );
+  }
+);
 
-      <MessageInputSection
-        conversationId={conversationId}
-        isLoading={isLoading}
-        onSendMessage={handleSubmit}
-      />
-    </div>
-  );
-});
+ChatInterface.displayName = "ChatInterface";
 
 export default ChatInterface;

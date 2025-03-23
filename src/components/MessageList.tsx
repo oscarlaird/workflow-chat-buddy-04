@@ -101,6 +101,7 @@ export const MessageList = ({
               <CodeRunMessage 
                 message={message} 
                 isStreaming={streamingMessageIds.has(message.id)} 
+                codeRunEvents={codeRunEventsData?.getEventsForMessage(message.id) || []}
               />
             </div>
           );
