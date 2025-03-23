@@ -34,13 +34,15 @@ const WorkflowPanel = ({
   // Check if workflow is being rebuilt
   useEffect(() => {
     if (messages && messages.length > 0) {
-      // Get the most recent message
-      const latestMessage = messages[messages.length - 1];
+      // Find the most recent user message
+      const latestUserMessage = [...messages]
+        .reverse()
+        .find(msg => msg.role === 'user');
       
       // Check if it requires a text reply but script is null
-      const rebuilding = latestMessage && 
-        latestMessage.requires_text_reply === true && 
-        latestMessage.script === null;
+      const rebuilding = latestUserMessage && 
+        latestUserMessage.requires_text_reply === true && 
+        latestUserMessage.script === null;
       
       setIsRebuilding(rebuilding);
     } else {
