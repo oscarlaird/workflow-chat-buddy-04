@@ -146,12 +146,18 @@ export const useCodeRunEvents = (chatId: string) => {
     return browserEvents[codeRunEventId] || [];
   }, [browserEvents]);
 
+  // Get events for a specific message ID
+  const getEventsForMessage = useCallback((messageId: string) => {
+    return codeRunEvents.filter(event => event.message_id === messageId);
+  }, [codeRunEvents]);
+
   return {
     codeRunEvents,
     browserEvents,
     isLoading,
     getCodeRunEvent,
     getBrowserEvents,
+    getEventsForMessage,
     refreshCodeRunEvents: fetchCodeRunEvents
   };
 };

@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -139,5 +138,26 @@ export interface CodeRunEvent {
   n_total?: number;
   progress_title?: string;
   requires_browser: boolean;
+  created_at: string;
+}
+
+export interface Run {
+  id: string;
+  dashboard_id: string;
+  chat_id: string;
+  status: string;
+  in_progress: boolean;
+  created_at: string;
+  updated_at: string;
+  username: string;
+}
+
+export interface RunMessage {
+  id: string;
+  run_id: string;
+  type: RunMessageType;
+  sender_type: RunMessageSenderType;
+  payload: any;
+  display_text?: string;
   created_at: string;
 }

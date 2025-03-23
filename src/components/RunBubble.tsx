@@ -1,16 +1,21 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Run, RunMessage as RunMessageType } from "@/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import RunMessageItem from "./RunMessageItem";
 
+// Use simpler props without the external Run/RunMessage types
 interface RunBubbleProps {
-  run: Run;
-  messages: RunMessageType[];
+  run: {
+    id: string;
+    status: string;
+    in_progress: boolean;
+    created_at: string;
+    chat_id: string;
+  };
+  messages: any[];
   isLatestRun?: boolean;
 }
 
@@ -104,11 +109,9 @@ export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps
               </div>
               <div className="max-h-[300px] overflow-y-auto pr-1">
                 {sortedMessages.map((message, index) => (
-                  <RunMessageItem 
-                    key={message.id} 
-                    message={message} 
-                    isLast={index === sortedMessages.length - 1} 
-                  />
+                  <div key={message.id} className="p-2 border-b text-sm">
+                    {message.type}: {message.display_text || "No display text"}
+                  </div>
                 ))}
               </div>
             </div>

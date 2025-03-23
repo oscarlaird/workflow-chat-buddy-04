@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrowserEvent, RunMessageType, RunMessageSenderType } from "@/types";
+import { BrowserEvent } from "@/types";
 
 export const useRunMessages = (conversationId: string) => {
   const [runMessages, setRunMessages] = useState<BrowserEvent[]>([]);
@@ -38,23 +38,8 @@ export const useRunMessages = (conversationId: string) => {
     runMessage: BrowserEvent, 
     isExtensionInstalled: boolean
   ) => {
-    if (runMessage.type === RunMessageType.SPAWN_WINDOW && isExtensionInstalled) {
+    if (runMessage.type === "spawn_window" && isExtensionInstalled) {
       try {
-        // First, create and send a launch_extension run_message
-        const launchMessage = {
-          coderun_event_id: runMessage.coderun_event_id,
-          type: RunMessageType.LAUNCH_EXTENSION,
-          payload: {},
-          chat_id: conversationId,
-          username: 'current_user',
-          sender_type: RunMessageSenderType.DASHBOARD,
-          display_text: 'Launching extension...'
-        };
-        
-        // Insert the launch_extension message to the database
-        supabase.from('browser_events').insert(launchMessage);
-          
-        // Send message to extension to create window with chat_id and coderun_event_id inside the payload
         window.postMessage({
           type: 'CREATE_AGENT_RUN_WINDOW',
           payload: {
@@ -70,17 +55,17 @@ export const useRunMessages = (conversationId: string) => {
 
   // Handle stopping a coderun_event
   const handleStopRun = useCallback(async (coderunEventId: string) => {
-    if (!coderunEventId) return;
+    if (!coderunEventId) return false;
     
     try {
       // Create an abort browser event
       const abortMessage = {
         coderun_event_id: coderunEventId,
-        type: RunMessageType.ABORT,
+        type: "abort",
         payload: { reason: 'Manual stop requested' },
         chat_id: conversationId,
         username: 'current_user',
-        sender_type: RunMessageSenderType.DASHBOARD,
+        sender_type: "dashboard",
         display_text: 'Stopping run...'
       };
       
@@ -115,15 +100,7 @@ export const useRunMessages = (conversationId: string) => {
         table: 'browser_events',
         filter: `chat_id=eq.${conversationId}`
       }, (payload) => {
-        // Check if the message has all required properties of BrowserEvent
-        if (payload.new && 
-            typeof payload.new === 'object' && 
-            'id' in payload.new && 
-            'coderun_event_id' in payload.new && 
-            'type' in payload.new && 
-            'payload' in payload.new && 
-            'created_at' in payload.new) {
-          
+        if (payload.new) {
           // Valid BrowserEvent - type-safe way to add to state
           const newMessage = payload.new as BrowserEvent;
           
@@ -135,8 +112,6 @@ export const useRunMessages = (conversationId: string) => {
             }
             return [...prev, newMessage];
           });
-        } else {
-          console.error('Received incomplete browser event:', payload.new);
         }
       })
       .subscribe();

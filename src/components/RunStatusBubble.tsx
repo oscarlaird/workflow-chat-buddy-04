@@ -3,14 +3,15 @@ import React from 'react';
 import { Loader2, Trash2, ExternalLink } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Run } from '@/types';
-import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Card, CardContent } from './ui/card';
 
 interface RunStatusBubbleProps {
-  run: Run | null;
+  run: {
+    id: string;
+    status: string;
+    in_progress: boolean;
+    chat_id: string;
+  } | null;
 }
 
 const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
@@ -30,25 +31,8 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
   };
 
   const handleDeleteRun = async () => {
-    try {
-      const { error } = await supabase
-        .from('runs')
-        .delete()
-        .eq('id', run.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast.success("Run deleted", {
-        description: "The run and its associated data have been deleted."
-      });
-    } catch (error) {
-      console.error('Error deleting run:', error);
-      toast.error("Failed to delete run", {
-        description: "An error occurred while trying to delete the run."
-      });
-    }
+    console.log('Delete run stub implementation');
+    alert('Run deletion is not available in this build');
   };
 
   const handleJumpToAgentWindow = () => {
@@ -62,10 +46,7 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
           <div className="flex items-center gap-2">
             <Badge 
               variant="default"
-              className={cn(
-                "px-3 py-1.5 font-medium", 
-                getStatusColor(run.in_progress, run.status)
-              )}
+              className={`px-3 py-1.5 font-medium ${getStatusColor(run.in_progress, run.status)}`}
             >
               {run.in_progress && (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />

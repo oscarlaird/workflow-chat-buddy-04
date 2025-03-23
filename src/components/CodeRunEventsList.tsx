@@ -75,7 +75,9 @@ const CodeRunEventsList: React.FC<CodeRunEventsListProps> = ({
             {browserEvents[event.id] && browserEvents[event.id].length > 0 ? (
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {browserEvents[event.id].map((browserEvent) => (
-                  <CodeRunEventItem key={browserEvent.id} browserEvent={browserEvent} />
+                  <div key={browserEvent.id} className="p-2 border rounded">
+                    {browserEvent.display_text}
+                  </div>
                 ))}
               </div>
             ) : (

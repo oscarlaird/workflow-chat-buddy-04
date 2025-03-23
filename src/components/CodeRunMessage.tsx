@@ -8,7 +8,6 @@ import CodeRunStatus from "./CodeRunStatus";
 import CodeRunOutput from "./CodeRunOutput";
 import CodeRunError from "./CodeRunError";
 import CodeRunTables from "./CodeRunTables";
-import CodeRunEventsList from "./CodeRunEventsList";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -28,15 +27,16 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
   
   // Use the parent's code run events data if provided, otherwise create our own
   const localCodeRunEvents = useCodeRunEvents(message.chat_id || "");
-  const { getEventsForMessage, isLoading } = codeRunEventsData || localCodeRunEvents;
+  const { codeRunEvents, browserEvents, isLoading } = codeRunEventsData || localCodeRunEvents;
   
-  const events = getEventsForMessage(message.id);
+  // Filter events for this message
+  const messageEvents = codeRunEvents.filter(event => event.message_id === message.id);
   
   // Separate events into function calls and progress updates
-  const functionCallEvents = events.filter(event => event.function_name !== null);
-  const progressBarEvents = events.filter(event => event.n_progress !== null && event.n_total !== null);
+  const functionCallEvents = messageEvents.filter(event => event.function_name !== null);
+  const progressBarEvents = messageEvents.filter(event => event.n_progress !== null && event.n_total !== null);
   
-  const hasEvents = events.length > 0;
+  const hasEvents = messageEvents.length > 0;
   const hasFunctionCalls = functionCallEvents.length > 0;
   const hasProgressBars = progressBarEvents.length > 0;
   
@@ -95,18 +95,79 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
             <strong>Command:</strong> {message.content || "Executing code..."}
           </div>
           
-          {/* Events Section */}
-          <CodeRunEventsList 
-            events={events}
-            hasFunctionCalls={hasFunctionCalls}
-            hasProgressBars={hasProgressBars}
-            functionCallEvents={functionCallEvents}
-            progressBarEvents={progressBarEvents}
-            functionCallsExpanded={functionCallsExpanded}
-            progressBarsExpanded={progressBarsExpanded}
-            setFunctionCallsExpanded={setFunctionCallsExpanded}
-            setProgressBarsExpanded={setProgressBarsExpanded}
-          />
+          {/* Events Display */}
+          {hasEvents && (
+            <div className="mt-3 border-t pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium flex items-center gap-1.5">
+                  <span>Code Run Events</span>
+                  {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+                </div>
+                <Badge variant="outline">{messageEvents.length}</Badge>
+              </div>
+              
+              <div className="space-y-2">
+                {functionCallEvents.length > 0 && (
+                  <div className="space-y-1">
+                    <button 
+                      className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setFunctionCallsExpanded(!functionCallsExpanded)}
+                    >
+                      {functionCallsExpanded ? 
+                        <ChevronDown className="h-3.5 w-3.5" /> : 
+                        <ChevronRight className="h-3.5 w-3.5" />}
+                      Function Calls ({functionCallEvents.length})
+                    </button>
+                    
+                    {functionCallsExpanded && (
+                      <div className="pl-4 space-y-2">
+                        {functionCallEvents.map(event => (
+                          <div key={event.id} className="text-xs p-2 border rounded">
+                            <div className="font-medium">{event.function_name}</div>
+                            {event.description && (
+                              <div className="text-muted-foreground mt-1">{event.description}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {progressBarEvents.length > 0 && (
+                  <div className="space-y-1">
+                    <button 
+                      className="text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setProgressBarsExpanded(!progressBarsExpanded)}
+                    >
+                      {progressBarsExpanded ? 
+                        <ChevronDown className="h-3.5 w-3.5" /> : 
+                        <ChevronRight className="h-3.5 w-3.5" />}
+                      Progress Updates ({progressBarEvents.length})
+                    </button>
+                    
+                    {progressBarsExpanded && (
+                      <div className="pl-4 space-y-2">
+                        {progressBarEvents.map(event => (
+                          <div key={event.id} className="text-xs p-2 border rounded">
+                            <div className="font-medium">{event.progress_title || "Progress"}</div>
+                            <div className="flex justify-between mt-1">
+                              <span>{event.n_progress} / {event.n_total}</span>
+                              <span>{Math.round((event.n_progress / event.n_total) * 100)}%</span>
+                            </div>
+                            <Progress 
+                              value={(event.n_progress / event.n_total) * 100} 
+                              className="h-1 mt-1" 
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* Show loading state when fetching events */}
           {isLoading && (
@@ -123,7 +184,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
           )}
           
           {/* Show a message if no events and not loading */}
-          {!hasFunctionCalls && !hasProgressBars && !isLoading && (
+          {!hasEvents && !isLoading && (
             <div className="mt-3 border-t pt-3">
               <div className="text-sm text-muted-foreground italic px-2">
                 No function calls or progress updates recorded yet
@@ -155,7 +216,7 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
             setTablesExpanded={setTablesExpanded}
           />
           
-          {!message.code_output && !message.code_output_error && !hasTableData && events.length === 0 && status === 'running' && !isLoading && (
+          {!message.code_output && !message.code_output_error && !hasTableData && !hasEvents && status === 'running' && !isLoading && (
             <div className="py-2 text-sm text-muted-foreground italic">
               Executing code, please wait...
             </div>

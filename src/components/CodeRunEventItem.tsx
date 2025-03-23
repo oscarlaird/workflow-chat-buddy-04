@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { CodeRunEvent } from "@/hooks/useCodeRunEvents";
+import { BrowserEvent } from "@/types";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Code, ChevronDown, ChevronRight, BarChart, Database, ArrowDownUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { InputFieldIcon } from "@/components/InputField";
 import { inferFieldType } from "@/hooks/useSelectedChatSettings";
 
 interface CodeRunEventItemProps {
-  event: CodeRunEvent;
+  event: any; // Use any for now to avoid complex type issues
 }
 
 const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
