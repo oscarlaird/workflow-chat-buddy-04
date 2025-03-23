@@ -10,6 +10,7 @@ import CodeRunTables from "./CodeRunTables";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import CodeRunEventItem from "./CodeRunEventItem";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -144,15 +145,17 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
               </div>
               
               {eventsExpanded && (
-                <div className="space-y-2">
-                  {messageEvents.map((event) => (
-                    <CodeRunEventItem
-                      key={event.id}
-                      event={event}
-                      browserEvents={browserEvents[event.id] || []}
-                    />
-                  ))}
-                </div>
+                <ScrollArea className="h-[calc(100vh*0.4)] rounded-md border" type="auto">
+                  <div className="space-y-2 p-2">
+                    {messageEvents.map((event) => (
+                      <CodeRunEventItem
+                        key={event.id}
+                        event={event}
+                        browserEvents={browserEvents[event.id] || []}
+                      />
+                    ))}
+                  </div>
+                </ScrollArea>
               )}
             </div>
           )}

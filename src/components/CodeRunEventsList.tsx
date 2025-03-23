@@ -6,17 +6,20 @@ import { Loader2, Terminal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import CodeRunEventItem from './CodeRunEventItem';
+import { ScrollArea } from './ui/scroll-area';
 
 interface CodeRunEventsListProps {
   codeRunEvents: CodeRunEvent[];
   browserEvents: Record<string, BrowserEvent[]>;
   isLoading?: boolean;
+  maxHeight?: string;
 }
 
 const CodeRunEventsList: React.FC<CodeRunEventsListProps> = ({
   codeRunEvents,
   browserEvents,
-  isLoading = false
+  isLoading = false,
+  maxHeight = '400px'
 }) => {
   if (isLoading) {
     return (
@@ -42,11 +45,13 @@ const CodeRunEventsList: React.FC<CodeRunEventsListProps> = ({
   }
 
   return (
-    <div className="space-y-3">
-      {codeRunEvents.map((event) => (
-        <CodeRunEventItem key={event.id} event={event} browserEvents={browserEvents[event.id] || []} />
-      ))}
-    </div>
+    <ScrollArea className={`max-h-[${maxHeight}]`} type="auto">
+      <div className="space-y-3 p-2">
+        {codeRunEvents.map((event) => (
+          <CodeRunEventItem key={event.id} event={event} browserEvents={browserEvents[event.id] || []} />
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
 
