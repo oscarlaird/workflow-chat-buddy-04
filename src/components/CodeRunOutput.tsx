@@ -28,7 +28,7 @@ const CodeRunOutput = ({
       >
         {outputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         <Terminal className="w-4 h-4" />
-        <span>Output</span>
+        <span>Logs</span>
       </button>
       
       {outputExpanded && (
