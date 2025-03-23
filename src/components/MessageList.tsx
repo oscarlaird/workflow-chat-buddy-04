@@ -100,7 +100,8 @@ export const MessageList = ({
             <div key={message.id} className="flex justify-start">
               <CodeRunMessage 
                 message={message} 
-                isStreaming={streamingMessageIds.has(message.id)} 
+                isStreaming={streamingMessageIds.has(message.id)}
+                codeRunEventsData={codeRunEventsData}
               />
             </div>
           );

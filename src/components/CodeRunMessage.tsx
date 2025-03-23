@@ -13,9 +13,10 @@ import CodeRunEventsList from "./CodeRunEventsList";
 interface CodeRunMessageProps {
   message: Message;
   isStreaming: boolean;
+  codeRunEventsData?: ReturnType<typeof useCodeRunEvents>;
 }
 
-const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
+const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMessageProps) => {
   const [expanded, setExpanded] = useState(true);
   const [tablesExpanded, setTablesExpanded] = useState(true);
   const [outputExpanded, setOutputExpanded] = useState(false);
@@ -25,7 +26,10 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const [functionCallsExpanded, setFunctionCallsExpanded] = useState(true);
   const [progressBarsExpanded, setProgressBarsExpanded] = useState(true);
   
-  const { getEventsForMessage, isLoading } = useCodeRunEvents(message.chat_id || "");
+  // Use the parent's code run events data if provided, otherwise create our own
+  const localCodeRunEvents = useCodeRunEvents(message.chat_id || "");
+  const { getEventsForMessage, isLoading } = codeRunEventsData || localCodeRunEvents;
+  
   const events = getEventsForMessage(message.id);
   
   // Separate events into function calls and progress updates

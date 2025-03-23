@@ -65,9 +65,9 @@ export const useCodeRunEvents = (chatId: string) => {
     
     fetchCodeRunEvents();
     
-    // Create a more specific channel name with the chat ID
-    const channel = supabase
-      .channel(`coderun_events_${chatId}`)
+    // Create a channel for INSERT events
+    const insertChannel = supabase
+      .channel(`coderun_events_insert_${chatId}`)
       .on('postgres_changes', {
         event: 'INSERT', 
         schema: 'public',
@@ -94,6 +94,11 @@ export const useCodeRunEvents = (chatId: string) => {
           });
         }
       })
+      .subscribe();
+      
+    // Create a separate channel for UPDATE events  
+    const updateChannel = supabase
+      .channel(`coderun_events_update_${chatId}`)
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
@@ -123,8 +128,9 @@ export const useCodeRunEvents = (chatId: string) => {
       .subscribe();
       
     return () => {
-      console.log('Removing channel for code run events');
-      supabase.removeChannel(channel);
+      console.log('Removing channels for code run events');
+      supabase.removeChannel(insertChannel);
+      supabase.removeChannel(updateChannel);
     };
   }, [chatId]);
 
