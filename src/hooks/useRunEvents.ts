@@ -11,6 +11,7 @@ export const useRunEvents = (
       if (event.data && 
           event.data.type === "WORKFLOW_RUN_CREATED" && 
           event.data.chatId === conversationId) {
+        console.log("Workflow run created event received:", event.data);
         setCurrentRunId(event.data.runId);
       }
     };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Upload, AlertCircle } from "lucide-react";
 import { InputField, InputValues } from "@/types";
@@ -59,6 +60,7 @@ export const WorkflowInputs = ({
   useEffect(() => {
     // Initialize input values from example inputs if available
     if (exampleInputs) {
+      console.log("Initializing inputs from example:", exampleInputs);
       setInputValues({...exampleInputs});
     } else {
       // Otherwise initialize with default values based on inferred schema

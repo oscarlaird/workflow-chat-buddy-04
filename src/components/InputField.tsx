@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -321,24 +321,9 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
       );
 
     case 'year':
+      // Convert value to number if it's a string or use directly if already a number
+      const yearNumValue = typeof value === 'string' ? parseInt(value) : value as number;
       const currentYear = new Date().getFullYear();
-      const [yearValue, setYearValue] = useState<number | ''>(value ? parseInt(value) : '');
-      
-      const handleYearInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = e.target.value === '' ? '' : parseInt(e.target.value);
-        setYearValue(inputValue);
-        if (inputValue !== '') {
-          handleChange(inputValue);
-        }
-      };
-      
-      const handleYearBlur = () => {
-        if (yearValue === '') {
-          setYearValue(currentYear);
-          handleChange(currentYear);
-        }
-        handleValidation(yearValue);
-      };
       
       return (
         <div className="w-full relative">
@@ -348,9 +333,18 @@ export const TypedInputField: React.FC<TypedInputFieldProps> = ({
             min={1900}
             max={currentYear + 100}
             placeholder={`Enter ${formatFieldName(field.field_name)}`}
-            value={yearValue}
-            onChange={handleYearInputChange}
-            onBlur={handleYearBlur}
+            value={yearNumValue || ''}
+            onChange={(e) => {
+              const newValue = e.target.value === '' ? '' : parseInt(e.target.value);
+              onChange(field.field_name, newValue);
+            }}
+            onBlur={() => {
+              if (value === '') {
+                onChange(field.field_name, currentYear);
+              }
+              handleValidation(value);
+              setIsTouched(true);
+            }}
             className={cn(showError && "border-red-500")}
           />
           {showError && (
