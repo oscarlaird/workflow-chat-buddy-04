@@ -2,22 +2,8 @@
 import { useState, useEffect } from "react";
 import { Check, X } from "lucide-react";
 
-interface ExtensionStatusIndicatorProps {
-  isInstalled?: boolean;
-  setIsInstalled?: React.Dispatch<React.SetStateAction<boolean>>;
-  compact?: boolean;
-}
-
-const ExtensionStatusIndicator: React.FC<ExtensionStatusIndicatorProps> = ({ 
-  isInstalled: propIsInstalled, 
-  setIsInstalled: propSetIsInstalled,
-  compact = false 
-}) => {
-  const [localIsInstalled, setLocalIsInstalled] = useState<boolean>(propIsInstalled || false);
-  
-  // Allow the component to work with either internal or external state
-  const isInstalled = propIsInstalled !== undefined ? propIsInstalled : localIsInstalled;
-  const setIsInstalled = propSetIsInstalled || setLocalIsInstalled;
+export const ExtensionStatusIndicator = () => {
+  const [isInstalled, setIsInstalled] = useState<boolean>(false);
 
   useEffect(() => {
     // Function to handle messages from the extension
@@ -36,28 +22,8 @@ const ExtensionStatusIndicator: React.FC<ExtensionStatusIndicatorProps> = ({
     return () => {
       window.removeEventListener("message", handleExtensionMessage);
     };
-  }, [setIsInstalled]);
+  }, []);
 
-  // For compact view (used in chat input)
-  if (compact) {
-    return (
-      <div className="inline-flex items-center">
-        {isInstalled ? (
-          <div className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs">
-            <Check className="w-3 h-3" />
-            <span className="hidden sm:inline">Extension Active</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-1 rounded text-xs">
-            <X className="w-3 h-3" />
-            <span className="hidden sm:inline">No Extension</span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Full view
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium">
       {isInstalled ? (
