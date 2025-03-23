@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrowserEvent } from "@/types";
+import { BrowserEvent, RunMessageSenderType, RunMessageType } from "@/types";
 
 export const useRunMessages = (conversationId: string) => {
   const [runMessages, setRunMessages] = useState<BrowserEvent[]>([]);
@@ -61,11 +61,11 @@ export const useRunMessages = (conversationId: string) => {
       // Create an abort browser event
       const abortMessage = {
         coderun_event_id: coderunEventId,
-        type: "abort", // Use string literal instead of enum
+        type: RunMessageType.ABORT, // Use enum value
         payload: { reason: 'Manual stop requested' },
         chat_id: conversationId,
         username: 'current_user',
-        sender_type: "dashboard", // Use string literal instead of enum
+        sender_type: RunMessageSenderType.DASHBOARD, // Use enum value
         display_text: 'Stopping run...'
       };
       

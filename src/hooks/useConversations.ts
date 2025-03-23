@@ -54,7 +54,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           keyframesMap[messageId].push({
             id: keyframe.id.toString(), // Convert ID to string
             message_id: keyframe.message_id,
-            screenshot_url: keyframe.screenshot_url,
+            screenshot_url: keyframe.screenshot_url || '',
             url: keyframe.url || '',
             tab_title: keyframe.tab_title || '',
             timestamp: keyframe.timestamp || new Date().toISOString()
@@ -90,20 +90,33 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
         });
         setMessages([]);
       } else if (data && data.length > 0) {
-        const messagesData = data.map(msg => ({
-          id: msg.id,
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-          username: msg.username,
-          screenrecording_url: msg.screenrecording_url,
-          chat_id: msg.chat_id,
-          type: (msg.type as "text_message" | "screen_recording" | "code_run" | "function_message") || "text_message", // Ensure every message has a type
-          code_output: msg.code_output,
-          code_output_error: msg.code_output_error,
-          code_run_success: msg.code_run_success,
-          code_output_tables: msg.code_output_tables,
-          duration: msg.duration
-        } as Message));
+        const messagesData = data.map(msg => {
+          const message: Message = {
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+            username: msg.username,
+            chat_id: msg.chat_id,
+            type: (msg.type as "text_message" | "screen_recording" | "code_run" | "function_message") || "text_message", // Ensure every message has a type
+            code_output: msg.code_output,
+            code_output_error: msg.code_output_error,
+            code_run_success: msg.code_run_success,
+            code_output_tables: msg.code_output_tables,
+          };
+          
+          // Only add these properties if they exist
+          if (msg.screenrecording_url) {
+            message.screenrecording_url = msg.screenrecording_url;
+          }
+          
+          // Handle optional duration property
+          const duration = parseInt(msg.duration as any);
+          if (!isNaN(duration)) {
+            message.duration = duration;
+          }
+          
+          return message;
+        });
         
         setMessages(messagesData);
       } else {

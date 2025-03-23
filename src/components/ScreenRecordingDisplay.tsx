@@ -51,9 +51,19 @@ export const ScreenRecordingDisplay = ({ message }: ScreenRecordingDisplayProps)
       }
       
       if (data && data.length > 0) {
-        setKeyframes(data as Keyframe[]);
+        // Convert numeric IDs to strings to match the Keyframe interface
+        const formattedKeyframes: Keyframe[] = data.map(item => ({
+          id: String(item.id),
+          message_id: item.message_id,
+          screenshot_url: item.screenshot_url || '',
+          url: item.url || '',
+          tab_title: item.tab_title || '',
+          timestamp: item.timestamp || new Date().toISOString()
+        }));
+        
+        setKeyframes(formattedKeyframes);
         // Set the first keyframe as selected by default
-        setSelectedKeyframe(data[0] as Keyframe);
+        setSelectedKeyframe(formattedKeyframes[0]);
       }
     };
     

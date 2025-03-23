@@ -1,9 +1,10 @@
 
 import React from "react";
 import { Separator } from "@/components/ui/separator";
+import { RunMessage } from "@/types";
 
 interface RunMessageItemProps {
-  message: {
+  message: RunMessage | {
     id: string;
     type: string;
     sender_type?: string;
@@ -38,7 +39,7 @@ export const RunMessageItem = ({ message, isLast = false }: RunMessageItemProps)
               </span>
             </div>
             
-            {message.display_text && (
+            {'display_text' in message && message.display_text && (
               <div className="mt-1 text-sm">
                 {message.display_text}
               </div>

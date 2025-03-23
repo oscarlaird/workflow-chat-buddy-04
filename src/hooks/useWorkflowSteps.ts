@@ -64,13 +64,14 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           // Handle steps as an array
           if (Array.isArray(stepsData)) {
             // Transform the steps array into an array of workflow steps
-            const transformedSteps: WorkflowStep[] = stepsData.map((stepData, index) => {
+            const transformedSteps = stepsData.map((stepData, index) => {
               // Type check and cast the step data
               const typedStepData = stepData as StepData;
               
               if (typedStepData && typeof typedStepData === 'object') {
-                return {
+                const step: WorkflowStep = {
                   id: `${chatId}-step-${index}`,
+                  chat_id: chatId,
                   title: typedStepData.function_name ? formatFieldName(typedStepData.function_name) : `Step ${index + 1}`,
                   description: typedStepData.description || "No description available",
                   step_number: index + 1,
@@ -78,9 +79,10 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
-                  code: null,
                   originalKey: index.toString() // Store the index to maintain order reference
                 };
+                
+                return step;
               }
               return null;
             }).filter(Boolean) as WorkflowStep[];
@@ -97,8 +99,9 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
               const typedStepData = stepData as StepData;
               
               if (typedStepData && typeof typedStepData === 'object') {
-                transformedSteps.push({
+                const step: WorkflowStep = {
                   id: `${chatId}-step-${index}`,
+                  chat_id: chatId,
                   title: formatFieldName(key), // Format the title
                   description: typedStepData.description || "No description available",
                   step_number: index + 1, // We preserve the original order with index
@@ -106,9 +109,10 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
-                  code: null,
                   originalKey: key // Store the original key to maintain order reference
-                });
+                };
+                
+                transformedSteps.push(step);
               }
             });
             
@@ -150,13 +154,14 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
           // Handle steps as an array
           if (Array.isArray(stepsData)) {
             // Transform the steps array into an array of workflow steps
-            const transformedSteps: WorkflowStep[] = stepsData.map((stepData, index) => {
+            const transformedSteps = stepsData.map((stepData, index) => {
               // Type check and cast the step data
               const typedStepData = stepData as StepData;
               
               if (typedStepData && typeof typedStepData === 'object') {
-                return {
+                const step: WorkflowStep = {
                   id: `${chatId}-step-${index}`,
+                  chat_id: chatId,
                   title: typedStepData.function_name ? formatFieldName(typedStepData.function_name) : `Step ${index + 1}`,
                   description: typedStepData.description || "No description available",
                   step_number: index + 1,
@@ -164,9 +169,10 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
-                  code: null,
                   originalKey: index.toString() // Store the index to maintain order reference
                 };
+                
+                return step;
               }
               return null;
             }).filter(Boolean) as WorkflowStep[];
@@ -182,8 +188,9 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
               const typedStepData = stepData as StepData;
               
               if (typedStepData && typeof typedStepData === 'object') {
-                transformedSteps.push({
+                const step: WorkflowStep = {
                   id: `${chatId}-step-${index}`,
+                  chat_id: chatId,
                   title: formatFieldName(key), // Format the title
                   description: typedStepData.description || "No description available",
                   step_number: index + 1, // We preserve the original order with index
@@ -191,9 +198,10 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
-                  code: null,
                   originalKey: key // Store the original key to maintain order reference
-                });
+                };
+                
+                transformedSteps.push(step);
               }
             });
             

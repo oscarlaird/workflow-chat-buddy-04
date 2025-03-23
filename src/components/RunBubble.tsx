@@ -47,7 +47,7 @@ const RunBubble: React.FC<RunBubbleProps> = ({ run, messages, isLatestRun = true
             {messages.map((message, idx) => (
               <RunMessageItem 
                 key={message.id} 
-                message={message} 
+                message={message}
                 isLast={idx === messages.length - 1}
               />
             ))}
