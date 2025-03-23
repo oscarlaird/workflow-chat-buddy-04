@@ -53,6 +53,10 @@ export interface WorkflowStep {
   code?: string;
   created_at?: string;
   updated_at?: string;
+  status?: string;
+  exampleInput?: Record<string, any>;
+  exampleOutput?: Record<string, any>;
+  requiresBrowser?: boolean;
 }
 
 export interface Workflow {
@@ -104,6 +108,7 @@ export interface RunMessage {
   content: string;
   role: string;
   created_at: string;
+  type?: string;
 }
 
 export enum RunMessageType {

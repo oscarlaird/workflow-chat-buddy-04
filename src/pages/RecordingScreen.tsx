@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const RecordingScreen = () => {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
-  const [isRecording, setIsRecording] = useState(false);
+  const [isCapturingScreen, setIsCapturingScreen] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
@@ -28,13 +29,13 @@ export const RecordingScreen = () => {
       return;
     }
 
-    if (isRecording) {
+    if (isCapturingScreen) {
       // Stop recording
-      setIsRecording(false);
+      setIsCapturingScreen(false);
       window.postMessage({ type: 'STOP_RECORDING', payload: { chatId } }, '*');
     } else {
       // Start recording
-      setIsRecording(true);
+      setIsCapturingScreen(true);
       window.postMessage({ type: 'START_RECORDING', payload: { chatId } }, '*');
     }
   };
@@ -61,10 +62,10 @@ export const RecordingScreen = () => {
         <div className="max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="mb-6 text-center">
             <h2 className="text-xl font-semibold mb-2">
-              {isRecording ? "Recording in progress..." : "Ready to capture"}
+              {isCapturingScreen ? "Recording in progress..." : "Ready to capture"}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {isRecording 
+              {isCapturingScreen 
                 ? "Your screen is being recorded. Click 'Stop Recording' when you're done." 
                 : "Click the button below to record your screen and capture your workflow."}
             </p>
@@ -78,11 +79,11 @@ export const RecordingScreen = () => {
           
           <Button 
             onClick={handleToggleRecording}
-            className={`w-full py-6 text-lg ${isRecording ? 
+            className={`w-full py-6 text-lg ${isCapturingScreen ? 
               'bg-red-500 hover:bg-red-600 animate-pulse' : 
               'bg-gray-700 hover:bg-gray-800'}`}
           >
-            {isRecording ? (
+            {isCapturingScreen ? (
               <>
                 <Square className="w-5 h-5 mr-2" />
                 Stop Recording
@@ -95,7 +96,7 @@ export const RecordingScreen = () => {
             )}
           </Button>
           
-          {isRecording && (
+          {isCapturingScreen && (
             <p className="mt-3 text-center text-red-600 text-sm animate-pulse">
               Recording in progress...
             </p>

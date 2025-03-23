@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { CornerDownLeft, Loader2, Video, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export const ChatInput = ({
   onCodeRun
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [isRecording, setIsRecording] = useState(isRecording);
+  const [isCapturingScreen, setIsCapturingScreen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   
@@ -46,7 +47,7 @@ export const ChatInput = ({
     // Listen for recording status changes
     const handleRecordingStatus = (event: MessageEvent) => {
       if (event.data && event.data.type === "RECORDING_STATUS") {
-        setIsRecording(event.data.isRecording);
+        setIsCapturingScreen(event.data.isRecording);
       }
     };
 
@@ -111,8 +112,8 @@ export const ChatInput = ({
   const handleScreenRecording = async () => {
     if (isInExtension) {
       // Toggle recording state
-      const newRecordingState = !isRecording;
-      setIsRecording(newRecordingState);
+      const newRecordingState = !isCapturingScreen;
+      setIsCapturingScreen(newRecordingState);
       
       // Message directly to background script
       if (newRecordingState) {
@@ -163,7 +164,7 @@ export const ChatInput = ({
   const getRecordingButtonClasses = () => {
     let classes = "flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors disabled:opacity-50";
     
-    if (isInExtension && isRecording) {
+    if (isInExtension && isCapturingScreen) {
       // Recording active state
       classes += " bg-red-100 text-red-600 hover:bg-red-200 animate-pulse";
     } else {
@@ -176,7 +177,7 @@ export const ChatInput = ({
 
   // Get the appropriate icon and aria-label for the recording button
   const getRecordingButtonProps = () => {
-    if (isRecording) {
+    if (isCapturingScreen) {
       return {
         icon: <Square className="w-4 h-4" />,
         text: "Stop Recording",
@@ -215,7 +216,7 @@ export const ChatInput = ({
             className={getRecordingButtonClasses()}
             disabled={disabled}
             aria-label={recordingButtonProps.ariaLabel}
-            title={isRecording ? "Stop recording" : "Capture screen"}
+            title={isCapturingScreen ? "Stop recording" : "Capture screen"}
           >
             {recordingButtonProps.icon}
             <span className="text-xs font-medium">{recordingButtonProps.text}</span>
@@ -237,7 +238,7 @@ export const ChatInput = ({
       <div className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
         {disabled ? 
           "Select a chat from the sidebar or create a new one" : 
-          isInExtension && isRecording ?
+          isInExtension && isCapturingScreen ?
             "Recording in progress. Click the stop button to finish recording." :
             "Press Enter to send, Shift+Enter for a new line"}
       </div>

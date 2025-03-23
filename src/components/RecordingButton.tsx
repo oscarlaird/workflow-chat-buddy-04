@@ -10,13 +10,13 @@ interface RecordingButtonProps {
 }
 
 const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps) => {
-  const [recording, setRecording] = useState(isInProgress);
+  const [isCapturingScreen, setIsCapturingScreen] = useState(isInProgress);
 
   // Listen for recording status changes
   useEffect(() => {
     const handleRecordingStatus = (event: MessageEvent) => {
       if (event.data && event.data.type === "RECORDING_STATUS") {
-        setRecording(event.data.isRecording);
+        setIsCapturingScreen(event.data.isRecording);
       }
     };
 
@@ -32,9 +32,9 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
   };
 
   const handleClick = () => {
-    if (!recording) {
+    if (!isCapturingScreen) {
       // Start recording - Create recording window
-      setRecording(true);
+      setIsCapturingScreen(true);
       
       // Send message to create recording window or start recording
       window.postMessage({
@@ -45,7 +45,7 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
       }, '*');
     } else {
       // Stop recording
-      setRecording(false);
+      setIsCapturingScreen(false);
       
       // Send message to stop recording
       window.postMessage({
@@ -62,12 +62,12 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
       onClick={handleClick}
       variant="outline"
       className={`w-full max-w-xs ${
-        recording ? 
+        isCapturingScreen ? 
           'animate-pulse bg-red-50 border-red-300 text-red-700 hover:bg-red-100' : 
           'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
       }`}
     >
-      {recording ? (
+      {isCapturingScreen ? (
         <>
           <Square className="w-4 h-4 mr-2" />
           {getButtonText()}

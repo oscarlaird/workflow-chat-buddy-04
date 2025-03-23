@@ -1,7 +1,6 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Film, Play, Clock, Maximize2 } from "lucide-react";
-import { Message } from "@/types";
+import { Message, Keyframe } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
@@ -13,15 +12,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
-interface Keyframe {
-  id: number;
-  message_id: string;
-  screenshot_url: string | null;
-  url: string | null;
-  tab_title: string | null;
-  timestamp: string | null;
-}
 
 interface ScreenRecordingDisplayProps {
   message: Message;
