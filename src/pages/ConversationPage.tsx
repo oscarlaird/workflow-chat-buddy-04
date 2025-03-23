@@ -1,8 +1,9 @@
 
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useEffect } from "react-router-dom";
 import ChatInterface from "@/components/ChatInterface";
 import { useToast } from "@/components/ui/use-toast";
 import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
+import { Message } from "@/types";
 
 const ConversationPage = () => {
   const { id: urlParamId } = useParams();
@@ -21,6 +22,17 @@ const ConversationPage = () => {
   const handleSendMessage = (message: string) => {
     // In a real app, would send message to API
     console.log("Message sent in standalone view:", message);
+  };
+
+  const handleMessagesUpdated = (messages: Message[]) => {
+    // Find the latest user message
+    const userMessages = messages.filter(msg => msg.role === 'user');
+    if (userMessages.length > 0) {
+      const latestUserMessage = userMessages[userMessages.length - 1];
+      console.log("CONVERSATION PAGE - Latest user message:", latestUserMessage);
+      console.log("requires_text_reply:", latestUserMessage.requires_text_reply);
+      console.log("script:", latestUserMessage.script);
+    }
   };
 
   if (!conversationId) {
@@ -50,6 +62,7 @@ const ConversationPage = () => {
             conversationId={conversationId}
             onSendMessage={handleSendMessage}
             forceExtensionInstalled={isAccessedThroughExtension}
+            onMessagesUpdated={handleMessagesUpdated}
           />
         </div>
       </div>

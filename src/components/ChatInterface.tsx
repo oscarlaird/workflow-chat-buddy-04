@@ -12,12 +12,14 @@ interface ChatInterfaceProps {
   conversationId: string;
   onSendMessage: (message: string) => void;
   forceExtensionInstalled?: boolean;
+  onMessagesUpdated?: (messages: Message[]) => void;
 }
 
 export const ChatInterface = forwardRef(({
   conversationId,
   onSendMessage,
-  forceExtensionInstalled = false
+  forceExtensionInstalled = false,
+  onMessagesUpdated
 }: ChatInterfaceProps, ref) => {
   const { 
     messages,
@@ -45,6 +47,13 @@ export const ChatInterface = forwardRef(({
   useImperativeHandle(ref, () => ({
     handleSubmit: (inputValue: string) => handleSubmit(inputValue)
   }));
+
+  // Notify parent when messages update
+  useEffect(() => {
+    if (onMessagesUpdated && messages.length > 0) {
+      onMessagesUpdated(messages);
+    }
+  }, [messages, onMessagesUpdated]);
 
   useEffect(() => {
     setRunMessages([]);
@@ -224,16 +233,26 @@ export const ChatInterface = forwardRef(({
   }, [conversationId, processSpawnWindowMessage]);
 
   const updateMessageContent = useCallback((messageId: string, updatedMessage: any, isStreaming: boolean = false) => {
-    setMessages(prevMessages => 
-      prevMessages.map(msg => 
+    setMessages(prevMessages => {
+      const updatedMessages = prevMessages.map(msg => 
         msg.id === messageId 
           ? { 
               ...msg, 
               ...updatedMessage
             } 
           : msg
-      )
-    );
+      );
+      
+      // Log if this is a user message
+      const updatedMsg = updatedMessages.find(m => m.id === messageId);
+      if (updatedMsg && updatedMsg.role === 'user') {
+        console.log("CHAT INTERFACE - Updated user message:", updatedMsg);
+        console.log("requires_text_reply:", updatedMsg.requires_text_reply);
+        console.log("script:", updatedMsg.script);
+      }
+      
+      return updatedMessages;
+    });
     
     if (isStreaming) {
       setStreamingMessages(prev => new Set(prev).add(messageId));
@@ -288,7 +307,9 @@ export const ChatInterface = forwardRef(({
               code_output: newMessage.code_output,
               code_output_error: newMessage.code_output_error,
               screenrecording_url: newMessage.screenrecording_url,
-              code_output_tables: newMessage.code_output_tables
+              code_output_tables: newMessage.code_output_tables,
+              script: newMessage.script,
+              requires_text_reply: newMessage.requires_text_reply
             }
           ];
         });
@@ -347,7 +368,14 @@ export const ChatInterface = forwardRef(({
         username: 'current_user'
       };
       
-      setMessages(prev => [...prev, optimisticMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, optimisticMessage];
+        // Log the latest user message
+        console.log("CHAT INTERFACE - New user message:", optimisticMessage);
+        console.log("requires_text_reply:", optimisticMessage.requires_text_reply);
+        console.log("script:", optimisticMessage.script);
+        return newMessages;
+      });
       
       const messageData: any = {
         id: messageId,

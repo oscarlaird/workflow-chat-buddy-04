@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -97,9 +98,11 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
       
       setIsLoading(true);
       
+      console.log("Loading messages for conversation:", conversationId);
+      
       const { data, error } = await supabase
         .from('messages')
-        .select('*')
+        .select('*')  // Select all fields, including script and requires_text_reply
         .eq('chat_id', conversationId)
         .order('created_at', { ascending: true });
       
@@ -112,6 +115,8 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
         });
         setMessages([]);
       } else if (data && data.length > 0) {
+        console.log("Received data from Supabase messages table:", data);
+        
         const messagesData = data.map(msg => ({
           id: msg.id,
           role: msg.role as "user" | "assistant",
@@ -126,8 +131,19 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           code_output: msg.code_output,
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,
-          code_output_tables: msg.code_output_tables
+          code_output_tables: msg.code_output_tables,
+          script: msg.script,
+          requires_text_reply: msg.requires_text_reply
         }));
+        
+        // Log the first user message to check if script and requires_text_reply exist
+        const firstUserMessage = messagesData.find(m => m.role === 'user');
+        if (firstUserMessage) {
+          console.log("First user message after loading:", firstUserMessage);
+          console.log("First message script field:", firstUserMessage.script);
+          console.log("First message requires_text_reply field:", firstUserMessage.requires_text_reply);
+        }
+        
         setMessages(messagesData);
         createVirtualScreenRecordings(messagesData);
       } else {

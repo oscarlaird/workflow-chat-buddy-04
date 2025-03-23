@@ -5,7 +5,7 @@ import ChatInterface from "../components/ChatInterface";
 import ChatHistory from "../components/ChatHistory";
 import WorkflowPanel from "../components/WorkflowPanel";
 import TopBar from "../components/TopBar";
-import { Chat } from "@/types";
+import { Chat, Message } from "@/types";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
@@ -45,6 +45,17 @@ export const Index: React.FC<IndexProps> = ({
   const handleSendMessage = (message: string) => {
     // We can keep this minimal log as it's useful for potential debugging
     console.log("Message sent from Index view:", message);
+  };
+
+  const handleMessagesUpdated = (messages: Message[]) => {
+    // Find the latest user message
+    const userMessages = messages.filter(msg => msg.role === 'user');
+    if (userMessages.length > 0) {
+      const latestUserMessage = userMessages[userMessages.length - 1];
+      console.log("MAIN PAGE - Latest user message:", latestUserMessage);
+      console.log("requires_text_reply:", latestUserMessage.requires_text_reply);
+      console.log("script:", latestUserMessage.script);
+    }
   };
 
   // This function is called when the run button is clicked
@@ -105,6 +116,7 @@ export const Index: React.FC<IndexProps> = ({
                 conversationId={selectedConversationId} 
                 onSendMessage={handleSendMessage}
                 ref={chatInterfaceRef}
+                onMessagesUpdated={handleMessagesUpdated}
               />
             </ResizablePanel>
             <ResizableHandle withHandle />
