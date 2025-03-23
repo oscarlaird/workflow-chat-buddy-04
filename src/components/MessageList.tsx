@@ -1,7 +1,6 @@
 
 import { useRef, useEffect } from "react";
 import { Message } from "@/types";
-import { ScreenRecording } from "@/hooks/useConversations";
 import UserMessage from "./UserMessage";
 import ScreenRecordingMessage from "./ScreenRecordingMessage";
 import ScreenRecordingDisplay from "./ScreenRecordingDisplay";
@@ -13,7 +12,6 @@ import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface MessageListProps {
   messages: Message[];
-  screenRecordings: Record<string, ScreenRecording>;
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
   streamingMessageIds?: Set<string>;
@@ -23,7 +21,6 @@ interface MessageListProps {
 
 export const MessageList = ({ 
   messages, 
-  screenRecordings,
   isExtensionInstalled,
   pendingMessageIds = new Set(),
   streamingMessageIds = new Set(),
@@ -70,7 +67,16 @@ export const MessageList = ({
           );
         }
         
-        // Handle message types based on message.type
+        // Handle screen recording messages
+        if (message.type === "screen_recording") {
+          return (
+            <div key={message.id} className="flex justify-center">
+              <ScreenRecordingDisplay message={message} />
+            </div>
+          );
+        }
+        
+        // Handle code run messages
         if (message.type === "code_run") {
           return (
             <div key={message.id} className="flex justify-start">
@@ -78,17 +84,6 @@ export const MessageList = ({
                 message={message} 
                 isStreaming={streamingMessageIds.has(message.id)}
                 codeRunEventsData={codeRunEventsData}
-              />
-            </div>
-          );
-        }
-        
-        if (message.type === "screen_recording") {
-          return (
-            <div key={message.id} className="flex justify-center">
-              <ScreenRecordingDisplay 
-                message={message} 
-                duration={screenRecordings[message.id]?.duration}
               />
             </div>
           );
@@ -104,14 +99,6 @@ export const MessageList = ({
                 isPending={pendingMessageIds.has(message.id)}
               />
             </div>
-            
-            {/* Only show the ScreenRecordingMessage component for regular messages that have an associated recording */}
-            {message.id in screenRecordings && message.type === "text_message" && (
-              <ScreenRecordingMessage 
-                messageId={message.id} 
-                screenRecordings={screenRecordings} 
-              />
-            )}
           </div>
         );
       })}

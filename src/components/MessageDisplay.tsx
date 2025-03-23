@@ -1,12 +1,10 @@
 
 import { Message } from "@/types";
-import { ScreenRecording } from "@/hooks/useConversations";
 import MessageList from "@/components/MessageList";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface MessageDisplayProps {
   messages: Message[];
-  screenRecordings: Record<string, ScreenRecording>;
   isExtensionInstalled: boolean;
   pendingMessageIds: Set<string>;
   streamingMessages: Set<string>;
@@ -16,7 +14,6 @@ interface MessageDisplayProps {
 
 export const MessageDisplay = ({
   messages,
-  screenRecordings,
   isExtensionInstalled,
   pendingMessageIds,
   streamingMessages,
@@ -50,7 +47,6 @@ export const MessageDisplay = ({
   return (
     <MessageList 
       messages={messages} 
-      screenRecordings={screenRecordings}
       isExtensionInstalled={isExtensionInstalled}
       pendingMessageIds={pendingMessageIds}
       streamingMessageIds={streamingMessages}

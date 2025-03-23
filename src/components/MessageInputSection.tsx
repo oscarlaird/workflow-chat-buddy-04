@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import ChatInput from "./ChatInput";
 
 interface MessageInputSectionProps {
@@ -15,13 +14,15 @@ export const MessageInputSection = ({
   onSendMessage,
   onCodeRun
 }: MessageInputSectionProps) => {
+  // Ensure we're only passing props that ChatInput accepts
   return (
     <ChatInput
       onSendMessage={onSendMessage}
-      onCodeRun={onCodeRun}
       isLoading={isLoading}
       disabled={!conversationId}
       chatId={conversationId}
+      // Only pass onCodeRun if it's defined
+      {...(onCodeRun ? { onCodeRun } : {})}
     />
   );
 };

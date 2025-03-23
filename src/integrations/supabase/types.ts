@@ -227,7 +227,7 @@ export type Database = {
           script?: string | null
           steps?: Json | null
           text_is_currently_streaming?: boolean | null
-          type?: Database["public"]["Enums"]["message_type"]
+          type: Database["public"]["Enums"]["message_type"]
           username: string
         }
         Update: {

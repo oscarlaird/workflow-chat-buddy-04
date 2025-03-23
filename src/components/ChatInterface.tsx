@@ -21,7 +21,6 @@ export const ChatInterface = forwardRef(({
 }: ChatInterfaceProps, ref) => {
   const { 
     messages,
-    screenRecordings,
     isLoading, 
     setIsLoading,
     setMessages
@@ -70,7 +69,6 @@ export const ChatInterface = forwardRef(({
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <MessageDisplay
           messages={messages}
-          screenRecordings={screenRecordings}
           isExtensionInstalled={isExtensionInstalled}
           pendingMessageIds={pendingMessageIds}
           streamingMessages={streamingMessages}

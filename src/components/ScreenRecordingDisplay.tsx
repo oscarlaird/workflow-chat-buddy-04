@@ -25,10 +25,9 @@ interface Keyframe {
 
 interface ScreenRecordingDisplayProps {
   message: Message;
-  duration?: string;
 }
 
-export const ScreenRecordingDisplay = ({ message, duration = "00:45" }: ScreenRecordingDisplayProps) => {
+export const ScreenRecordingDisplay = ({ message }: ScreenRecordingDisplayProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [keyframes, setKeyframes] = useState<Keyframe[]>([]);
   const [selectedKeyframe, setSelectedKeyframe] = useState<Keyframe | null>(null);
@@ -39,8 +38,11 @@ export const ScreenRecordingDisplay = ({ message, duration = "00:45" }: ScreenRe
   const recordingDate = new Date();
   const formattedDate = format(recordingDate, "MMM d, yyyy 'at' h:mm a");
   
-  // Use screenrecording_url instead of content
+  // Use screenrecording_url from the message
   const videoUrl = message.screenrecording_url || "";
+  
+  // Calculate duration or use placeholder
+  const duration = message.duration || "45s";
   
   // Fetch keyframes from the database
   useEffect(() => {

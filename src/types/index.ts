@@ -11,6 +11,7 @@ export interface Message {
   code_output_error?: string;
   code_run_success?: boolean;
   code_output_tables?: any;
+  duration?: string; // Add duration for screen recordings
 }
 
 export interface Conversation {
