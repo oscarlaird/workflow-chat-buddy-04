@@ -13,7 +13,6 @@ import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface MessageListProps {
   messages: Message[];
-  hasScreenRecording: (message: Message) => boolean;
   screenRecordings: Record<string, ScreenRecording>;
   isExtensionInstalled: boolean;
   pendingMessageIds?: Set<string>;
@@ -24,7 +23,6 @@ interface MessageListProps {
 
 export const MessageList = ({ 
   messages, 
-  hasScreenRecording, 
   screenRecordings,
   isExtensionInstalled,
   pendingMessageIds = new Set(),
@@ -90,7 +88,7 @@ export const MessageList = ({
             <div key={message.id} className="flex justify-center">
               <ScreenRecordingDisplay 
                 message={message} 
-                duration={hasScreenRecording(message) ? screenRecordings[message.id]?.duration : undefined}
+                duration={screenRecordings[message.id]?.duration}
               />
             </div>
           );
@@ -107,8 +105,8 @@ export const MessageList = ({
               />
             </div>
             
-            {/* Screen Recording indicator for other message types */}
-            {hasScreenRecording(message) && message.type !== "screen_recording" && (
+            {/* Screen Recording indicator for messages that have associated recordings but aren't screen_recording type */}
+            {message.id in screenRecordings && message.type !== "screen_recording" && (
               <ScreenRecordingMessage 
                 messageId={message.id} 
                 screenRecordings={screenRecordings} 

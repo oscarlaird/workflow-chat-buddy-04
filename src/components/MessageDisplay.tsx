@@ -6,7 +6,6 @@ import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
 interface MessageDisplayProps {
   messages: Message[];
-  hasScreenRecording: (message: Message) => boolean;
   screenRecordings: Record<string, ScreenRecording>;
   isExtensionInstalled: boolean;
   pendingMessageIds: Set<string>;
@@ -17,7 +16,6 @@ interface MessageDisplayProps {
 
 export const MessageDisplay = ({
   messages,
-  hasScreenRecording,
   screenRecordings,
   isExtensionInstalled,
   pendingMessageIds,
@@ -52,7 +50,6 @@ export const MessageDisplay = ({
   return (
     <MessageList 
       messages={messages} 
-      hasScreenRecording={hasScreenRecording} 
       screenRecordings={screenRecordings}
       isExtensionInstalled={isExtensionInstalled}
       pendingMessageIds={pendingMessageIds}
