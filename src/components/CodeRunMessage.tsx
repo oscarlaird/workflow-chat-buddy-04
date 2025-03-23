@@ -1,12 +1,13 @@
 
 import { useState } from "react";
-import { Loader2, Play, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Table } from "lucide-react";
+import { Loader2, Play, AlertCircle, CheckCircle, ChevronDown, ChevronRight, Table, Code, Terminal } from "lucide-react";
 import { Message } from "@/types";
 import { Progress } from "@/components/ui/progress";
 import CodeBlock from "@/components/CodeBlock";
 import DataTable from "@/components/DataTable";
 import CodeRunEventItem from "./CodeRunEventItem";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
+import { Button } from "./ui/button";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -17,6 +18,8 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
   const [expanded, setExpanded] = useState(true);
   const [tablesExpanded, setTablesExpanded] = useState(true);
   const [eventsExpanded, setEventsExpanded] = useState(true);
+  const [outputExpanded, setOutputExpanded] = useState(false);
+  const [errorExpanded, setErrorExpanded] = useState(false);
   
   const { getEventsForMessage } = useCodeRunEvents(message.chat_id || "");
   const events = getEventsForMessage(message.id);
@@ -53,6 +56,8 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
 
   const tables = getTables();
   const hasTableData = tables && Object.keys(tables).length > 0;
+  const hasOutput = !!message.code_output;
+  const hasError = !!message.code_output_error;
   
   return (
     <div className="max-w-[80%] w-full space-y-2">
@@ -132,23 +137,55 @@ const CodeRunMessage = ({ message, isStreaming }: CodeRunMessageProps) => {
             )}
           </div>
           
-          {message.code_output && (
-            <div className="mt-3">
-              <div className="text-xs text-muted-foreground mb-1">Output:</div>
-              <CodeBlock code={message.code_output} language="plaintext" />
+          {/* Code Output Section - Collapsible */}
+          {hasOutput && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOutputExpanded(!outputExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
+              >
+                {outputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <Terminal className="w-4 h-4" />
+                <span>Output</span>
+              </button>
+              
+              {outputExpanded && (
+                <div className="mt-2">
+                  <CodeBlock code={message.code_output} language="plaintext" />
+                </div>
+              )}
             </div>
           )}
           
-          {message.code_output_error && (
-            <div className="mt-3">
-              <div className="text-xs text-red-500 mb-1">Error:</div>
-              <CodeBlock code={message.code_output_error} language="plaintext" />
+          {/* Error Output Section - Collapsible */}
+          {hasError && (
+            <div className="mt-3 border-t pt-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setErrorExpanded(!errorExpanded);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors mb-2"
+              >
+                {errorExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <AlertCircle className="w-4 h-4" />
+                <span>Error</span>
+              </button>
+              
+              {errorExpanded && (
+                <div className="mt-2">
+                  <CodeBlock code={message.code_output_error} language="plaintext" />
+                </div>
+              )}
             </div>
           )}
           
           {/* Tables output section */}
           {hasTableData && (
-            <div className="mt-3">
+            <div className="mt-3 border-t pt-3">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
