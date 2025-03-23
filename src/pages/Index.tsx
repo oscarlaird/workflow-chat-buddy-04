@@ -8,8 +8,9 @@ import TopBar from "../components/TopBar";
 import { Chat } from "@/types";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, RefreshCw } from "lucide-react";
 import { MotionDiv } from "@/lib/transitions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface IndexProps {
   selectedConversationId: string;
@@ -42,11 +43,26 @@ export const Index: React.FC<IndexProps> = ({
   const chatInterfaceRef = React.useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [isRebuilding, setIsRebuilding] = useState(false);
 
-  // Debug effect to log when messages update
+  // Effect to determine if workflow is rebuilding
   useEffect(() => {
-    console.log("Messages updated in Index:", chatMessages.length, 
-      "Latest user message:", chatMessages.filter(m => m.role === 'user').pop());
+    if (chatMessages && chatMessages.length > 0) {
+      // Find the most recent user message
+      const latestUserMessage = [...chatMessages]
+        .reverse()
+        .find(msg => msg.role === 'user');
+      
+      // Check if it requires a text reply but script is null
+      const rebuilding = latestUserMessage && 
+        latestUserMessage.requires_text_reply === true && 
+        latestUserMessage.script === null;
+      
+      setIsRebuilding(rebuilding);
+      console.log("MAIN PAGE - Is rebuilding?", rebuilding, "Latest user message:", latestUserMessage);
+    } else {
+      setIsRebuilding(false);
+    }
   }, [chatMessages]);
 
   const handleSendMessage = (message: string) => {
@@ -111,26 +127,38 @@ export const Index: React.FC<IndexProps> = ({
         </MotionDiv>
         
         {selectedConversationId ? (
-          <ResizablePanelGroup direction="horizontal" className="flex-1">
-            <ResizablePanel defaultSize={70} minSize={30}>
-              <ChatInterface 
-                conversationId={selectedConversationId} 
-                onSendMessage={handleSendMessage}
-                ref={chatInterfaceRef}
-                onMessagesUpdate={handleMessagesUpdate}
-              />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={30} minSize={20}>
-              <WorkflowPanel 
-                chatId={selectedConversationId}
-                onRunWorkflow={handleRunWorkflow}
-                showRunButton={true}
-                showInputs={true}
-                messages={chatMessages}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+          <>
+            {/* Very clear rebuilding indicator at the top of the main content */}
+            {isRebuilding && (
+              <Alert className="absolute top-16 right-4 z-50 w-auto max-w-md bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                <AlertDescription className="flex items-center font-medium">
+                  Rebuilding Workflow: Latest user message requires text reply but has no script
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <ResizablePanelGroup direction="horizontal" className="flex-1">
+              <ResizablePanel defaultSize={70} minSize={30}>
+                <ChatInterface 
+                  conversationId={selectedConversationId} 
+                  onSendMessage={handleSendMessage}
+                  ref={chatInterfaceRef}
+                  onMessagesUpdate={handleMessagesUpdate}
+                />
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={30} minSize={20}>
+                <WorkflowPanel 
+                  chatId={selectedConversationId}
+                  onRunWorkflow={handleRunWorkflow}
+                  showRunButton={true}
+                  showInputs={true}
+                  messages={chatMessages}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </>
         ) : (
           <div className="h-full flex items-center justify-center flex-1">
             <div className="max-w-md text-center p-8">
