@@ -14,15 +14,13 @@ export const MessageInputSection = ({
   onSendMessage,
   onCodeRun
 }: MessageInputSectionProps) => {
-  // Ensure we're only passing props that ChatInput accepts
   return (
     <ChatInput
       onSendMessage={onSendMessage}
       isLoading={isLoading}
       disabled={!conversationId}
       chatId={conversationId}
-      // Only pass onCodeRun if it's defined
-      {...(onCodeRun ? { onCodeRun } : {})}
+      onCodeRun={onCodeRun}
     />
   );
 };

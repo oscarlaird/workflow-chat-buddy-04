@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Message } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,7 +53,7 @@ export const useMessageManager = (
         role: 'user',
         content: inputValue,
         username: 'current_user',
-        type: 'text_message'
+        type: 'text_message' // Explicitly set as text_message
       };
       
       setMessages(prev => [...prev, optimisticMessage]);
@@ -66,7 +65,7 @@ export const useMessageManager = (
         content: inputValue,
         username: 'current_user',
         text_is_currently_streaming: false,
-        type: 'text_message'
+        type: 'text_message' // Explicitly set as text_message
       };
       
       await supabase
@@ -108,7 +107,7 @@ export const useMessageManager = (
         role: 'user',
         content: codeContent,
         username: 'current_user',
-        type: 'code_run'
+        type: 'code_run' // Explicitly set as code_run
       };
       
       setMessages(prev => [...prev, optimisticMessage]);
@@ -120,7 +119,7 @@ export const useMessageManager = (
         content: codeContent,
         username: 'current_user',
         text_is_currently_streaming: false,
-        type: 'code_run'
+        type: 'code_run' // Explicitly set as code_run
       };
       
       await supabase

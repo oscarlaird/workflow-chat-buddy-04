@@ -97,12 +97,12 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           username: msg.username,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
-          type: (msg.type as "text_message" | "screen_recording" | "code_run") || "text_message",
+          type: (msg.type as "text_message" | "screen_recording" | "code_run") || "text_message", // Ensure every message has a type
           code_output: msg.code_output,
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,
           code_output_tables: msg.code_output_tables,
-          duration: msg.duration
+          duration: msg.duration || undefined // Handle this properly
         } as Message));
         
         setMessages(messagesData);

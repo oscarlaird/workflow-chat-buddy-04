@@ -11,13 +11,15 @@ interface ChatInputProps {
   isLoading: boolean;
   disabled?: boolean;
   chatId?: string;
+  onCodeRun?: (codeContent: string) => void;
 }
 
 export const ChatInput = ({ 
   onSendMessage, 
   isLoading, 
   disabled = false,
-  chatId
+  chatId,
+  onCodeRun
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -97,7 +99,8 @@ export const ChatInput = ({
         content: 'Click Here to Start Recording',
         function_name: 'recording_requested',
         is_currently_streaming: false,
-        username: 'system' // Required username field
+        username: 'system',
+        type: 'text_message' // Added required type field
       };
       
       await supabase.from('messages').insert(messageData);
