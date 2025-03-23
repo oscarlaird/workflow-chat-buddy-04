@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -257,8 +256,8 @@ export const useChats = () => {
           username: currentUsername,
           created_at: new Date().toISOString(),
           from_template: true,
-          function_name: message.function_name,
-          type: message.type,
+          function_name: message.function_name || undefined,
+          type: message.type || "text_message",
           steps: message.steps
         }));
       }

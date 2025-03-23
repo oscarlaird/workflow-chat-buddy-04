@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message, Keyframe } from "@/types";
@@ -104,12 +103,12 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           role: msg.role as "user" | "assistant",
           content: msg.content,
           username: msg.username,
-          // Use optional chaining and safely access properties
-          function_name: msg.function_name || undefined,
-          workflow_step_id: msg.workflow_step_id || undefined,
+          // Safely access optional properties with optional chaining
+          function_name: msg.function_name,
+          workflow_step_id: msg.workflow_step_id,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
-          type: msg.type || "text_message",
+          type: (msg.type as "text_message" | "screen_recording" | "code_run") || "text_message",
           code_output: msg.code_output,
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,

@@ -85,8 +85,8 @@ export interface InputField {
 export interface BrowserEvent {
   id: string;
   coderun_event_id: string;
-  type: string;
-  sender_type: string;
+  type: RunMessageType | string;
+  sender_type: RunMessageSenderType | string;
   display_text?: string;
   created_at: string;
   username?: string;
@@ -142,7 +142,7 @@ export interface CodeRunEvent {
   created_at: string;
 }
 
-// Add the missing Run interface
+// Run interface
 export interface Run {
   id: string;
   dashboard_id?: string;
@@ -154,7 +154,7 @@ export interface Run {
   username?: string;
 }
 
-// Add the RunMessage interface that was missing
+// RunMessage interface
 export interface RunMessage {
   id: string;
   run_id: string;
