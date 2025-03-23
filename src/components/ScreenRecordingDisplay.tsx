@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Film, Play, Clock, Maximize2 } from "lucide-react";
 import { Message, Keyframe } from "@/types";
@@ -53,7 +54,7 @@ export const ScreenRecordingDisplay = ({ message }: ScreenRecordingDisplayProps)
       if (data && data.length > 0) {
         // Convert numeric IDs to strings to match the Keyframe interface
         const formattedKeyframes: Keyframe[] = data.map(item => ({
-          id: String(item.id),
+          id: String(item.id), // Convert numeric ID to string
           message_id: item.message_id,
           screenshot_url: item.screenshot_url || '',
           url: item.url || '',

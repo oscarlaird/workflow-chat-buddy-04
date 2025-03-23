@@ -50,22 +50,19 @@ export interface WorkflowStep {
   step_number: number;
   title: string;
   description?: string;
-  code?: string;
-  created_at?: string;
-  updated_at?: string;
   status?: string;
   exampleInput?: Record<string, any>;
   exampleOutput?: Record<string, any>;
   requiresBrowser?: boolean;
-  originalKey?: string; // Add this property to support code in useWorkflowSteps
+  originalKey?: string;
 }
 
 export interface Workflow {
   id: string;
   title: string;
   description?: string;
-  currentStep?: number; // Added to fix MockWorkflow
-  totalSteps?: number; // Added to fix MockWorkflow
+  currentStep?: number;
+  totalSteps?: number;
   steps: WorkflowStep[];
 }
 
@@ -111,7 +108,10 @@ export interface RunMessage {
   content: string;
   role: string;
   created_at: string;
-  type: string; // Make type required
+  type: string;
+  sender_type?: string;
+  display_text?: string;
+  payload?: any;
 }
 
 export enum RunMessageType {

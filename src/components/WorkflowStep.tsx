@@ -1,8 +1,7 @@
 
 import { memo } from "react";
-import { ChevronDown, ChevronRight, Code, Table, Database, Trash2, ArrowDownUp, Globe, Chrome, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, Table, Database, Trash2, ArrowDownUp, Globe, Chrome, ExternalLink } from "lucide-react";
 import { WorkflowStep as WorkflowStepType } from "@/types";
-import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
 import { useState } from "react";
 import { MotionDiv } from "@/lib/transitions";
@@ -19,7 +18,6 @@ interface WorkflowStepProps {
 }
 
 export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowStepProps) => {
-  const [isCodeExpanded, setIsCodeExpanded] = useState(false);
   const [isInputExpanded, setIsInputExpanded] = useState(false);
   const [isOutputExpanded, setIsOutputExpanded] = useState(false);
   
@@ -196,25 +194,6 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
           {isOutputExpanded && (
             <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
               {renderOutput(step.exampleOutput)}
-            </div>
-          )}
-        </div>
-      )}
-
-      {step.code && (
-        <div className="mt-3">
-          <button
-            onClick={() => setIsCodeExpanded(!isCodeExpanded)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
-          >
-            {isCodeExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <Code className="w-4 h-4" />
-            <span>Code {isCodeExpanded ? "▾" : "▸"}</span>
-          </button>
-          
-          {isCodeExpanded && (
-            <div className="mt-2 overflow-hidden rounded-md animate-slide-in-bottom">
-              <CodeBlock code={step.code} language="python" />
             </div>
           )}
         </div>

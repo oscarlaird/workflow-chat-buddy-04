@@ -1,7 +1,6 @@
 
 // This file serves as a central export point for all mock data
 
-import { mockWorkflow } from './mockWorkflow';
 import { 
   voteDataColumns, 
   voteData, 
@@ -10,7 +9,6 @@ import {
 } from './mockTableData';
 
 export {
-  mockWorkflow,
   voteDataColumns,
   voteData,
   cpacDataColumns,

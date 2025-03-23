@@ -1,130 +1,145 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrowserEvent, RunMessageSenderType, RunMessageType } from "@/types";
+import { RunMessage, RunMessageType, RunMessageSenderType } from "@/types";
+import { v4 as uuidv4 } from 'uuid';
 
-export const useRunMessages = (conversationId: string) => {
-  const [runMessages, setRunMessages] = useState<BrowserEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+interface UseRunMessagesResult {
+  runMessages: RunMessage[];
+  isLoading: boolean;
+  error: string | null;
+  abortRun: (runId: string, reason: string) => Promise<void>;
+  fetchRunMessages: () => Promise<void>;
+}
 
-  // Fetch browser events for this conversation
-  const fetchRunMessages = useCallback(async () => {
-    if (!conversationId) return;
-    
+export const useRunMessages = (runId?: string): UseRunMessagesResult => {
+  const [runMessages, setRunMessages] = useState<RunMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRunMessages = async () => {
+    if (!runId) {
+      setRunMessages([]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
-        .from('browser_events')
+        .from('run_messages')
         .select('*')
-        .eq('chat_id', conversationId);
-        
+        .eq('run_id', runId)
+        .order('created_at', { ascending: true });
+
       if (error) {
-        console.error('Error fetching browser events:', error);
+        console.error('Error fetching run messages:', error);
+        setError(error.message);
         return;
       }
-      
+
       if (data) {
-        setRunMessages(data as BrowserEvent[]);
+        setRunMessages(data as RunMessage[]);
+      } else {
+        setRunMessages([]);
       }
     } catch (err) {
-      console.error('Exception when fetching browser events:', err);
+      console.error('Error in fetchRunMessages:', err);
+      setError('An unexpected error occurred while loading run messages');
+      setRunMessages([]);
     } finally {
       setIsLoading(false);
     }
-  }, [conversationId]);
+  };
 
-  // Process spawn_window messages when extension is installed
-  const processSpawnWindowMessage = useCallback((
-    runMessage: BrowserEvent, 
-    isExtensionInstalled: boolean
-  ) => {
-    if (runMessage.type === "spawn_window" && isExtensionInstalled) {
-      try {
-        window.postMessage({
-          type: 'CREATE_AGENT_RUN_WINDOW',
-          payload: {
-            coderunEventId: runMessage.coderun_event_id,
-            chatId: conversationId,
-          }
-        }, '*');
-      } catch (err) {
-        console.error('Error processing spawn_window message:', err);
-      }
-    }
-  }, [conversationId]);
-
-  // Handle stopping a coderun_event
-  const handleStopRun = useCallback(async (coderunEventId: string) => {
-    if (!coderunEventId) return false;
-    
-    try {
-      // Create an abort browser event
-      const abortMessage = {
-        coderun_event_id: coderunEventId,
-        type: RunMessageType.ABORT, // Use enum value
-        payload: { reason: 'Manual stop requested' },
-        chat_id: conversationId,
-        username: 'current_user',
-        sender_type: RunMessageSenderType.DASHBOARD, // Use enum value
-        display_text: 'Stopping run...'
-      };
-      
-      const { error } = await supabase
-        .from('browser_events')
-        .insert(abortMessage);
-        
-      if (error) {
-        console.error('Error creating abort event:', error);
-        return false;
-      }
-      
-      return true;
-    } catch (err) {
-      console.error('Exception when stopping run:', err);
-      return false;
-    }
-  }, [conversationId]);
-
-  // Set up real-time listener for browser events
   useEffect(() => {
-    if (!conversationId) return;
-    
-    // Initial fetch
     fetchRunMessages();
-    
+
     const channel = supabase
-      .channel(`browser_events:${conversationId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'browser_events',
-        filter: `chat_id=eq.${conversationId}`
-      }, (payload) => {
-        if (payload.new) {
-          // Valid BrowserEvent - type-safe way to add to state
-          const newMessage = payload.new as BrowserEvent;
-          
-          // Check if this message ID already exists to prevent duplicates
-          setRunMessages(prev => {
-            // If message with this ID already exists, don't add it again
-            if (prev.some(msg => msg.id === newMessage.id)) {
-              return prev;
-            }
-            return [...prev, newMessage];
-          });
+      .channel(`run-messages-${runId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'run_messages',
+          filter: `run_id=eq.${runId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
+            fetchRunMessages();
+          }
         }
-      })
+      )
       .subscribe();
-      
+
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, fetchRunMessages]);
+  }, [runId]);
 
-  return {
-    runMessages,
-    isLoading,
-    processSpawnWindowMessage,
-    handleStopRun
+  // Handle aborting a run 
+  const abortRun = async (runId: string, reason: string) => {
+    try {
+      // Find the run record to get the chat_id
+      const { data: runData, error: runError } = await supabase
+        .from('runs')
+        .select('chat_id')
+        .eq('id', runId)
+        .single();
+        
+      if (runError) {
+        console.error('Error finding run:', runError);
+        return;
+      }
+      
+      // Create abort message
+      const messageId = uuidv4();
+      
+      // Get the current user
+      const currentUser = await supabase.auth.getUser();
+      const username = currentUser.data.user?.email || 'anonymous';
+      
+      // Create a string value for sender_type instead of using the enum directly
+      const senderTypeValue = 'dashboard'; // This corresponds to RunMessageSenderType.DASHBOARD
+      
+      // Create browser event
+      const { error: eventError } = await supabase
+        .from('browser_events')
+        .insert({
+          id: messageId,
+          coderun_event_id: null,
+          type: 'abort', // Use string value instead of enum
+          payload: { reason },
+          chat_id: runData.chat_id,
+          username,
+          sender_type: senderTypeValue,
+          display_text: `Run aborted: ${reason}`
+        });
+        
+      if (eventError) {
+        console.error('Error creating abort event:', eventError);
+        return;
+      }
+      
+      // Update the run status
+      const { error: updateError } = await supabase
+        .from('runs')
+        .update({ status: 'aborted', in_progress: false })
+        .eq('id', runId);
+        
+      if (updateError) {
+        console.error('Error updating run status:', updateError);
+      }
+      
+      // Reload run messages
+      fetchRunMessages();
+      
+    } catch (error) {
+      console.error('Error in abortRun:', error);
+    }
   };
+
+  return { runMessages, isLoading, error, abortRun, fetchRunMessages };
 };
