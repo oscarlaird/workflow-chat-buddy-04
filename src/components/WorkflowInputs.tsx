@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash, Upload, AlertCircle } from "lucide-react";
 import { InputField, InputValues } from "@/types";
@@ -24,6 +23,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface WorkflowInputsProps {
   chatId?: string;
@@ -49,7 +49,7 @@ export const WorkflowInputs = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   
   const { 
     exampleInputs,
@@ -58,12 +58,10 @@ export const WorkflowInputs = ({
   } = useSelectedChatSettings(chatId);
 
   useEffect(() => {
-    // Initialize input values from example inputs if available
     if (exampleInputs) {
       console.log("Initializing inputs from example:", exampleInputs);
       setInputValues({...exampleInputs});
     } else {
-      // Otherwise initialize with default values based on inferred schema
       const initialValues: InputValues = {};
       inferredSchema.forEach((field: InputField) => {
         if (field.type === 'string' || field.type === 'person' || field.type === 'email' || 
@@ -132,23 +130,23 @@ export const WorkflowInputs = ({
         role: 'user',
         content: 'Please execute my workflow',
         username: 'current_user',
-        requires_text_reply: false,
-        code_run: true
+        type: 'code_run'
       };
       
       await supabase.from('messages').insert(messageData);
       
-      toast({
-        title: "Code execution requested",
-        description: "Your workflow code will be executed"
-      });
+      toast.success("Code execution requested");
+      
+      // Broadcast event to notify other components
+      window.postMessage({
+        type: "WORKFLOW_CODE_RUN_STARTED", 
+        messageId: messageId,
+        chatId: chatId
+      }, '*');
+      
     } catch (error) {
       console.error('Error requesting code execution:', error);
-      toast({
-        title: "Error",
-        description: "Failed to request code execution",
-        variant: "destructive"
-      });
+      toast.error("Failed to request code execution");
     }
   };
 
@@ -184,7 +182,7 @@ export const WorkflowInputs = ({
 
       // Use the first row of data
       setInputValues(mappedData[0]);
-      toast({
+      uiToast({
         title: "Data imported",
         description: `Imported the first row from ${file.name}`,
       });

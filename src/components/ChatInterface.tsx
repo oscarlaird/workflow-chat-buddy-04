@@ -38,6 +38,7 @@ export const ChatInterface = forwardRef(({
     setStreamingMessages,
     updateMessageContent,
     handleSubmit,
+    handleCodeRun,
     setPendingMessageIds
   } = useMessageManager(
     conversationId,
@@ -82,6 +83,7 @@ export const ChatInterface = forwardRef(({
         conversationId={conversationId}
         isLoading={isLoading}
         onSendMessage={handleSubmit}
+        onCodeRun={handleCodeRun}
       />
     </div>
   );
