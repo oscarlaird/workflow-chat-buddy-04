@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
 import ChatHistory from "../components/ChatHistory";
@@ -42,6 +42,12 @@ export const Index: React.FC<IndexProps> = ({
   const chatInterfaceRef = React.useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
+
+  // Debug effect to log when messages update
+  useEffect(() => {
+    console.log("Messages updated in Index:", chatMessages.length, 
+      "Latest user message:", chatMessages.filter(m => m.role === 'user').pop());
+  }, [chatMessages]);
 
   const handleSendMessage = (message: string) => {
     // We can keep this minimal log as it's useful for potential debugging
