@@ -4,14 +4,10 @@ import { Loader2, Trash2, ExternalLink } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
+import { Run } from '@/types';
 
 interface RunStatusBubbleProps {
-  run: {
-    id: string;
-    status: string;
-    in_progress: boolean;
-    chat_id: string;
-  } | null;
+  run: Run | null;
 }
 
 const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {

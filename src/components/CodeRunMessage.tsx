@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { Message } from "@/types";
 import { Skeleton } from "./ui/skeleton";
 import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
@@ -8,6 +8,8 @@ import CodeRunStatus from "./CodeRunStatus";
 import CodeRunOutput from "./CodeRunOutput";
 import CodeRunError from "./CodeRunError";
 import CodeRunTables from "./CodeRunTables";
+import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
 
 interface CodeRunMessageProps {
   message: Message;
@@ -30,7 +32,9 @@ const CodeRunMessage = ({ message, isStreaming, codeRunEventsData }: CodeRunMess
   const { codeRunEvents, browserEvents, isLoading } = codeRunEventsData || localCodeRunEvents;
   
   // Filter events for this message
-  const messageEvents = codeRunEvents.filter(event => event.message_id === message.id);
+  const messageEvents = codeRunEvents.filter(event => 
+    event.message_id === message.id
+  );
   
   // Separate events into function calls and progress updates
   const functionCallEvents = messageEvents.filter(event => event.function_name !== null);

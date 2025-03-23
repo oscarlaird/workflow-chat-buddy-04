@@ -80,7 +80,7 @@ export const MessageList = ({
         }
         
         // Special handling for screen_recording type
-        if (message.type === "screen_recording" || message.function_name === "screen_recording") {
+        if (message.type === "screen_recording" || (message.function_name === "screen_recording")) {
           return (
             <div key={message.id} className="flex justify-center">
               <ScreenRecordingDisplay 

@@ -1,127 +1,57 @@
 
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Run, RunMessage } from '@/types';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import RunStatusBubble from './RunStatusBubble';
+import RunMessageItem from './RunMessageItem';
 
-// Use simpler props without the external Run/RunMessage types
 interface RunBubbleProps {
-  run: {
-    id: string;
-    status: string;
-    in_progress: boolean;
-    created_at: string;
-    chat_id: string;
-  };
-  messages: any[];
+  run: Run;
+  messages: RunMessage[];
   isLatestRun?: boolean;
 }
 
-export const RunBubble = ({ run, messages, isLatestRun = false }: RunBubbleProps) => {
-  const [isExpanded, setIsExpanded] = useState(isLatestRun);
-  const location = useLocation();
-
-  useEffect(() => {
-    // When the isLatestRun prop changes, update the expanded state
-    setIsExpanded(isLatestRun);
-  }, [isLatestRun]);
-
-  const handleJumpToAgentWindow = () => {
-    window.postMessage({
-      type: 'JUMP_TO_AGENT_WINDOW',
-      payload: {
-        runId: run.id,
-        chatId: run.chat_id
-      }
-    }, '*');
-  };
-
-  // Check if we're on the workflow route
-  const isWorkflowRoute = location.pathname.startsWith('/workflow');
+const RunBubble: React.FC<RunBubbleProps> = ({ run, messages, isLatestRun = true }) => {
+  const [expanded, setExpanded] = useState(isLatestRun);
   
-  // Sort messages in reverse chronological order (newest first)
-  const sortedMessages = [...messages].sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
+  const toggleExpanded = () => {
+    setExpanded(prev => !prev);
+  };
+  
   return (
-    <Card className="w-full max-w-lg border-blue-200 dark:border-blue-800 bg-gradient-to-b from-blue-50/80 to-blue-50/30 dark:from-blue-950/30 dark:to-blue-950/10 backdrop-blur-sm">
-      <CardHeader className="py-3 space-y-0">
+    <Card className="w-full max-w-lg bg-white dark:bg-gray-900 border-blue-200 dark:border-blue-800">
+      <CardHeader className="px-4 py-2 flex flex-col gap-2 border-b border-blue-100 dark:border-blue-800">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div 
-              className={`h-3 w-3 rounded-full ${
-                run.in_progress 
-                  ? "bg-amber-500 animate-pulse" 
-                  : "bg-green-500"
-              }`} 
-            />
-            <Badge variant={run.in_progress ? "secondary" : "outline"} className="font-medium">
-              {run.in_progress ? "Running" : "Completed"}
-            </Badge>
-            <span className="text-xs text-muted-foreground ml-1">
-              #{run.id.slice(0, 8)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {run.in_progress && !isWorkflowRoute && (
-              <Button 
-                variant="outline"
-                size="sm"
-                className="h-8 gap-1 text-blue-500 hover:text-blue-600 border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                onClick={handleJumpToAgentWindow}
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span>Jump to agent</span>
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+          <div className="text-sm font-medium">Run Details</div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-7 w-7 p-0" 
+            onClick={toggleExpanded}
+          >
+            {expanded ? 
+              <ChevronUp className="h-4 w-4" /> : 
+              <ChevronDown className="h-4 w-4" />
+            }
+          </Button>
         </div>
-        <div className="mt-2 flex items-center justify-between">
-          <p className="text-sm font-medium">Status: {run.status}</p>
-          <span className="text-xs text-muted-foreground">
-            {new Date(run.created_at).toLocaleString()}
-          </span>
-        </div>
+        
+        <RunStatusBubble run={run} />
       </CardHeader>
       
-      {isExpanded && (
-        <CardContent className="pt-0 pb-3">
-          {sortedMessages.length > 0 && (
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-muted-foreground">Messages (newest first)</p>
-                <span className="text-xs text-muted-foreground">{sortedMessages.length}</span>
-              </div>
-              <div className="max-h-[300px] overflow-y-auto pr-1">
-                {sortedMessages.map((message, index) => (
-                  <div key={message.id} className="p-2 border-b text-sm">
-                    {message.type}: {message.display_text || "No display text"}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {messages.length === 0 && (
-            <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
-              No messages available
-            </div>
-          )}
+      {expanded && messages.length > 0 && (
+        <CardContent className="p-3 max-h-[300px] overflow-y-auto">
+          <div className="space-y-0.5">
+            {messages.map((message, idx) => (
+              <RunMessageItem 
+                key={message.id} 
+                message={message} 
+                isLast={idx === messages.length - 1}
+              />
+            ))}
+          </div>
         </CardContent>
       )}
     </Card>

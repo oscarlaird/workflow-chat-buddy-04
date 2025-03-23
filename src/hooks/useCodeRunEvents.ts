@@ -146,7 +146,7 @@ export const useCodeRunEvents = (chatId: string) => {
     return browserEvents[codeRunEventId] || [];
   }, [browserEvents]);
 
-  // Get events for a specific message ID
+  // Get events for a specific message ID (adds the missing function)
   const getEventsForMessage = useCallback((messageId: string) => {
     return codeRunEvents.filter(event => event.message_id === messageId);
   }, [codeRunEvents]);

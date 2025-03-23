@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -141,22 +142,24 @@ export interface CodeRunEvent {
   created_at: string;
 }
 
+// Add the missing Run interface
 export interface Run {
   id: string;
-  dashboard_id: string;
+  dashboard_id?: string;
   chat_id: string;
   status: string;
   in_progress: boolean;
   created_at: string;
-  updated_at: string;
-  username: string;
+  updated_at?: string;
+  username?: string;
 }
 
+// Add the RunMessage interface that was missing
 export interface RunMessage {
   id: string;
   run_id: string;
-  type: RunMessageType;
-  sender_type: RunMessageSenderType;
+  type: RunMessageType | string;
+  sender_type: RunMessageSenderType | string;
   payload: any;
   display_text?: string;
   created_at: string;

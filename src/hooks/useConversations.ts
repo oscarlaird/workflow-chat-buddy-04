@@ -104,9 +104,9 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           role: msg.role as "user" | "assistant",
           content: msg.content,
           username: msg.username,
-          // Use optional chaining to safely access properties that might not exist
-          function_name: msg.function_name,
-          workflow_step_id: msg.workflow_step_id,
+          // Use optional chaining and safely access properties
+          function_name: msg.function_name || undefined,
+          workflow_step_id: msg.workflow_step_id || undefined,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
           type: msg.type || "text_message",
