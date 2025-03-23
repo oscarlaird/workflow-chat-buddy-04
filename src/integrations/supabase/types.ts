@@ -153,6 +153,7 @@ export type Database = {
           function_name: string | null
           id: string
           is_currently_streaming: boolean | null
+          needs_code_revision: boolean
           requires_text_reply: boolean
           role: string
           run_id: string | null
@@ -176,6 +177,7 @@ export type Database = {
           function_name?: string | null
           id?: string
           is_currently_streaming?: boolean | null
+          needs_code_revision?: boolean
           requires_text_reply?: boolean
           role: string
           run_id?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           function_name?: string | null
           id?: string
           is_currently_streaming?: boolean | null
+          needs_code_revision?: boolean
           requires_text_reply?: boolean
           role?: string
           run_id?: string | null

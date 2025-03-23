@@ -60,6 +60,23 @@ export const inferInputSchema = (exampleInputs: Record<string, any> | null): Inp
   }));
 };
 
+// Extract example_input from the first step in steps
+const extractExampleInputFromSteps = (steps: Record<string, any> | null): Record<string, any> | null => {
+  if (!steps || typeof steps !== 'object' || Object.keys(steps).length === 0) {
+    return null;
+  }
+
+  // Find the first step with example_input
+  const firstStepKey = Object.keys(steps)[0];
+  const firstStep = steps[firstStepKey];
+  
+  if (firstStep && firstStep.example_input) {
+    return firstStep.example_input;
+  }
+  
+  return null;
+};
+
 export interface ChatSettings {
   exampleInputs: Record<string, any> | null;
   inferredSchema: InputField[];
@@ -81,12 +98,12 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
       try {
         setIsLoading(true);
         
-        // Get the latest message with non-null example_inputs for this chat
+        // Get the latest message with non-null steps for this chat
         const { data, error } = await supabase
           .from('messages')
-          .select('example_inputs')
+          .select('steps')
           .eq('chat_id', chatId)
-          .not('example_inputs', 'is', null)
+          .not('steps', 'is', null)
           .order('created_at', { ascending: false })
           .limit(1);
 
@@ -98,7 +115,9 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
             variant: "destructive"
           });
         } else if (data && data.length > 0) {
-          const examples = data[0].example_inputs as Record<string, any> | null;
+          // Extract example inputs from the first step in steps
+          const steps = data[0].steps;
+          const examples = extractExampleInputFromSteps(steps);
           setExampleInputs(examples);
           
           if (examples) {
@@ -106,7 +125,7 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
             setInferredSchema(schema);
           }
         } else {
-          // No example inputs found
+          // No steps found
           setExampleInputs(null);
           setInferredSchema([]);
         }
@@ -119,7 +138,7 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
 
     fetchChatSettings();
 
-    // Set up real-time subscription for messages with example_inputs for this chat
+    // Set up real-time subscription for messages with steps for this chat
     if (chatId) {
       const channel = supabase
         .channel(`chat-messages-settings-${chatId}`)
@@ -129,11 +148,13 @@ export const useSelectedChatSettings = (chatId?: string): ChatSettings => {
           table: 'messages',
           filter: `chat_id=eq.${chatId}`,
         }, (payload) => {
-          // Only process if the message has example_inputs
-          if (payload.new && 'example_inputs' in payload.new && payload.new.example_inputs) {
-            console.log('Message with example_inputs updated:', payload.new);
+          // Only process if the message has steps
+          if (payload.new && 'steps' in payload.new && payload.new.steps) {
+            console.log('Message with steps updated:', payload.new);
             
-            const examples = payload.new.example_inputs as Record<string, any> | null;
+            // Extract example inputs from the first step
+            const steps = payload.new.steps;
+            const examples = extractExampleInputFromSteps(steps);
             setExampleInputs(examples);
             
             if (examples) {
