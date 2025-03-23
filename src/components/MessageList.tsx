@@ -116,7 +116,7 @@ export const MessageList = ({
             </div>
             
             {/* Screen Recording indicator for other message types */}
-            {hasScreenRecording(message) && message.type !== "screen_recording" && message.function_name !== "screen_recording" && (
+            {hasScreenRecording(message) && (message.type !== "screen_recording") && (message.function_name !== "screen_recording") && (
               <ScreenRecordingMessage 
                 messageId={message.id} 
                 screenRecordings={screenRecordings} 

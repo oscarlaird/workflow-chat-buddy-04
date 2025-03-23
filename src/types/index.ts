@@ -61,7 +61,6 @@ export interface TableData {
   [key: string]: any;
 }
 
-// Updated Chat interface without input_schema and multi_input
 export interface Chat {
   id: string;
   title: string;
@@ -71,12 +70,10 @@ export interface Chat {
   username?: string;
 }
 
-// Add InputValues interface to be more consistent across the app
 export interface InputValues {
   [key: string]: string | number | boolean | Array<any>;
 }
 
-// Updated InputField interface with expanded type options
 export interface InputField {
   field_name: string;
   type: 'string' | 'number' | 'integer' | 'bool' | 'person' | 'email' | 'date' | 
@@ -85,7 +82,6 @@ export interface InputField {
   columns?: string[]; // Column fields for table type
 }
 
-// Updated interface for browser events
 export interface BrowserEvent {
   id: string;
   coderun_event_id: string;
@@ -98,7 +94,6 @@ export interface BrowserEvent {
   payload?: any;
 }
 
-// Add Keyframe interface for screen recording keyframes
 export interface Keyframe {
   id: number;
   message_id: string;
@@ -108,21 +103,18 @@ export interface Keyframe {
   timestamp: string;
 }
 
-// Add recording status enum
 export enum RecordingStatus {
   REQUESTED = 'requested',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed'
 }
 
-// Enum for message sender type used in browser events
 export enum RunMessageSenderType {
   DASHBOARD = 'dashboard',
   BACKEND = 'backend',
   EXTENSION = 'extension'
 }
 
-// Enum for message types used in browser events
 export enum RunMessageType {
   INPUTS = 'inputs',
   SPAWN_WINDOW = 'spawn_window',
@@ -135,7 +127,6 @@ export enum RunMessageType {
   ABORT = 'abort'
 }
 
-// Define a CodeRunEvent interface for the new schema
 export interface CodeRunEvent {
   id: string;
   message_id?: string;

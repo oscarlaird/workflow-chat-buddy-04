@@ -83,15 +83,6 @@ export const NewChatDialog = ({
         
       if (messagesError) throw messagesError;
       
-      // Get example workflow steps
-      const { data: exampleWorkflowSteps, error: workflowStepsError } = await supabase
-        .from('workflow_steps')
-        .select('*')
-        .eq('chat_id', exampleChat.id)
-        .order('step_number', { ascending: true });
-        
-      if (workflowStepsError) throw workflowStepsError;
-      
       // Prepare new chat
       const chatInsert = {
         id: newChatId,
@@ -111,25 +102,8 @@ export const NewChatDialog = ({
           content: message.content,
           username: 'current_user',
           created_at: new Date().toISOString(),
-          from_template: true // Set from_template to true for copied messages
-        }));
-      }
-      
-      // Prepare workflow steps
-      let newWorkflowSteps = [];
-      if (exampleWorkflowSteps && exampleWorkflowSteps.length > 0) {
-        newWorkflowSteps = exampleWorkflowSteps.map(step => ({
-          id: uuidv4(),
-          chat_id: newChatId,
-          title: step.title,
-          description: step.description,
-          status: step.status,
-          code: step.code,
-          example_data: step.example_data,
-          screenshots: step.screenshots,
-          step_number: step.step_number,
-          username: 'current_user',
-          created_at: new Date().toISOString()
+          from_template: true, // Set from_template to true for copied messages
+          type: message.type || 'text_message'
         }));
       }
       
@@ -147,15 +121,6 @@ export const NewChatDialog = ({
           .insert(newMessages);
           
         if (insertError) throw insertError;
-      }
-      
-      // Insert the copied workflow steps
-      if (newWorkflowSteps.length > 0) {
-        const { error: workflowInsertError } = await supabase
-          .from('workflow_steps')
-          .insert(newWorkflowSteps);
-          
-        if (workflowInsertError) throw workflowInsertError;
       }
       
       onOpenChange(false);

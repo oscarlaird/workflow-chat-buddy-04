@@ -1,87 +1,92 @@
 
-import { ChevronDown, ChevronRight, Code, BarChart } from "lucide-react";
-import { CodeRunEvent } from "@/hooks/useCodeRunEvents";
-import CodeRunEventItem from "./CodeRunEventItem";
+import React from 'react';
+import { CodeRunEvent, BrowserEvent } from '@/types';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Loader2, AlertCircle, CheckCircle, Terminal } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import CodeRunEventItem from './CodeRunEventItem';
 
 interface CodeRunEventsListProps {
-  events: CodeRunEvent[];
-  hasFunctionCalls: boolean;
-  hasProgressBars: boolean;
-  functionCallEvents: CodeRunEvent[];
-  progressBarEvents: CodeRunEvent[];
-  functionCallsExpanded: boolean;
-  progressBarsExpanded: boolean;
-  setFunctionCallsExpanded: (expanded: boolean) => void;
-  setProgressBarsExpanded: (expanded: boolean) => void;
+  codeRunEvents: CodeRunEvent[];
+  browserEvents: Record<string, BrowserEvent[]>;
+  isLoading?: boolean;
 }
 
-const CodeRunEventsList = ({
-  events,
-  hasFunctionCalls,
-  hasProgressBars,
-  functionCallEvents,
-  progressBarEvents,
-  functionCallsExpanded,
-  progressBarsExpanded,
-  setFunctionCallsExpanded,
-  setProgressBarsExpanded
-}: CodeRunEventsListProps) => {
-  if (events.length === 0) return null;
-  
+const CodeRunEventsList: React.FC<CodeRunEventsListProps> = ({
+  codeRunEvents,
+  browserEvents,
+  isLoading = false
+}) => {
+  if (isLoading) {
+    return (
+      <Card className="p-4 flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+        <span>Loading code run events...</span>
+      </Card>
+    );
+  }
+
+  if (codeRunEvents.length === 0) {
+    return (
+      <Card className="p-4">
+        <div className="flex flex-col items-center justify-center text-center py-6">
+          <Terminal className="h-10 w-10 text-muted-foreground mb-2" />
+          <h3 className="text-lg font-medium">No code run events</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Code run events will appear here when they occur
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
-    <>
-      {/* Progress Bars section - Only show if there are progress events */}
-      {hasProgressBars && (
-        <div className="mt-3 border-t pt-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setProgressBarsExpanded(!progressBarsExpanded);
-            }}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
-          >
-            {progressBarsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <BarChart className="w-4 h-4" />
-            <span>Progress Updates</span>
-            <span className="text-xs text-muted-foreground">({progressBarEvents.length})</span>
-          </button>
-          
-          {progressBarsExpanded && (
-            <div className="space-y-1 mt-2">
-              {progressBarEvents.map((event) => (
-                <CodeRunEventItem key={event.id} event={event} />
-              ))}
+    <div className="space-y-3">
+      {codeRunEvents.map((event) => (
+        <Card key={event.id} className="overflow-hidden">
+          <CardHeader className="py-3 px-4 bg-muted/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="font-medium">
+                  {event.function_name || 'Code Run'}
+                </Badge>
+                {event.n_progress !== undefined && event.n_total !== undefined && (
+                  <span className="text-xs text-muted-foreground">
+                    Progress: {event.n_progress}/{event.n_total}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {new Date(event.created_at).toLocaleString()}
+              </span>
             </div>
-          )}
-        </div>
-      )}
-      
-      {/* Function Calls section */}
-      {hasFunctionCalls && (
-        <div className="mt-3 border-t pt-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setFunctionCallsExpanded(!functionCallsExpanded);
-            }}
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors mb-2"
-          >
-            {functionCallsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            <Code className="w-4 h-4" />
-            <span>Function Calls</span>
-            <span className="text-xs text-muted-foreground">({functionCallEvents.length})</span>
-          </button>
-          
-          {functionCallsExpanded && (
-            <div className="space-y-1 mt-2">
-              {functionCallEvents.map((event) => (
-                <CodeRunEventItem key={event.id} event={event} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </>
+            {event.description && (
+              <p className="text-sm mt-1">{event.description}</p>
+            )}
+            {event.n_progress !== undefined && event.n_total !== undefined && event.n_total > 0 && (
+              <Progress 
+                value={(event.n_progress / event.n_total) * 100} 
+                className="h-1 mt-2" 
+              />
+            )}
+          </CardHeader>
+          <CardContent className="py-3 px-4">
+            {browserEvents[event.id] && browserEvents[event.id].length > 0 ? (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {browserEvents[event.id].map((browserEvent) => (
+                  <CodeRunEventItem key={browserEvent.id} browserEvent={browserEvent} />
+                ))}
+              </div>
+            ) : (
+              <div className="py-3 text-center text-sm text-muted-foreground">
+                No browser events for this code run
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 
