@@ -1,6 +1,6 @@
 
 import { memo } from "react";
-import { ChevronDown, ChevronRight, Code, Table, Database, Trash2, ArrowDownUp } from "lucide-react";
+import { ChevronDown, ChevronRight, Code, Table, Database, Trash2, ArrowDownUp, Globe, Chrome, ExternalLink } from "lucide-react";
 import { WorkflowStep as WorkflowStepType } from "@/types";
 import CodeBlock from "./CodeBlock";
 import DataTable from "./DataTable";
@@ -10,6 +10,7 @@ import { Button } from "./ui/button";
 import { TypedInputField, InputFieldIcon } from "./InputField";
 import { InputField } from "@/types";
 import { inferFieldType } from "@/hooks/useSelectedChatSettings";
+import { Badge } from "./ui/badge";
 
 interface WorkflowStepProps {
   step: WorkflowStepType;
@@ -24,6 +25,9 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
   
   // Create a key based on step data to ensure proper re-renders
   const stepKey = `${step.id}-${step.description}`;
+
+  // Check if step requires browser
+  const requiresBrowser = step.requiresBrowser === true;
 
   const getStatusClass = () => {
     switch (step.status) {
@@ -119,10 +123,26 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
       )}
       
       <div className="mb-2">
-        <h3 className="text-lg font-medium">
-          Step {step.step_number}: {step.title}
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium">
+            Step {step.step_number}: {step.title}
+          </h3>
+          
+          {requiresBrowser && (
+            <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800 flex items-center gap-1 px-2">
+              <Chrome className="h-3.5 w-3.5" />
+              <span>Browser Required</span>
+            </Badge>
+          )}
+        </div>
         <p className="text-gray-600 dark:text-gray-400">{step.description}</p>
+        
+        {requiresBrowser && (
+          <div className="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-md flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300">
+            <ExternalLink className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            <span>This step will be executed in a browser window</span>
+          </div>
+        )}
       </div>
 
       {hasInputs && (

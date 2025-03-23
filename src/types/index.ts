@@ -1,4 +1,3 @@
-
 export interface Message {
   id: string;
   role: "user" | "assistant";
@@ -40,6 +39,7 @@ export interface WorkflowStep {
   exampleInput?: Record<string, any> | null;
   exampleOutput?: any | null;
   step_number: number;
+  requiresBrowser?: boolean;
 }
 
 export interface Workflow {

@@ -66,6 +66,7 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   status: "waiting", // Default status
                   exampleInput: (stepData as any).example_input || null,
                   exampleOutput: (stepData as any).example_output || null,
+                  requiresBrowser: Boolean((stepData as any).requires_browser),
                   code: null
                 });
               }
@@ -117,6 +118,7 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   status: "waiting", // Default status
                   exampleInput: (stepData as any).example_input || null,
                   exampleOutput: (stepData as any).example_output || null,
+                  requiresBrowser: Boolean((stepData as any).requires_browser),
                   code: null
                 });
               }
