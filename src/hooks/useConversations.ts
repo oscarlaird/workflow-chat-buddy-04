@@ -52,7 +52,7 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           }
           
           keyframesMap[messageId].push({
-            id: keyframe.id,
+            id: keyframe.id.toString(), // Convert ID to string
             message_id: keyframe.message_id,
             screenshot_url: keyframe.screenshot_url,
             url: keyframe.url || '',
@@ -97,12 +97,12 @@ export const useConversations = ({ conversationId }: UseConversationsProps) => {
           username: msg.username,
           screenrecording_url: msg.screenrecording_url,
           chat_id: msg.chat_id,
-          type: (msg.type as "text_message" | "screen_recording" | "code_run") || "text_message", // Ensure every message has a type
+          type: (msg.type as "text_message" | "screen_recording" | "code_run" | "function_message") || "text_message", // Ensure every message has a type
           code_output: msg.code_output,
           code_output_error: msg.code_output_error,
           code_run_success: msg.code_run_success,
           code_output_tables: msg.code_output_tables,
-          duration: msg.duration || undefined // Handle this properly
+          duration: msg.duration
         } as Message));
         
         setMessages(messagesData);

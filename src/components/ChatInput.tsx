@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { CornerDownLeft, Loader2, Video, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ export const ChatInput = ({
   onCodeRun
 }: ChatInputProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
+  const [isRecording, setIsRecording] = useState(isRecording);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   
@@ -92,7 +91,7 @@ export const ChatInput = ({
     try {
       const messageId = uuidv4();
       
-      const messageData = {
+      const messageData: any = {
         id: messageId,
         chat_id: chatId,
         role: 'assistant',
@@ -100,7 +99,7 @@ export const ChatInput = ({
         function_name: 'recording_requested',
         is_currently_streaming: false,
         username: 'system',
-        type: 'text_message' // Added required type field
+        type: 'text_message' // Set type explicitly as text_message (string literal)
       };
       
       await supabase.from('messages').insert(messageData);

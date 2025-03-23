@@ -130,7 +130,7 @@ export const WorkflowInputs = ({
         role: 'user',
         content: 'Please execute my workflow',
         username: 'current_user',
-        type: 'code_run' // Explicitly set the correct type
+        type: 'code_run' as const // Using a const assertion to ensure this is the literal type
       };
       
       await supabase.from('messages').insert(messageData);
