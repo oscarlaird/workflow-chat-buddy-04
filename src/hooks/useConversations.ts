@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "@/types";
@@ -6,6 +7,8 @@ interface UseConversationsResult {
   messages: Message[];
   isLoading: boolean;
   error: string | null;
+  setIsLoading: (isLoading: boolean) => void;
+  setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
 }
 
 export const useConversations = (chatId?: string): UseConversationsResult => {
@@ -120,5 +123,5 @@ export const useConversations = (chatId?: string): UseConversationsResult => {
     };
   };
 
-  return { messages, isLoading, error };
+  return { messages, isLoading, error, setIsLoading, setMessages };
 };

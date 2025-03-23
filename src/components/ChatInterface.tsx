@@ -1,72 +1,74 @@
-
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import MessageDisplay from "./MessageDisplay";
+import MessageInputSection from "./MessageInputSection";
 import { useConversations } from "@/hooks/useConversations";
-import { forwardRef, useImperativeHandle } from "react";
-import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
-import { useMessageManager } from "@/hooks/useMessageManager";
 import useMessageListener from "@/hooks/useMessageListener";
-import useExtensionStatus from "@/hooks/useExtensionStatus";
-import MessageDisplay from "@/components/MessageDisplay";
-import MessageInputSection from "@/components/MessageInputSection";
+import { useMessageManager } from "@/hooks/useMessageManager";
+import { useCodeRunEvents } from "@/hooks/useCodeRunEvents";
 
-interface ChatInterfaceProps {
-  conversationId: string;
-  onSendMessage: (message: string) => void;
-  forceExtensionInstalled?: boolean;
-}
+const ChatInterface = () => {
+  const { id: conversationId } = useParams<{ id: string }>();
+  const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
+  const [forceExtensionInstalled, setForceExtensionInstalled] = useState(false);
 
-export const ChatInterface = forwardRef(({
-  conversationId,
-  onSendMessage,
-  forceExtensionInstalled = false
-}: ChatInterfaceProps, ref) => {
+  const { messages, isLoading, error, setIsLoading, setMessages } = useConversations(conversationId);
+  const codeRunEventsData = useCodeRunEvents(conversationId || "");
+
+  useEffect(() => {
+    // Simulate checking if the extension is installed
+    // In a real application, you would use a more reliable method
+    setTimeout(() => {
+      setIsExtensionInstalled(true);
+    }, 1000);
+  }, []);
+
+  const onSendMessage = (message: string) => {
+    // Any custom logic here
+    console.log("Message sent:", message);
+  };
+
   const { 
-    messages,
-    isLoading, 
-    setIsLoading,
-    setMessages
-  } = useConversations({ conversationId });
-  
-  // Initialize code run events hook for the entire chat
-  const codeRunEventsData = useCodeRunEvents(conversationId);
-  
-  // Initialize message manager hook
-  const {
-    localMessageIds,
+    localMessageIds, 
     pendingMessageIds,
     streamingMessages,
-    setStreamingMessages,
     updateMessageContent,
     handleSubmit,
     handleCodeRun,
     setPendingMessageIds
   } = useMessageManager(
-    conversationId,
+    conversationId || "",
     setIsLoading,
     setMessages,
     onSendMessage
   );
-  
-  // Initialize extension status hook
-  const { isExtensionInstalled } = useExtensionStatus(forceExtensionInstalled);
-  
-  // Setup message listener
+
   useMessageListener(
-    conversationId,
+    conversationId || "",
     setMessages,
     localMessageIds,
     setPendingMessageIds,
     updateMessageContent,
-    setStreamingMessages
+    streamingMessages
   );
 
-  // Expose the handleSubmit method to the parent component
-  useImperativeHandle(ref, () => ({
-    handleSubmit: (inputValue: string) => handleSubmit(inputValue)
-  }));
+  const handleInputSubmit = useCallback(
+    (inputValue: string) => {
+      handleSubmit(inputValue);
+    },
+    [handleSubmit]
+  );
+  
+  const handleRunCode = useCallback(
+    (codeContent: string) => {
+      handleCodeRun(codeContent);
+    },
+    [handleCodeRun]
+  );
 
   return (
-    <div className="flex flex-col h-full chat-interface">
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+    <div className="flex flex-col h-full">
+      <div className="flex-grow overflow-y-auto p-4">
         <MessageDisplay
           messages={messages}
           isExtensionInstalled={isExtensionInstalled}
@@ -76,15 +78,16 @@ export const ChatInterface = forwardRef(({
           codeRunEventsData={codeRunEventsData}
         />
       </div>
-
-      <MessageInputSection
-        conversationId={conversationId}
-        isLoading={isLoading}
-        onSendMessage={handleSubmit}
-        onCodeRun={handleCodeRun}
-      />
+      <div className="border-t p-4">
+        <MessageInputSection
+          conversationId={conversationId || ""}
+          isLoading={isLoading}
+          onSendMessage={handleInputSubmit}
+          onCodeRun={handleRunCode}
+        />
+      </div>
     </div>
   );
-});
+};
 
 export default ChatInterface;
