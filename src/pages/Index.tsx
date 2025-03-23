@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatInterface from "../components/ChatInterface";
 import ChatHistory from "../components/ChatHistory";
@@ -10,6 +9,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { PanelLeft } from "lucide-react";
 import { MotionDiv } from "@/lib/transitions";
+import { supabase } from "@/integrations/supabase/client";
 
 interface IndexProps {
   selectedConversationId: string;
@@ -41,6 +41,47 @@ export const Index: React.FC<IndexProps> = ({
   const navigate = useNavigate();
   const chatInterfaceRef = React.useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [latestUserMessage, setLatestUserMessage] = useState<Message | null>(null);
+
+  // Fetch the latest user message every second
+  useEffect(() => {
+    if (!selectedConversationId) return;
+
+    const checkLatestUserMessage = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', selectedConversationId)
+          .eq('role', 'user')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (error) {
+          console.error('Error fetching latest user message:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const message = data[0] as Message;
+          console.log("MAIN PAGE - Latest user message:", message);
+          console.log("requires_text_reply:", message.requires_text_reply);
+          console.log("script:", message.script);
+          setLatestUserMessage(message);
+        }
+      } catch (err) {
+        console.error('Error in checkLatestUserMessage:', err);
+      }
+    };
+
+    // Initial check
+    checkLatestUserMessage();
+
+    // Set up polling
+    const intervalId = setInterval(checkLatestUserMessage, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedConversationId]);
 
   const handleSendMessage = (message: string) => {
     // We can keep this minimal log as it's useful for potential debugging
@@ -48,13 +89,11 @@ export const Index: React.FC<IndexProps> = ({
   };
 
   const handleMessagesUpdated = (messages: Message[]) => {
-    // Find the latest user message
+    // This is now less important as we're polling directly
     const userMessages = messages.filter(msg => msg.role === 'user');
     if (userMessages.length > 0) {
-      const latestUserMessage = userMessages[userMessages.length - 1];
-      console.log("MAIN PAGE - Latest user message:", latestUserMessage);
-      console.log("requires_text_reply:", latestUserMessage.requires_text_reply);
-      console.log("script:", latestUserMessage.script);
+      const latestUserMsg = userMessages[userMessages.length - 1];
+      console.log("Messages updated - Latest user message id:", latestUserMsg.id);
     }
   };
 
