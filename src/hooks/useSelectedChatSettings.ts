@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -60,22 +59,22 @@ export const inferInputSchema = (exampleInputs: Record<string, any> | null): Inp
   }));
 };
 
-// Extract example_input from the first step in steps
+// Extract example_output from the first step in steps
 const extractExampleInputFromSteps = (steps: Json): Record<string, any> | null => {
   // Check if steps is null, not an object, or an empty object
   if (!steps || typeof steps !== 'object' || Array.isArray(steps) || Object.keys(steps).length === 0) {
     return null;
   }
 
-  // Find the first step with example_input
+  // Find the first step with example_output
   const firstStepKey = Object.keys(steps)[0];
   const firstStep = steps[firstStepKey] as Record<string, any>;
   
-  if (firstStep && typeof firstStep === 'object' && 'example_input' in firstStep && firstStep.example_input) {
-    // Ensure the example_input is an object
-    const exampleInput = firstStep.example_input;
-    if (typeof exampleInput === 'object' && !Array.isArray(exampleInput)) {
-      return exampleInput as Record<string, any>;
+  if (firstStep && typeof firstStep === 'object' && 'example_output' in firstStep && firstStep.example_output) {
+    // Ensure the example_output is an object
+    const exampleOutput = firstStep.example_output;
+    if (typeof exampleOutput === 'object' && !Array.isArray(exampleOutput)) {
+      return exampleOutput as Record<string, any>;
     }
   }
   
