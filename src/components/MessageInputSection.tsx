@@ -1,6 +1,9 @@
 
 import { useState } from "react";
 import ChatInput from "./ChatInput";
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MessageInputSectionProps {
   conversationId: string;
@@ -18,10 +21,43 @@ export const MessageInputSection = ({
   const [showCodeRunner, setShowCodeRunner] = useState(false);
   const [codeInput, setCodeInput] = useState("");
 
-  const handleCodeSubmit = () => {
-    if (onCodeRun && codeInput.trim()) {
-      onCodeRun(codeInput);
-      setCodeInput("");
+  const handleCodeSubmit = async () => {
+    if (codeInput.trim()) {
+      try {
+        // Create a message with code_run type
+        const messageId = uuidv4();
+        
+        const { error } = await supabase
+          .from('messages')
+          .insert({
+            id: messageId,
+            chat_id: conversationId,
+            role: 'assistant',
+            content: codeInput,
+            username: 'current_user',
+            type: 'code_run'
+          });
+  
+        if (error) {
+          console.error('Error creating code run message:', error);
+          toast.error('Failed to submit code for execution');
+          return;
+        }
+        
+        // Clear the code input and hide the code runner
+        setCodeInput("");
+        setShowCodeRunner(false);
+        
+        toast.success("Code submitted for execution");
+        
+        // Call the onCodeRun callback if provided
+        if (onCodeRun) {
+          onCodeRun(codeInput);
+        }
+      } catch (err) {
+        console.error('Error submitting code:', err);
+        toast.error('An unexpected error occurred');
+      }
     }
   };
   

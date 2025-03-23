@@ -1,18 +1,21 @@
+
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import WorkflowPanel from "@/components/WorkflowPanel";
-import RunMessage from "@/components/RunMessage";
+import CodeRunMessage from "@/components/CodeRunMessage";
 import PythonCodeDisplay from "@/components/PythonCodeDisplay";
 import { useToast } from "@/components/ui/use-toast";
 import { Info, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Message } from "@/types";
 
 const WorkflowPage = () => {
   const { toast } = useToast();
   const location = useLocation();
   const params = useParams();
   const [chatId, setChatId] = useState("");
-  const [latestRunId, setLatestRunId] = useState<string | null>(null);
+  const [latestCodeRunMessage, setLatestCodeRunMessage] = useState<Message | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // First check if ID is in URL params (from route pattern /workflow/:id)
@@ -34,8 +37,8 @@ const WorkflowPage = () => {
         variant: "default",
       });
 
-      // Fetch the latest run for this chat
-      fetchLatestRun(finalId);
+      // Fetch the latest code run message for this chat
+      fetchLatestCodeRunMessage(finalId);
     } else {
       console.log("No chat ID found, setting to empty string");
       setChatId("");
@@ -54,25 +57,29 @@ const WorkflowPage = () => {
     }
   }, [location.search, params, toast]);
 
-  const fetchLatestRun = async (chatId: string) => {
+  const fetchLatestCodeRunMessage = async (chatId: string) => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
-        .from('runs')
-        .select('id')
+        .from('messages')
+        .select('*')
         .eq('chat_id', chatId)
+        .eq('type', 'code_run')
         .order('created_at', { ascending: false })
         .limit(1);
 
       if (error) {
-        console.error('Error fetching latest run:', error);
+        console.error('Error fetching latest code run message:', error);
         return;
       }
 
       if (data && data.length > 0) {
-        setLatestRunId(data[0].id);
+        setLatestCodeRunMessage(data[0] as unknown as Message);
       }
     } catch (err) {
-      console.error('Exception when fetching latest run:', err);
+      console.error('Exception when fetching latest code run message:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,16 +89,16 @@ const WorkflowPage = () => {
         <div className="h-full glass-panel flex flex-col">
           {chatId ? (
             <>
-              {latestRunId ? (
+              {latestCodeRunMessage ? (
                 <div className="pt-4">
-                  <RunMessage runId={latestRunId} />
+                  <CodeRunMessage message={latestCodeRunMessage} isStreaming={false} />
                 </div>
               ) : (
                 <div className="flex justify-center py-4">
                   <div className="w-full max-w-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-amber-700 dark:text-amber-300">
                     <p className="text-sm flex items-center">
                       <Info className="h-4 w-4 mr-2 flex-shrink-0" />
-                      No active run found for this workflow
+                      No active code runs found for this workflow
                     </p>
                   </div>
                 </div>

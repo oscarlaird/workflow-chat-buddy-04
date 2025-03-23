@@ -134,3 +134,19 @@ export enum RunMessageType {
   CLOSE_EXTENSION = 'close_extension',
   ABORT = 'abort'
 }
+
+// Define a CodeRunEvent interface for the new schema
+export interface CodeRunEvent {
+  id: string;
+  message_id?: string;
+  chat_id?: string;
+  function_name?: string;
+  description?: string;
+  example_input?: any;
+  example_output?: any;
+  n_progress?: number;
+  n_total?: number;
+  progress_title?: string;
+  requires_browser: boolean;
+  created_at: string;
+}

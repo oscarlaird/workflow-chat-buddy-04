@@ -238,17 +238,6 @@ export const useChats = () => {
         throw messagesError;
       }
       
-      const { data: workflowSteps, error: workflowStepsError } = await supabase
-        .from('workflow_steps')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('step_number', { ascending: true });
-        
-      if (workflowStepsError) {
-        console.error('Error fetching workflow steps:', workflowStepsError);
-        throw workflowStepsError;
-      }
-      
       const duplicatedChatTitle = `${chatDetails.title} (Copy)`;
       const chatInsert = {
         id: newChatId,
@@ -269,32 +258,9 @@ export const useChats = () => {
           created_at: new Date().toISOString(),
           from_template: true,
           function_name: message.function_name,
-          workflow_step_id: null
+          type: message.type,
+          steps: message.steps
         }));
-      }
-      
-      let newWorkflowSteps = [];
-      const workflowStepIdMap: Record<string, string> = {};
-      
-      if (workflowSteps && workflowSteps.length > 0) {
-        newWorkflowSteps = workflowSteps.map(step => {
-          const newStepId = uuidv4();
-          workflowStepIdMap[step.id] = newStepId;
-          
-          return {
-            id: newStepId,
-            chat_id: newChatId,
-            title: step.title,
-            description: step.description,
-            status: step.status,
-            code: step.code,
-            example_data: step.example_data,
-            screenshots: step.screenshots,
-            step_number: step.step_number,
-            username: currentUsername,
-            created_at: new Date().toISOString()
-          };
-        });
       }
       
       const { error: chatError } = await supabase
@@ -306,28 +272,7 @@ export const useChats = () => {
         throw chatError;
       }
       
-      if (newWorkflowSteps.length > 0) {
-        const { error: workflowInsertError } = await supabase
-          .from('workflow_steps')
-          .insert(newWorkflowSteps);
-          
-        if (workflowInsertError) {
-          console.error('Error inserting workflow steps:', workflowInsertError);
-          throw workflowInsertError;
-        }
-      }
-      
       if (newMessages.length > 0) {
-        newMessages = newMessages.map(message => {
-          if (message.workflow_step_id && workflowStepIdMap[message.workflow_step_id]) {
-            return {
-              ...message,
-              workflow_step_id: workflowStepIdMap[message.workflow_step_id]
-            };
-          }
-          return message;
-        });
-        
         const { error: insertError } = await supabase
           .from('messages')
           .insert(newMessages);
@@ -339,7 +284,7 @@ export const useChats = () => {
       }
       
       toast({
-        title: "Workflow duplicated",
+        title: "Chat duplicated",
         description: `"${duplicatedChatTitle}" has been created successfully.`
       });
       
@@ -347,8 +292,8 @@ export const useChats = () => {
     } catch (error: any) {
       console.error('Error in duplicateChat:', error);
       toast({
-        title: "Error duplicating workflow",
-        description: error?.message || "An error occurred while duplicating the workflow",
+        title: "Error duplicating chat",
+        description: error?.message || "An error occurred while duplicating the chat",
         variant: "destructive"
       });
       return null;
