@@ -14,18 +14,12 @@ export const MessageInputSection = ({
   onSendMessage
 }: MessageInputSectionProps) => {
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center border-t border-gray-200 dark:border-gray-700 p-2">
-        <div className="flex-1">
-          <ChatInput
-            onSendMessage={onSendMessage}
-            isLoading={isLoading}
-            disabled={!conversationId}
-            chatId={conversationId}
-          />
-        </div>
-      </div>
-    </div>
+    <ChatInput
+      onSendMessage={onSendMessage}
+      isLoading={isLoading}
+      disabled={!conversationId}
+      chatId={conversationId}
+    />
   );
 };
 
