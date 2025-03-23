@@ -75,7 +75,6 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   title: typedStepData.function_name ? formatFieldName(typedStepData.function_name) : `Step ${index + 1}`,
                   description: typedStepData.description || "No description available",
                   step_number: index + 1,
-                  status: "waiting",
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
@@ -105,7 +104,6 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   title: formatFieldName(key), // Format the title
                   description: typedStepData.description || "No description available",
                   step_number: index + 1, // We preserve the original order with index
-                  status: "waiting", // Default status
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
@@ -165,7 +163,6 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   title: typedStepData.function_name ? formatFieldName(typedStepData.function_name) : `Step ${index + 1}`,
                   description: typedStepData.description || "No description available",
                   step_number: index + 1,
-                  status: "waiting",
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),
@@ -194,7 +191,6 @@ export const useWorkflowSteps = (chatId?: string): UseWorkflowStepsResult => {
                   title: formatFieldName(key), // Format the title
                   description: typedStepData.description || "No description available",
                   step_number: index + 1, // We preserve the original order with index
-                  status: "waiting", // Default status
                   exampleInput: typedStepData.example_input || null,
                   exampleOutput: typedStepData.example_output || null,
                   requiresBrowser: Boolean(typedStepData.requires_browser),

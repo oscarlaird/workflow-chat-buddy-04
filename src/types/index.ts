@@ -50,7 +50,6 @@ export interface WorkflowStep {
   step_number: number;
   title: string;
   description?: string;
-  status?: string;
   exampleInput?: Record<string, any>;
   exampleOutput?: Record<string, any>;
   requiresBrowser?: boolean;
@@ -108,8 +107,8 @@ export interface RunMessage {
   content: string;
   role: string;
   created_at: string;
-  type: string;
-  sender_type?: string;
+  type: RunMessageType;
+  sender_type?: RunMessageSenderType;
   display_text?: string;
   payload?: any;
 }

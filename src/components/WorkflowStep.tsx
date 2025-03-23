@@ -27,19 +27,6 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
   // Check if step requires browser
   const requiresBrowser = step.requiresBrowser === true;
 
-  const getStatusClass = () => {
-    switch (step.status) {
-      case "complete":
-        return "workflow-step-complete";
-      case "active":
-        return "workflow-step-active";
-      case "waiting":
-        return "workflow-step-waiting";
-      default:
-        return "workflow-step-waiting";
-    }
-  };
-
   // Function to infer field types from example inputs and outputs
   const inferInputFields = (inputData: Record<string, any> | null): InputField[] => {
     if (!inputData) return [];
@@ -97,7 +84,7 @@ export const WorkflowStep = memo(({ step, index, isDeleting = false }: WorkflowS
 
   return (
     <MotionDiv 
-      className={`workflow-step ${getStatusClass()} ${isDeleting ? 'workflow-step-deleting' : ''}`} 
+      className={`workflow-step ${isDeleting ? 'workflow-step-deleting' : ''}`} 
       key={stepKey}
       initial={{ opacity: 1, height: "auto" }}
       animate={{ 
