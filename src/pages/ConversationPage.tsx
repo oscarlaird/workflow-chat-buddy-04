@@ -1,58 +1,59 @@
 
-import { useParams, useLocation } from "react-router-dom";
-import ChatInterface from "@/components/ChatInterface";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
-import ExtensionStatusIndicator from "@/components/ExtensionStatusIndicator";
+import { ChatInterface } from "@/components/ChatInterface";
+import WorkflowPanel from "@/components/WorkflowPanel";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { supabase } from "@/integrations/supabase/client";
 
 const ConversationPage = () => {
-  const { id: urlParamId } = useParams();
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const chatIdFromQuery = queryParams.get('chat_id');
-  
-  // Use URL parameter first, then fall back to query parameter
-  const conversationId = urlParamId || chatIdFromQuery || "";
-  
-  // Determine if the page is being accessed through the extension (via query param)
-  const isAccessedThroughExtension = Boolean(chatIdFromQuery);
-  
+  const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const [messages, setMessages] = useState<any[]>([]);
+  const chatInterfaceRef = useRef<any>(null);
 
-  const handleSendMessage = (message: string) => {
-    // In a real app, would send message to API
-    console.log("Message sent in standalone view:", message);
-  };
-
-  if (!conversationId) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-        <div className="text-center">
-          <h2 className="text-xl font-medium">No conversation ID provided</h2>
-          <p className="mt-2 text-muted-foreground">Please specify a conversation ID.</p>
-          <a href="/" className="mt-4 inline-block text-blue-500 hover:underline">
-            Return to Home
-          </a>
-        </div>
-      </div>
-    );
+  // Ensure we have a conversation ID
+  if (!id) {
+    return <div>No conversation ID provided</div>;
   }
 
+  // Handle sending a message to the AI
+  const handleSendMessage = (message: string) => {
+    console.log("Sent message:", message);
+    // The actual sending is handled in ChatInterface
+  };
+
+  // Function to handle workflow execution
+  const handleRunWorkflow = () => {
+    if (chatInterfaceRef.current) {
+      chatInterfaceRef.current.handleSubmit("[RUN_WORKFLOW]");
+    }
+  };
+
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-950">
-      {!isAccessedThroughExtension && (
-        <div className="absolute top-4 right-4 z-10">
-          <ExtensionStatusIndicator />
-        </div>
-      )}
-      <div className="h-full p-4">
-        <div className="h-full glass-panel">
+    <div className="flex flex-col h-full">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        <ResizablePanel defaultSize={50} minSize={30} className="h-full">
           <ChatInterface
-            conversationId={conversationId}
+            ref={chatInterfaceRef}
+            conversationId={id} 
             onSendMessage={handleSendMessage}
-            forceExtensionInstalled={isAccessedThroughExtension}
+            onMessagesUpdate={setMessages}
           />
-        </div>
-      </div>
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={50} minSize={30} className="h-full overflow-hidden">
+          <WorkflowPanel 
+            chatId={id} 
+            onRunWorkflow={handleRunWorkflow} 
+            showRunButton={true}
+            messages={messages}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
