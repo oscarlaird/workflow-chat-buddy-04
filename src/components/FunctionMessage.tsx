@@ -16,11 +16,6 @@ export const FunctionMessage = ({ message, isStreaming }: FunctionMessageProps) 
     const firstSentence = message.content.split('.')[0];
     return firstSentence.length < 30 ? firstSentence : firstSentence.substring(0, 30) + '...';
   };
-  
-  // If this is a screen recording message, we'll handle it in MessageList
-  if (message.type === "screen_recording") {
-    return null;
-  }
 
   return (
     <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-800 dark:text-blue-300">

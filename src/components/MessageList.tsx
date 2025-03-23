@@ -3,8 +3,6 @@ import { useRef, useEffect } from "react";
 import { Message } from "@/types";
 import { ScreenRecording } from "@/hooks/useConversations";
 import UserMessage from "./UserMessage";
-import FunctionMessage from "./FunctionMessage";
-import WorkflowStepMessage from "./WorkflowStepMessage";
 import ScreenRecordingMessage from "./ScreenRecordingMessage";
 import ScreenRecordingDisplay from "./ScreenRecordingDisplay";
 import ExtensionAlert from "./ExtensionAlert";
@@ -74,7 +72,7 @@ export const MessageList = ({
           );
         }
         
-        // Check if this message is a code run message
+        // Handle message types based on message.type
         if (message.type === "code_run") {
           return (
             <div key={message.id} className="flex justify-start">
@@ -87,7 +85,6 @@ export const MessageList = ({
           );
         }
         
-        // Special handling for screen_recording type
         if (message.type === "screen_recording") {
           return (
             <div key={message.id} className="flex justify-center">
@@ -99,28 +96,15 @@ export const MessageList = ({
           );
         }
         
-        // Regular message rendering
+        // Default to text message handling
         return (
           <div key={message.id} className="space-y-4">
             <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              {message.content && message.content.includes("function:") ? (
-                <div className="max-w-[80%]">
-                  <FunctionMessage 
-                    message={message} 
-                    isStreaming={streamingMessageIds.has(message.id)} 
-                  />
-                </div>
-              ) : message.content && message.content.includes("workflow_step:") ? (
-                <div className="max-w-[80%]">
-                  <WorkflowStepMessage message={message} />
-                </div>
-              ) : (
-                <UserMessage 
-                  message={message} 
-                  isStreaming={message.role === "assistant" && streamingMessageIds.has(message.id)}
-                  isPending={pendingMessageIds.has(message.id)}
-                />
-              )}
+              <UserMessage 
+                message={message} 
+                isStreaming={message.role === "assistant" && streamingMessageIds.has(message.id)}
+                isPending={pendingMessageIds.has(message.id)}
+              />
             </div>
             
             {/* Screen Recording indicator for other message types */}
