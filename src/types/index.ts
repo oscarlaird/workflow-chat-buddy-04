@@ -11,9 +11,6 @@ export interface Message {
   code_output_error?: string;
   code_run_success?: boolean;
   code_output_tables?: any;
-  // Adding these back as optional properties since they're used in components
-  function_name?: string;
-  workflow_step_id?: string;
 }
 
 export interface Conversation {

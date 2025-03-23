@@ -51,16 +51,24 @@ export const MessageList = ({
     return <EmptyMessageList />;
   }
 
+  // Helper to determine if a message is a recording message
+  const isRecordingMessage = (message: Message) => {
+    return message.content && (
+      message.content.includes("recording_requested") || 
+      message.content.includes("recording_progress")
+    );
+  };
+
   return (
     <div className="space-y-6">
       {messages.map((message) => {
-        // Special handling for recording_requested and recording_progress functions
-        if (message.function_name === "recording_requested" || message.function_name === "recording_progress") {
+        // Special handling for recording messages based on content
+        if (isRecordingMessage(message)) {
           return (
             <div key={message.id} className="flex justify-center">
               <RecordingButton 
                 message={message} 
-                isInProgress={message.function_name === "recording_progress"} 
+                isInProgress={message.content?.includes("recording_progress") || false} 
               />
             </div>
           );
@@ -80,7 +88,7 @@ export const MessageList = ({
         }
         
         // Special handling for screen_recording type
-        if (message.type === "screen_recording" || message.function_name === "screen_recording") {
+        if (message.type === "screen_recording") {
           return (
             <div key={message.id} className="flex justify-center">
               <ScreenRecordingDisplay 
@@ -95,14 +103,14 @@ export const MessageList = ({
         return (
           <div key={message.id} className="space-y-4">
             <div className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              {message.function_name ? (
+              {message.content && message.content.includes("function:") ? (
                 <div className="max-w-[80%]">
                   <FunctionMessage 
                     message={message} 
                     isStreaming={streamingMessageIds.has(message.id)} 
                   />
                 </div>
-              ) : message.workflow_step_id ? (
+              ) : message.content && message.content.includes("workflow_step:") ? (
                 <div className="max-w-[80%]">
                   <WorkflowStepMessage message={message} />
                 </div>

@@ -25,16 +25,14 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
   }, []);
 
   const getButtonText = () => {
-    if (message.function_name === 'recording_requested') {
-      return message.content || 'Capture Screen';
-    } else if (message.function_name === 'recording_progress') {
+    if (isInProgress) {
       return 'Recording in Progress...';
     }
-    return 'Capture Screen';
+    return message.content || 'Capture Screen';
   };
 
   const handleClick = () => {
-    if (message.function_name === 'recording_requested' || (message.function_name === 'recording_progress' && !recording)) {
+    if (!recording) {
       // Start recording - Create recording window
       setRecording(true);
       
@@ -45,7 +43,7 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
           chatId: message.chat_id
         }
       }, '*');
-    } else if (message.function_name === 'recording_progress' && recording) {
+    } else {
       // Stop recording
       setRecording(false);
       
@@ -64,12 +62,12 @@ const RecordingButton = ({ message, isInProgress = false }: RecordingButtonProps
       onClick={handleClick}
       variant="outline"
       className={`w-full max-w-xs ${
-        message.function_name === 'recording_progress' || recording ? 
+        recording ? 
           'animate-pulse bg-red-50 border-red-300 text-red-700 hover:bg-red-100' : 
           'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
       }`}
     >
-      {message.function_name === 'recording_progress' || recording ? (
+      {recording ? (
         <>
           <Square className="w-4 h-4 mr-2" />
           {getButtonText()}
