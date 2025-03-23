@@ -2,11 +2,14 @@
 import { useState } from "react";
 import { CodeRunEvent } from "@/hooks/useCodeRunEvents";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Code, ChevronDown, ChevronRight, BarChart } from "lucide-react";
+import { Code, ChevronDown, ChevronRight, BarChart, Database, ArrowDownUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CodeBlock from "@/components/CodeBlock";
 import DataTable from "@/components/DataTable";
 import { Progress } from "@/components/ui/progress";
+import { cn, formatFieldName } from "@/lib/utils";
+import { InputFieldIcon } from "@/components/InputField";
+import { inferFieldType } from "@/hooks/useSelectedChatSettings";
 
 interface CodeRunEventItemProps {
   event: CodeRunEvent;
@@ -32,6 +35,16 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
     return Math.min(100, Math.round((event.n_progress! / event.n_total!) * 100));
   };
   
+  // Function to infer field types from input data
+  const inferInputFields = (inputData: Record<string, any>) => {
+    if (!inputData) return [];
+    
+    return Object.entries(inputData).map(([fieldName, value]) => ({
+      field_name: fieldName,
+      type: inferFieldType(fieldName, value)
+    }));
+  };
+  
   const renderOutput = (output: any) => {
     if (output === null) return <div className="text-gray-500">No output available</div>;
     
@@ -45,12 +58,16 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
         return <DataTable data={output._ret} />;
       }
       
-      // For other objects, render as JSON
+      // For other objects, render as formatted items
       return (
-        <CodeBlock 
-          code={JSON.stringify(output, null, 2)} 
-          language="json" 
-        />
+        <div className="space-y-3">
+          {Object.entries(output).map(([key, value]) => (
+            <div key={key} className="border rounded-md p-3">
+              <div className="font-medium text-sm mb-1">{formatFieldName(key)}</div>
+              {renderOutput(value)}
+            </div>
+          ))}
+        </div>
       );
     }
     
@@ -87,7 +104,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
     );
   }
   
-  // Function call display
+  // Function call display - enhanced to match workflow display
   return (
     <Card className="mb-2 overflow-hidden border-dashed">
       <CardHeader className="p-2 cursor-pointer" onClick={() => setExpanded(!expanded)}>
@@ -119,15 +136,47 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
               >
                 {isInputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <Database className="w-4 h-4" />
                 <span>Inputs</span>
               </button>
               
               {isInputExpanded && (
                 <div className="mt-2 p-3 border rounded-md bg-gray-50 dark:bg-gray-900 animate-slide-in-bottom">
-                  <CodeBlock 
-                    code={JSON.stringify(event.example_input, null, 2)} 
-                    language="json" 
-                  />
+                  {/* Enhanced input display similar to workflow */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Object.entries(event.example_input).map(([fieldName, value]) => {
+                      const fieldType = inferFieldType(fieldName, value);
+                      
+                      return (
+                        <div key={fieldName} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <InputFieldIcon type={fieldType} className="text-gray-500" />
+                            <label className="text-sm font-medium">
+                              {formatFieldName(fieldName)}
+                              <span className="ml-2 text-xs text-gray-500">({fieldType})</span>
+                            </label>
+                          </div>
+                          
+                          {/* Render value based on type */}
+                          {fieldType === 'table' && Array.isArray(value) ? (
+                            <div className="border rounded">
+                              <DataTable data={value} />
+                            </div>
+                          ) : typeof value === 'boolean' ? (
+                            <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                              {value ? 'true' : 'false'}
+                            </div>
+                          ) : typeof value === 'object' && value !== null ? (
+                            <CodeBlock code={JSON.stringify(value, null, 2)} language="json" />
+                          ) : (
+                            <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto">
+                              {String(value)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -143,6 +192,7 @@ const CodeRunEventItem = ({ event }: CodeRunEventItemProps) => {
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-foreground transition-colors"
               >
                 {isOutputExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <ArrowDownUp className="w-4 h-4" />
                 <span>Output</span>
               </button>
               
