@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import ChatInterface from "./components/ChatInterface";
-import { Index } from "./pages/Index";
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ConversationPage from "./pages/ConversationPage";
 import WorkflowPage from "./pages/WorkflowPage";
 import RecordingScreen from "./pages/RecordingScreen";
+import AgentRunPage from "./pages/AgentRunPage";
 import { useChats } from "./hooks/useChats";
 import Cookies from "js-cookie";
 
@@ -93,6 +94,9 @@ function App() {
           <Route path="/conversation" element={<ConversationPage />} />
           <Route path="/workflow/:id" element={<WorkflowPage />} />
           <Route path="/workflow" element={<WorkflowPage />} />
+          {/* Add new routes for agent run page */}
+          <Route path="/agent_run/:id" element={<AgentRunPage />} />
+          <Route path="/agent_run" element={<AgentRunPage />} />
           {/* Add new route for recording screen */}
           <Route path="/recording-screen" element={<RecordingScreen />} />
           <Route path="*" element={<NotFound />} />

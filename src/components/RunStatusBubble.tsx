@@ -32,7 +32,8 @@ const RunStatusBubble: React.FC<RunStatusBubbleProps> = ({ run }) => {
   };
 
   const handleJumpToAgentWindow = () => {
-    window.open(`/workflow?chat_id=${run.chat_id}`, '_blank');
+    // Updated to navigate to our new agent_run route
+    window.open(`/agent_run?chat_id=${run.chat_id}`, '_blank');
   };
 
   return (

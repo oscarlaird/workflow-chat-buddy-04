@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Run, RunMessage } from '@/types';
+import { BrowserEvent, Run } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import RunStatusBubble from './RunStatusBubble';
@@ -9,7 +9,7 @@ import RunMessageItem from './RunMessageItem';
 
 interface RunBubbleProps {
   run: Run;
-  messages: RunMessage[];
+  messages: BrowserEvent[];
   isLatestRun?: boolean;
 }
 
